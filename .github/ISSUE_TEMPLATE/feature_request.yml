@@ -1,0 +1,50 @@
+name: Feature Request / Architecture Module
+description: Propose a new architectural module, capability, or deterministic benchmark suite
+title: "[FEAT] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing a new feature or architectural module for **AI Sales Assistant**. Please complete the engineering contract below.
+  - type: dropdown
+    id: module
+    attributes:
+      label: Target Architectural Layer
+      description: Which subsystem does this feature belong to?
+      options:
+        - "Module 1: Catalog Schema, Spec Registry & Deterministic Validator Gate"
+        - "Module 2: Multimodal Assets (COS/Local), Gemini-Embedding-2 (1024d) & Vector Store"
+        - "Module 3: System One (Jev) Gating, Local Rule Governance & Hybrid RAG Relaxation"
+        - "Module 4: 272K Context Orchestrator, Deterministic Order Tools & Typed SSE Showcase"
+        - "Module 5: 50-Query Benchmark Suite, A/B Ablations & End-to-End Verification"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Motivation & Architectural Context
+      description: Why is this capability required, and what production guarantee does it establish?
+      placeholder: Describe the latency, accuracy, or safety problem addressed by this module...
+    validations:
+      required: true
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Core Deliverables & File Contracts
+      description: List the target modules, schemas, endpoints, or CLI scripts.
+      placeholder: |
+        - `app/services/...`
+        - `scripts/test_...`
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Deterministic Acceptance Criteria
+      description: Define the exact verification commands and zero-regression assertions required before merging.
+      placeholder: |
+        - [ ] `python -B scripts/validate_catalog.py` exits with code 0
+        - [ ] Unit and adversarial tests pass 100%
+    validations:
+      required: true
