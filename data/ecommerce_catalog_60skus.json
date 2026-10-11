@@ -1,0 +1,1655 @@
+[
+  {
+    "sku_id": "SKU-3C-001",
+    "category": "3c_digital",
+    "sub_category": "gan_charger",
+    "title": "安克 Anker 30W 氮化镓超能充 Nano3 折叠插脚单口快充头",
+    "brand": "Anker",
+    "original_price": 59.0,
+    "final_price": 35.0,
+    "specs": {
+      "power_w": 30,
+      "ports": 1
+    },
+    "highlights": [
+      "氮化镓温控芯片",
+      "折叠插脚",
+      "体积小巧如耳塞盒",
+      "1C单口PD快充"
+    ],
+    "visual_description": "冰晶紫方糖造型微型充电头，表面磨砂搭配亮面金属装饰圈，底部配备可折叠国标双扁插脚，单Type-C接口居中设计。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "Anker 30W 氮化镓 折叠插脚 小巧充电器 商品图",
+    "retrieval_text": "【商品】安克 Anker 30W 氮化镓超能充 Nano3 折叠插脚单口快充头 【品牌】Anker 【类目】3c_digital/gan_charger (氮化镓快充充电器) 【价格】到手价¥35.0 (原价¥59.0，直降¥24.0) 【核心规格】最大输出功率:30W | 可用接口数量:1口 【核心卖点】氮化镓温控芯片；折叠插脚；体积小巧如耳塞盒；1C单口PD快充 【视觉外观】冰晶紫方糖造型微型充电头，表面磨砂搭配亮面金属装饰圈，底部配备可折叠国标双扁插脚，单Type-C接口居中设计。",
+    "image_path": "/static/images/SKU-3C-001.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-001.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-002",
+    "category": "3c_digital",
+    "sub_category": "gan_charger",
+    "title": "倍思 65W 氮化镓 GaN5 Pro 三口快充充电器套装",
+    "brand": "Baseus",
+    "original_price": 129.0,
+    "final_price": 89.0,
+    "specs": {
+      "power_w": 65,
+      "ports": 3
+    },
+    "highlights": [
+      "第五代氮化镓芯片",
+      "2C1A三口盲插",
+      "折叠插脚轻巧便携",
+      "附赠Type-C编织快充线"
+    ],
+    "visual_description": "黑色修长柱状机身，消光细腻磨砂外壳，冰蓝电源呼吸指示灯，顶部排列2个Type-C与1个USB-A接口（2C1A），配折叠插脚。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "倍思 65W 氮化镓 三口快充充电器 黑色 商品图",
+    "retrieval_text": "【商品】倍思 65W 氮化镓 GaN5 Pro 三口快充充电器套装 【品牌】Baseus 【类目】3c_digital/gan_charger (氮化镓快充充电器) 【价格】到手价¥89.0 (原价¥129.0，直降¥40.0) 【核心规格】最大输出功率:65W | 可用接口数量:3口 【核心卖点】第五代氮化镓芯片；2C1A三口盲插；折叠插脚轻巧便携；附赠Type-C编织快充线 【视觉外观】黑色修长柱状机身，消光细腻磨砂外壳，冰蓝电源呼吸指示灯，顶部排列2个Type-C与1个USB-A接口（2C1A），配折叠插脚。",
+    "image_path": "/static/images/SKU-3C-002.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-002.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-003",
+    "category": "3c_digital",
+    "sub_category": "gan_charger",
+    "title": "绿联 140W 氮化镓 PD3.1 四口桌面闪充充电器",
+    "brand": "UGREEN",
+    "original_price": 249.0,
+    "final_price": 199.0,
+    "specs": {
+      "power_w": 140,
+      "ports": 4
+    },
+    "highlights": [
+      "PD3.1满血140W输出",
+      "3C1A四口同充",
+      "氮化镓双芯片散热",
+      "折叠插脚"
+    ],
+    "visual_description": "深空灰金属质感方正外壳，斜切防滑纹理侧面，正面印有140W金色标识，输出端为3个Type-C口加1个USB-A口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "绿联 140W 氮化镓 四口快充充电器 商品图",
+    "retrieval_text": "【商品】绿联 140W 氮化镓 PD3.1 四口桌面闪充充电器 【品牌】UGREEN 【类目】3c_digital/gan_charger (氮化镓快充充电器) 【价格】到手价¥199.0 (原价¥249.0，直降¥50.0) 【核心规格】最大输出功率:140W | 可用接口数量:4口 【核心卖点】PD3.1满血140W输出；3C1A四口同充；氮化镓双芯片散热；折叠插脚 【视觉外观】深空灰金属质感方正外壳，斜切防滑纹理侧面，正面印有140W金色标识，输出端为3个Type-C口加1个USB-A口。",
+    "image_path": "/static/images/SKU-3C-003.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-003.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-004",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "绿联 13.3寸轻薄笔记本防刮内胆包 适配MacBook Air",
+    "brand": "UGREEN",
+    "original_price": 25.9,
+    "final_price": 15.9,
+    "specs": {
+      "screen_size": 13.3
+    },
+    "highlights": [
+      "轻便纤薄",
+      "细腻水晶绒内里",
+      "防泼水PU皮面"
+    ],
+    "visual_description": "浅灰色极简信封式轻薄内胆包，荔枝纹PU皮表面，隐藏式磁吸封口，贴合13.3寸超极本。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "绿联 13.3寸 笔记本内胆包 灰色 商品图",
+    "retrieval_text": "【商品】绿联 13.3寸轻薄笔记本防刮内胆包 适配MacBook Air 【品牌】UGREEN 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥15.9 (原价¥25.9，直降¥10.0) 【核心规格】可容纳的最大笔记本尺寸:13.3寸 【核心卖点】轻便纤薄；细腻水晶绒内里；防泼水PU皮面 【视觉外观】浅灰色极简信封式轻薄内胆包，荔枝纹PU皮表面，隐藏式磁吸封口，贴合13.3寸超极本。",
+    "image_path": "/static/images/SKU-3C-004.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-004.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-005",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "倍思 14寸商务手提笔记本电脑包 防泼水气囊内胆",
+    "brand": "Baseus",
+    "original_price": 59.0,
+    "final_price": 39.0,
+    "specs": {
+      "screen_size": 14.0
+    },
+    "highlights": [
+      "隐藏式手提带",
+      "防震海绵层",
+      "防泼水面料",
+      "前袋收纳电源鼠标"
+    ],
+    "visual_description": "深空灰商务风手提电脑包，正面设斜拉链配件仓，高密度防泼水涤纶面料，顶部配可伸缩软皮提手。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "倍思 14寸 手提笔记本电脑包 深空灰 商品图",
+    "retrieval_text": "【商品】倍思 14寸商务手提笔记本电脑包 防泼水气囊内胆 【品牌】Baseus 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥39.0 (原价¥59.0，直降¥20.0) 【核心规格】可容纳的最大笔记本尺寸:14.0寸 【核心卖点】隐藏式手提带；防震海绵层；防泼水面料；前袋收纳电源鼠标 【视觉外观】深空灰商务风手提电脑包，正面设斜拉链配件仓，高密度防泼水涤纶面料，顶部配可伸缩软皮提手。",
+    "image_path": "/static/images/SKU-3C-005.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-005.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-006",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "小米 16寸多功能都市电脑双肩包 防震气囊独立电脑仓",
+    "brand": "Xiaomi",
+    "original_price": 79.0,
+    "final_price": 49.0,
+    "specs": {
+      "screen_size": 16.0
+    },
+    "highlights": [
+      "16寸独立防震仓",
+      "S型减压背带",
+      "4级防泼水面料",
+      "轻便通勤"
+    ],
+    "visual_description": "炭黑色立体剪裁双肩电脑背包，正面几何折线造型，背部透气网孔海绵垫，内置加厚绒毛16寸电脑隔层。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "小米 16寸 电脑双肩包 黑色 商品图",
+    "retrieval_text": "【商品】小米 16寸多功能都市电脑双肩包 防震气囊独立电脑仓 【品牌】Xiaomi 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥49.0 (原价¥79.0，直降¥30.0) 【核心规格】可容纳的最大笔记本尺寸:16.0寸 【核心卖点】16寸独立防震仓；S型减压背带；4级防泼水面料；轻便通勤 【视觉外观】炭黑色立体剪裁双肩电脑背包，正面几何折线造型，背部透气网孔海绵垫，内置加厚绒毛16寸电脑隔层。",
+    "image_path": "/static/images/SKU-3C-006.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-006.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-007",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "ROG 玩家国度 17.3寸硬壳装甲防震游戏本双肩包",
+    "brand": "ROG",
+    "original_price": 129.0,
+    "final_price": 79.0,
+    "specs": {
+      "screen_size": 17.3
+    },
+    "highlights": [
+      "EVA硬壳防撞外甲",
+      "四角气囊防震",
+      "17.3寸巨无霸游戏本专属",
+      "防泼水涂层"
+    ],
+    "visual_description": "纯黑机甲硬壳双肩包，正面压印败家之眼反光徽标与赛博斜纹，大容量加厚防震主仓可容纳17.3寸厚重游戏本。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "ROG 17.3寸 游戏本双肩电脑包 黑色 商品图",
+    "retrieval_text": "【商品】ROG 玩家国度 17.3寸硬壳装甲防震游戏本双肩包 【品牌】ROG 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥79.0 (原价¥129.0，直降¥50.0) 【核心规格】可容纳的最大笔记本尺寸:17.3寸 【核心卖点】EVA硬壳防撞外甲；四角气囊防震；17.3寸巨无霸游戏本专属；防泼水涂层 【视觉外观】纯黑机甲硬壳双肩包，正面压印败家之眼反光徽标与赛博斜纹，大容量加厚防震主仓可容纳17.3寸厚重游戏本。",
+    "image_path": "/static/images/SKU-3C-007.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-007.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-008",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "酷态科 17.3寸加厚气囊防震游戏本电脑包",
+    "brand": "CukTech",
+    "original_price": 39.9,
+    "final_price": 29.9,
+    "specs": {
+      "screen_size": 17.3
+    },
+    "highlights": [
+      "四角专利气囊防震",
+      "防泼水牛津布",
+      "适配拯救者/ROG 17.3寸",
+      "加厚毛绒护机内胆"
+    ],
+    "visual_description": "星空黑大号手提内胆包，四角内置立体蜂窝气囊缓冲垫，外层耐磨防泼水牛津布，顺滑双金属拉链开合。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "17.3寸 气囊防震 游戏本手提电脑包 黑色 商品图",
+    "retrieval_text": "【商品】酷态科 17.3寸加厚气囊防震游戏本电脑包 【品牌】CukTech 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥29.9 (原价¥39.9，直降¥10.0) 【核心规格】可容纳的最大笔记本尺寸:17.3寸 【核心卖点】四角专利气囊防震；防泼水牛津布；适配拯救者/ROG 17.3寸；加厚毛绒护机内胆 【视觉外观】星空黑大号手提内胆包，四角内置立体蜂窝气囊缓冲垫，外层耐磨防泼水牛津布，顺滑双金属拉链开合。",
+    "image_path": "/static/images/SKU-3C-008.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-008.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-009",
+    "category": "3c_digital",
+    "sub_category": "laptop_bag",
+    "title": "毕亚兹 15.6寸加厚防震笔记本内胆包 防泼水轻便手提包",
+    "brand": "BIAZE",
+    "original_price": 29.9,
+    "final_price": 18.9,
+    "specs": {
+      "screen_size": 15.6
+    },
+    "highlights": [
+      "珍珠棉防震夹层",
+      "防泼水面料",
+      "轻便手提",
+      "15.6寸主流游戏本/全能本通用"
+    ],
+    "visual_description": "深灰简约手提内胆包，正面带拉链电源收纳副袋，内层加厚防震海绵与柔软绒布，适合15.6寸笔记本日常携带。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "15.6寸 防震笔记本电脑内胆包 手提包 深灰 商品图",
+    "retrieval_text": "【商品】毕亚兹 15.6寸加厚防震笔记本内胆包 防泼水轻便手提包 【品牌】BIAZE 【类目】3c_digital/laptop_bag (笔记本电脑包) 【价格】到手价¥18.9 (原价¥29.9，直降¥11.0) 【核心规格】可容纳的最大笔记本尺寸:15.6寸 【核心卖点】珍珠棉防震夹层；防泼水面料；轻便手提；15.6寸主流游戏本/全能本通用 【视觉外观】深灰简约手提内胆包，正面带拉链电源收纳副袋，内层加厚防震海绵与柔软绒布，适合15.6寸笔记本日常携带。",
+    "image_path": "/static/images/SKU-3C-009.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-009.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-010",
+    "category": "3c_digital",
+    "sub_category": "gan_charger",
+    "title": "酷态科 100W 氮化镓三口快充头 GaN-100W-Pro 笔记本手机同充",
+    "brand": "CukTech",
+    "original_price": 169.0,
+    "final_price": 129.0,
+    "specs": {
+      "power_w": 100,
+      "ports": 3
+    },
+    "highlights": [
+      "100W满血笔记本快充",
+      "2C1A三口智能分流",
+      "体积小巧",
+      "折叠插脚便携"
+    ],
+    "visual_description": "钛灰拼黑撞色外壳，机甲风条纹散热槽，体积紧凑小巧，配备2个Type-C口与1个橙色舌片USB-A口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "酷态科 100W 氮化镓 三口快充头 商品图",
+    "retrieval_text": "【商品】酷态科 100W 氮化镓三口快充头 GaN-100W-Pro 笔记本手机同充 【品牌】CukTech 【类目】3c_digital/gan_charger (氮化镓快充充电器) 【价格】到手价¥129.0 (原价¥169.0，直降¥40.0) 【核心规格】最大输出功率:100W | 可用接口数量:3口 【核心卖点】100W满血笔记本快充；2C1A三口智能分流；体积小巧；折叠插脚便携 【视觉外观】钛灰拼黑撞色外壳，机甲风条纹散热槽，体积紧凑小巧，配备2个Type-C口与1个橙色舌片USB-A口。",
+    "image_path": "/static/images/SKU-3C-010.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-010.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-011",
+    "category": "3c_digital",
+    "sub_category": "gan_charger",
+    "title": "努比亚氘锋 65W 氮化镓双口快充头 GaN-65W-Mini",
+    "brand": "Nubia",
+    "original_price": 69.0,
+    "final_price": 45.0,
+    "specs": {
+      "power_w": 65,
+      "ports": 2
+    },
+    "highlights": [
+      "65W轻薄本快充",
+      "1C1A双口输出",
+      "体积小巧",
+      "折叠插脚"
+    ],
+    "visual_description": "银灰机械风涂装小方块充电器，侧边印有红色氘字Logo，折叠插脚收纳设计，顶部提供1C1A双快充口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "努比亚 氘锋 65W 氮化镓 双口充电器 商品图",
+    "retrieval_text": "【商品】努比亚氘锋 65W 氮化镓双口快充头 GaN-65W-Mini 【品牌】Nubia 【类目】3c_digital/gan_charger (氮化镓快充充电器) 【价格】到手价¥45.0 (原价¥69.0，直降¥24.0) 【核心规格】最大输出功率:65W | 可用接口数量:2口 【核心卖点】65W轻薄本快充；1C1A双口输出；体积小巧；折叠插脚 【视觉外观】银灰机械风涂装小方块充电器，侧边印有红色氘字Logo，折叠插脚收纳设计，顶部提供1C1A双快充口。",
+    "image_path": "/static/images/SKU-3C-011.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-011.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-012",
+    "category": "3c_digital",
+    "sub_category": "power_bank",
+    "title": "酷态科 20000mAh 高密硅碳负极超轻自带线快充充电宝 45W",
+    "brand": "CukTech",
+    "original_price": 149.0,
+    "final_price": 119.0,
+    "specs": {
+      "output_w": 45,
+      "capacity_mah": 20000,
+      "weight_g": 195
+    },
+    "highlights": [
+      "硅碳负极电芯195g超轻机身",
+      "20000mAh大容量",
+      "自带线双向快充",
+      "登机可带"
+    ],
+    "visual_description": "钛灰磨砂超薄卡片式机身，侧边嵌入式编织Type-C自带线，正面LED数显百分比屏幕，掌心大小轻巧便携。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "酷态科 20000毫安 自带线 轻薄充电宝 数显 商品图",
+    "retrieval_text": "【商品】酷态科 20000mAh 高密硅碳负极超轻自带线快充充电宝 45W 【品牌】CukTech 【类目】3c_digital/power_bank (移动电源/充电宝) 【价格】到手价¥119.0 (原价¥149.0，直降¥30.0) 【核心规格】最大输出功率:45W | 标称容量:20000mAh | 整机重量:195g 【核心卖点】硅碳负极电芯195g超轻机身；20000mAh大容量；自带线双向快充；登机可带 【视觉外观】钛灰磨砂超薄卡片式机身，侧边嵌入式编织Type-C自带线，正面LED数显百分比屏幕，掌心大小轻巧便携。",
+    "image_path": "/static/images/SKU-3C-012.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-012.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-013",
+    "category": "3c_digital",
+    "sub_category": "power_bank",
+    "title": "小米 10000mAh 口袋版自带线轻薄快充充电宝 22.5W",
+    "brand": "Xiaomi",
+    "original_price": 79.0,
+    "final_price": 55.0,
+    "specs": {
+      "output_w": 22.5,
+      "capacity_mah": 10000,
+      "weight_g": 185
+    },
+    "highlights": [
+      "185g轻巧塞口袋",
+      "自带线免带线材",
+      "22.5W双向快充",
+      "登机可带"
+    ],
+    "visual_description": "莫兰迪灰圆润口袋移动电源，一体式收纳Type-C自带快充线可兼作挂绳，磨砂亲肤外壳不沾指纹。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "小米 10000mAh 口袋版 自带线充电宝 商品图",
+    "retrieval_text": "【商品】小米 10000mAh 口袋版自带线轻薄快充充电宝 22.5W 【品牌】Xiaomi 【类目】3c_digital/power_bank (移动电源/充电宝) 【价格】到手价¥55.0 (原价¥79.0，直降¥24.0) 【核心规格】最大输出功率:22.5W | 标称容量:10000mAh | 整机重量:185g 【核心卖点】185g轻巧塞口袋；自带线免带线材；22.5W双向快充；登机可带 【视觉外观】莫兰迪灰圆润口袋移动电源，一体式收纳Type-C自带快充线可兼作挂绳，磨砂亲肤外壳不沾指纹。",
+    "image_path": "/static/images/SKU-3C-013.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-013.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-014",
+    "category": "3c_digital",
+    "sub_category": "power_bank",
+    "title": "绿联 20000mAh 100W 笔记本闪充移动电源 数显大功率充电宝",
+    "brand": "UGREEN",
+    "original_price": 139.0,
+    "final_price": 89.0,
+    "specs": {
+      "capacity_mah": 20000,
+      "output_w": 100,
+      "weight_g": 245
+    },
+    "highlights": [
+      "100W大功率充笔记本",
+      "20000mAh长续航",
+      "智能数显屏",
+      "登机可带"
+    ],
+    "visual_description": "深空灰金属喷砂机身，正面大尺寸高清数字显示屏，顶部配2C1A三接口，机身厚实稳重。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "绿联 20000mAh 100W 笔记本充电宝 数显 商品图",
+    "retrieval_text": "【商品】绿联 20000mAh 100W 笔记本闪充移动电源 数显大功率充电宝 【品牌】UGREEN 【类目】3c_digital/power_bank (移动电源/充电宝) 【价格】到手价¥89.0 (原价¥139.0，直降¥50.0) 【核心规格】标称容量:20000mAh | 最大输出功率:100W | 整机重量:245g 【核心卖点】100W大功率充笔记本；20000mAh长续航；智能数显屏；登机可带 【视觉外观】深空灰金属喷砂机身，正面大尺寸高清数字显示屏，顶部配2C1A三接口，机身厚实稳重。",
+    "image_path": "/static/images/SKU-3C-014.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-014.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-015",
+    "category": "3c_digital",
+    "sub_category": "mechanical_keyboard",
+    "title": "VGN V98Pro 三模无线客制化机械键盘 TTC金粉轴V2 Gasket结构",
+    "brand": "VGN",
+    "original_price": 329.0,
+    "final_price": 249.0,
+    "specs": {
+      "switch_type": "linear",
+      "layout": "98_keys",
+      "connectivity": "triple_mode"
+    },
+    "highlights": [
+      "TTC金粉轴V2轻柔线性手感",
+      "Gasket消音结构",
+      "全键热插拔",
+      "RGB背光98配列带小键盘"
+    ],
+    "visual_description": "海盐蓝白双拼PBT球帽，紧凑98键配列保留右侧数字区，窄边框磨砂外壳透出柔和RGB背光。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "VGN V98Pro 三模机械键盘 蓝白 98配列 商品图",
+    "retrieval_text": "【商品】VGN V98Pro 三模无线客制化机械键盘 TTC金粉轴V2 Gasket结构 【品牌】VGN 【类目】3c_digital/mechanical_keyboard (机械键盘) 【价格】到手价¥249.0 (原价¥329.0，直降¥80.0) 【核心规格】轴体手感:linear(线性轴) | 配列:98_keys(98键配列) | 连接方式:triple_mode(三模无线) 【核心卖点】TTC金粉轴V2轻柔线性手感；Gasket消音结构；全键热插拔；RGB背光98配列带小键盘 【视觉外观】海盐蓝白双拼PBT球帽，紧凑98键配列保留右侧数字区，窄边框磨砂外壳透出柔和RGB背光。",
+    "image_path": "/static/images/SKU-3C-015.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-015.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-016",
+    "category": "3c_digital",
+    "sub_category": "mechanical_keyboard",
+    "title": "RK R87 有线单模游戏机械键盘 茶轴微段落 87键紧凑配列",
+    "brand": "RK",
+    "original_price": 149.0,
+    "final_price": 99.0,
+    "specs": {
+      "switch_type": "tactile",
+      "layout": "87_keys",
+      "connectivity": "wired"
+    },
+    "highlights": [
+      "经典茶轴确认感段落手感",
+      "87键无数字区省桌面空间",
+      "全键热插拔",
+      "键线分离"
+    ],
+    "visual_description": "复古灰白配色87键无小键盘紧凑机身，双色注塑透光键帽，侧边带Type-C键线分离接口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "RK R87 87键 灰白 机械键盘 商品图",
+    "retrieval_text": "【商品】RK R87 有线单模游戏机械键盘 茶轴微段落 87键紧凑配列 【品牌】RK 【类目】3c_digital/mechanical_keyboard (机械键盘) 【价格】到手价¥99.0 (原价¥149.0，直降¥50.0) 【核心规格】轴体手感:tactile(段落轴) | 配列:87_keys(87键配列) | 连接方式:wired(有线单模) 【核心卖点】经典茶轴确认感段落手感；87键无数字区省桌面空间；全键热插拔；键线分离 【视觉外观】复古灰白配色87键无小键盘紧凑机身，双色注塑透光键帽，侧边带Type-C键线分离接口。",
+    "image_path": "/static/images/SKU-3C-016.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-016.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-017",
+    "category": "3c_digital",
+    "sub_category": "mechanical_keyboard",
+    "title": "雷柏 V500PRO 104键全尺寸蓝牙双模机械键盘 清脆青轴",
+    "brand": "Rapoo",
+    "original_price": 179.0,
+    "final_price": 129.0,
+    "specs": {
+      "switch_type": "clicky",
+      "layout": "104_keys",
+      "connectivity": "bluetooth"
+    },
+    "highlights": [
+      "清脆咔哒有声青轴",
+      "104键全尺寸办公游戏兼顾",
+      "铝合金上盖悬浮键帽"
+    ],
+    "visual_description": "黑色阳极氧化铝合金拉丝面板，104键全尺寸悬浮式键帽设计，金属质感硬朗耐脏。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "雷柏 V500PRO 104键 黑色 机械键盘 商品图",
+    "retrieval_text": "【商品】雷柏 V500PRO 104键全尺寸蓝牙双模机械键盘 清脆青轴 【品牌】Rapoo 【类目】3c_digital/mechanical_keyboard (机械键盘) 【价格】到手价¥129.0 (原价¥179.0，直降¥50.0) 【核心规格】轴体手感:clicky(有声段落轴) | 配列:104_keys(104键全尺寸配列) | 连接方式:bluetooth(蓝牙双模) 【核心卖点】清脆咔哒有声青轴；104键全尺寸办公游戏兼顾；铝合金上盖悬浮键帽 【视觉外观】黑色阳极氧化铝合金拉丝面板，104键全尺寸悬浮式键帽设计，金属质感硬朗耐脏。",
+    "image_path": "/static/images/SKU-3C-017.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-017.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-018",
+    "category": "3c_digital",
+    "sub_category": "mechanical_keyboard",
+    "title": "迈从 K87 2.4G无线电竞机械键盘 快银线性轴 Gasket热插拔",
+    "brand": "MCHOSE",
+    "original_price": 239.0,
+    "final_price": 179.0,
+    "specs": {
+      "switch_type": "linear",
+      "layout": "87_keys",
+      "connectivity": "2.4g"
+    },
+    "highlights": [
+      "快银轴极速触发直上直下",
+      "1ms低延迟2.4G无线",
+      "Gasket五层填充消音",
+      "RGB灯效热插拔"
+    ],
+    "visual_description": "黑莓粉紫渐变侧刻键帽，87键TKL配列，背部配磁吸金属铭牌与2.4G接收器隐藏收纳仓。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "迈从 K87 87键 渐变 机械键盘 商品图",
+    "retrieval_text": "【商品】迈从 K87 2.4G无线电竞机械键盘 快银线性轴 Gasket热插拔 【品牌】MCHOSE 【类目】3c_digital/mechanical_keyboard (机械键盘) 【价格】到手价¥179.0 (原价¥239.0，直降¥60.0) 【核心规格】轴体手感:linear(线性轴) | 配列:87_keys(87键配列) | 连接方式:2.4g(2.4G无线) 【核心卖点】快银轴极速触发直上直下；1ms低延迟2.4G无线；Gasket五层填充消音；RGB灯效热插拔 【视觉外观】黑莓粉紫渐变侧刻键帽，87键TKL配列，背部配磁吸金属铭牌与2.4G接收器隐藏收纳仓。",
+    "image_path": "/static/images/SKU-3C-018.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-018.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-019",
+    "category": "3c_digital",
+    "sub_category": "nc_headphones",
+    "title": "漫步者 W820NB 双金标版 头戴式主动降噪蓝牙耳机",
+    "brand": "Edifier",
+    "original_price": 329.0,
+    "final_price": 239.0,
+    "specs": {
+      "anc_db": 43,
+      "battery_h": 50,
+      "weight_g": 220
+    },
+    "highlights": [
+      "-43dB深度主动降噪",
+      "50小时超长续航",
+      "220g轻量化久戴不夹头",
+      "Hi-Res双金标音质"
+    ],
+    "visual_description": "云岩白哑光耳罩配柔软蛋白皮耳垫，可伸缩头梁内侧加厚海绵，流线型极简头戴式外观。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "漫步者 W820NB 云岩白 头戴式降噪耳机 商品图",
+    "retrieval_text": "【商品】漫步者 W820NB 双金标版 头戴式主动降噪蓝牙耳机 【品牌】Edifier 【类目】3c_digital/nc_headphones (头戴式降噪耳机) 【价格】到手价¥239.0 (原价¥329.0，直降¥90.0) 【核心规格】降噪深度:43dB | 单次续航:50h | 整机重量:220g 【核心卖点】-43dB深度主动降噪；50小时超长续航；220g轻量化久戴不夹头；Hi-Res双金标音质 【视觉外观】云岩白哑光耳罩配柔软蛋白皮耳垫，可伸缩头梁内侧加厚海绵，流线型极简头戴式外观。",
+    "image_path": "/static/images/SKU-3C-019.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-019.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-020",
+    "category": "3c_digital",
+    "sub_category": "nc_headphones",
+    "title": "倍思 H1i 头戴式无线蓝牙主动降噪耳机 空间音频长续航",
+    "brand": "Baseus",
+    "original_price": 199.0,
+    "final_price": 129.0,
+    "specs": {
+      "anc_db": 38,
+      "battery_h": 65,
+      "weight_g": 225
+    },
+    "highlights": [
+      "65小时跨周超长续航",
+      "-38dB主动降噪",
+      "BISA空间音频",
+      "久戴不夹头"
+    ],
+    "visual_description": "星耀黑圆润耳壳设计，金属转轴支持折叠收纳，耳罩外侧带磨砂同心圆纹理。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "倍思 H1i 黑色 头戴式蓝牙耳机 商品图",
+    "retrieval_text": "【商品】倍思 H1i 头戴式无线蓝牙主动降噪耳机 空间音频长续航 【品牌】Baseus 【类目】3c_digital/nc_headphones (头戴式降噪耳机) 【价格】到手价¥129.0 (原价¥199.0，直降¥70.0) 【核心规格】降噪深度:38dB | 单次续航:65h | 整机重量:225g 【核心卖点】65小时跨周超长续航；-38dB主动降噪；BISA空间音频；久戴不夹头 【视觉外观】星耀黑圆润耳壳设计，金属转轴支持折叠收纳，耳罩外侧带磨砂同心圆纹理。",
+    "image_path": "/static/images/SKU-3C-020.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-020.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-021",
+    "category": "3c_digital",
+    "sub_category": "nc_headphones",
+    "title": "声阔 Soundcore Space One 太空舱头戴式深度降噪耳机",
+    "brand": "Soundcore",
+    "original_price": 599.0,
+    "final_price": 449.0,
+    "specs": {
+      "anc_db": 48,
+      "battery_h": 55,
+      "weight_g": 258
+    },
+    "highlights": [
+      "-48dB自适应深度降噪",
+      "LDAC高清传输",
+      "8度浮动耳罩久戴不夹头",
+      "空间音频"
+    ],
+    "visual_description": "冰川蓝金属光泽耳罩，亮面音符Logo点缀，8度倾斜人体工学转轴搭配记忆海绵全包耳垫。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "声阔 Space One 头戴式降噪耳机 蓝色 商品图",
+    "retrieval_text": "【商品】声阔 Soundcore Space One 太空舱头戴式深度降噪耳机 【品牌】Soundcore 【类目】3c_digital/nc_headphones (头戴式降噪耳机) 【价格】到手价¥449.0 (原价¥599.0，直降¥150.0) 【核心规格】降噪深度:48dB | 单次续航:55h | 整机重量:258g 【核心卖点】-48dB自适应深度降噪；LDAC高清传输；8度浮动耳罩久戴不夹头；空间音频 【视觉外观】冰川蓝金属光泽耳罩，亮面音符Logo点缀，8度倾斜人体工学转轴搭配记忆海绵全包耳垫。",
+    "image_path": "/static/images/SKU-3C-021.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-021.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-022",
+    "category": "3c_digital",
+    "sub_category": "nc_headphones",
+    "title": "QCY H3 轻羽版 头戴式主动降噪蓝牙耳机 学生党图书馆自习",
+    "brand": "QCY",
+    "original_price": 149.0,
+    "final_price": 89.0,
+    "specs": {
+      "anc_db": 30,
+      "battery_h": 35,
+      "weight_g": 195
+    },
+    "highlights": [
+      "195g超轻机身久戴不夹头",
+      "自习室人声降噪",
+      "可折叠便携",
+      "有线无线双模"
+    ],
+    "visual_description": "奶昔白小巧可折叠头戴耳机，轻盈塑料头梁包裹软皮，耳垫亲肤透气适合眼镜党。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "QCY H3 白色 头戴式降噪耳机 商品图",
+    "retrieval_text": "【商品】QCY H3 轻羽版 头戴式主动降噪蓝牙耳机 学生党图书馆自习 【品牌】QCY 【类目】3c_digital/nc_headphones (头戴式降噪耳机) 【价格】到手价¥89.0 (原价¥149.0，直降¥60.0) 【核心规格】降噪深度:30dB | 单次续航:35h | 整机重量:195g 【核心卖点】195g超轻机身久戴不夹头；自习室人声降噪；可折叠便携；有线无线双模 【视觉外观】奶昔白小巧可折叠头戴耳机，轻盈塑料头梁包裹软皮，耳垫亲肤透气适合眼镜党。",
+    "image_path": "/static/images/SKU-3C-022.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-022.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-023",
+    "category": "3c_digital",
+    "sub_category": "usb_hub_cable",
+    "title": "绿联 Type-C拓展坞 5合1扩展坞 4K高清HDMI千兆网口分线器",
+    "brand": "UGREEN",
+    "original_price": 99.0,
+    "final_price": 69.0,
+    "specs": {
+      "port_count": 5,
+      "protocol": "usb3.0"
+    },
+    "highlights": [
+      "5Gbps高速传输",
+      "铝合金外壳高效散热",
+      "即插即用免驱",
+      "支持PD100W供电"
+    ],
+    "visual_description": "深空灰阳极氧化铝合金条形机身，自带编织Type-C短线，侧面排列3个蓝色USB3.0口、1个HDMI口与1个PD口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "绿联 Type-C 五合一拓展坞 铝合金 商品图",
+    "retrieval_text": "【商品】绿联 Type-C拓展坞 5合1扩展坞 4K高清HDMI千兆网口分线器 【品牌】UGREEN 【类目】3c_digital/usb_hub_cable (Type-C拓展坞) 【价格】到手价¥69.0 (原价¥99.0，直降¥30.0) 【核心规格】扩展接口数量:5口 | 协议规格:usb3.0(USB3.0(5Gbps)) 【核心卖点】5Gbps高速传输；铝合金外壳高效散热；即插即用免驱；支持PD100W供电 【视觉外观】深空灰阳极氧化铝合金条形机身，自带编织Type-C短线，侧面排列3个蓝色USB3.0口、1个HDMI口与1个PD口。",
+    "image_path": "/static/images/SKU-3C-023.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-023.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-024",
+    "category": "3c_digital",
+    "sub_category": "usb_hub_cable",
+    "title": "倍思 8合1 Type-C高速扩展坞 10Gbps双屏异显分线器",
+    "brand": "Baseus",
+    "original_price": 199.0,
+    "final_price": 149.0,
+    "specs": {
+      "port_count": 8,
+      "protocol": "usb3.2gen2"
+    },
+    "highlights": [
+      "USB3.2 Gen2 10Gbps秒传大文件",
+      "8口全功能满配",
+      "铝合金外壳",
+      "免驱"
+    ],
+    "visual_description": "枪灰色一体成型铝合金机身，橙色点缀高速USB3.2接口，带收纳槽可将Type-C连接头隐藏防损。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "倍思 八合一 Type-C拓展坞 商品图",
+    "retrieval_text": "【商品】倍思 8合1 Type-C高速扩展坞 10Gbps双屏异显分线器 【品牌】Baseus 【类目】3c_digital/usb_hub_cable (Type-C拓展坞) 【价格】到手价¥149.0 (原价¥199.0，直降¥50.0) 【核心规格】扩展接口数量:8口 | 协议规格:usb3.2gen2(USB3.2 Gen2(10Gbps)) 【核心卖点】USB3.2 Gen2 10Gbps秒传大文件；8口全功能满配；铝合金外壳；免驱 【视觉外观】枪灰色一体成型铝合金机身，橙色点缀高速USB3.2接口，带收纳槽可将Type-C连接头隐藏防损。",
+    "image_path": "/static/images/SKU-3C-024.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-024.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-3C-025",
+    "category": "3c_digital",
+    "sub_category": "usb_hub_cable",
+    "title": "阿卡西斯 雷电4拓展坞 40Gbps高速四口Type-C专业工作站分线器",
+    "brand": "ACASIS",
+    "original_price": 499.0,
+    "final_price": 369.0,
+    "specs": {
+      "port_count": 4,
+      "protocol": "thunderbolt4"
+    },
+    "highlights": [
+      "雷电4满血40Gbps带宽",
+      "支持8K/双4K60Hz显示器",
+      "CNC铝合金外壳散热鳍片",
+      "免驱"
+    ],
+    "visual_description": "银色CNC精雕铝合金方盒机身，表面带凹凸散热鳍片，正面与背面分布4个带闪电标志的雷电4接口。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "阿卡西斯 雷电4 拓展坞 银色铝合金 商品图",
+    "retrieval_text": "【商品】阿卡西斯 雷电4拓展坞 40Gbps高速四口Type-C专业工作站分线器 【品牌】ACASIS 【类目】3c_digital/usb_hub_cable (Type-C拓展坞) 【价格】到手价¥369.0 (原价¥499.0，直降¥130.0) 【核心规格】扩展接口数量:4口 | 协议规格:thunderbolt4(雷电4(40Gbps)) 【核心卖点】雷电4满血40Gbps带宽；支持8K/双4K60Hz显示器；CNC铝合金外壳散热鳍片；免驱 【视觉外观】银色CNC精雕铝合金方盒机身，表面带凹凸散热鳍片，正面与背面分布4个带闪电标志的雷电4接口。",
+    "image_path": "/static/images/SKU-3C-025.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-3C-025.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-001",
+    "category": "apparel",
+    "sub_category": "windbreaker",
+    "title": "拓路者 10000mm暴雨级防水超轻冲锋衣 280g便携户外防风外套",
+    "brand": "PioneerCamp",
+    "original_price": 529.0,
+    "final_price": 399.0,
+    "specs": {
+      "waterproof_mm": 10000,
+      "weight_g": 280
+    },
+    "highlights": [
+      "10000mm全压胶暴雨级防水",
+      "280g超轻量化可收纳进袋",
+      "三合一内胆挂载系统",
+      "腋下透气拉链"
+    ],
+    "visual_description": "山系苍岭绿拼碳黑连帽冲锋衣，全衣防水压胶拉链，立体防风护脖高领，微宽松户外机能剪裁。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "户外冲锋衣 绿色 防水防风外套 商品图",
+    "retrieval_text": "【商品】拓路者 10000mm暴雨级防水超轻冲锋衣 280g便携户外防风外套 【品牌】PioneerCamp 【类目】apparel/windbreaker (户外冲锋衣) 【价格】到手价¥399.0 (原价¥529.0，直降¥130.0) 【核心规格】静水压防水指数:10000mm | 整衣重量:280g 【核心卖点】10000mm全压胶暴雨级防水；280g超轻量化可收纳进袋；三合一内胆挂载系统；腋下透气拉链 【视觉外观】山系苍岭绿拼碳黑连帽冲锋衣，全衣防水压胶拉链，立体防风护脖高领，微宽松户外机能剪裁。",
+    "image_path": "/static/images/SKU-APP-001.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-001.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-002",
+    "category": "apparel",
+    "sub_category": "windbreaker",
+    "title": "迪卡侬 MH100 城市通勤轻便防水冲锋衣外套 5000mm防风夹克",
+    "brand": "Decathlon",
+    "original_price": 249.0,
+    "final_price": 179.0,
+    "specs": {
+      "waterproof_mm": 5000,
+      "weight_g": 320
+    },
+    "highlights": [
+      "5000mm日常防中雨",
+      "320g轻便易穿",
+      "可收纳进袋",
+      "三合一兼容拉链"
+    ],
+    "visual_description": "岩石灰简约连帽防水夹克，门襟魔术贴加拉链双层防风，袖口松紧收口，可整件折叠塞入侧袋。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "迪卡侬 灰色 连帽防水冲锋衣夹克 商品图",
+    "retrieval_text": "【商品】迪卡侬 MH100 城市通勤轻便防水冲锋衣外套 5000mm防风夹克 【品牌】Decathlon 【类目】apparel/windbreaker (户外冲锋衣) 【价格】到手价¥179.0 (原价¥249.0，直降¥70.0) 【核心规格】静水压防水指数:5000mm | 整衣重量:320g 【核心卖点】5000mm日常防中雨；320g轻便易穿；可收纳进袋；三合一兼容拉链 【视觉外观】岩石灰简约连帽防水夹克，门襟魔术贴加拉链双层防风，袖口松紧收口，可整件折叠塞入侧袋。",
+    "image_path": "/static/images/SKU-APP-002.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-002.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-003",
+    "category": "apparel",
+    "sub_category": "hoodie",
+    "title": "日系重磅 300g/㎡ 新疆长绒棉宽松落肩圆领卫衣",
+    "brand": "UniqCraft",
+    "original_price": 169.0,
+    "final_price": 129.0,
+    "specs": {
+      "fabric_weight_gm2": 300
+    },
+    "highlights": [
+      "300g/㎡重磅面料不透肉",
+      "领口双层螺纹久洗不变形",
+      "落肩版型微阔显瘦",
+      "不起球"
+    ],
+    "visual_description": "高级花灰色无帽圆领套头卫衣，领口加密粗罗纹加固，落肩微阔版型，纯棉毛圈底纹理细腻。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "日系重磅 花灰色 圆领套头卫衣 商品图",
+    "retrieval_text": "【商品】日系重磅 300g/㎡ 新疆长绒棉宽松落肩圆领卫衣 【品牌】UniqCraft 【类目】apparel/hoodie (卫衣) 【价格】到手价¥129.0 (原价¥169.0，直降¥40.0) 【核心规格】面料克重:300g/㎡ 【核心卖点】300g/㎡重磅面料不透肉；领口双层螺纹久洗不变形；落肩版型微阔显瘦；不起球 【视觉外观】高级花灰色无帽圆领套头卫衣，领口加密粗罗纹加固，落肩微阔版型，纯棉毛圈底纹理细腻。",
+    "image_path": "/static/images/SKU-APP-003.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-003.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-004",
+    "category": "apparel",
+    "sub_category": "hoodie",
+    "title": "美式复古 400g/㎡ 超重磅三层加绒连帽卫衣 立体挺括帽型",
+    "brand": "CleanFit",
+    "original_price": 219.0,
+    "final_price": 159.0,
+    "specs": {
+      "fabric_weight_gm2": 400
+    },
+    "highlights": [
+      "400g/㎡重磅硬挺不塌帽",
+      "三层加绒保暖锁温",
+      "落肩版型",
+      "抗静电不起球"
+    ],
+    "visual_description": "深藏青色重磅连帽卫衣，双层立体大帽兜无抽绳极简设计，腹前袋鼠兜，内层厚实复合银狐绒。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "美式重磅 藏青色 连帽卫衣 商品图",
+    "retrieval_text": "【商品】美式复古 400g/㎡ 超重磅三层加绒连帽卫衣 立体挺括帽型 【品牌】CleanFit 【类目】apparel/hoodie (卫衣) 【价格】到手价¥159.0 (原价¥219.0，直降¥60.0) 【核心规格】面料克重:400g/㎡ 【核心卖点】400g/㎡重磅硬挺不塌帽；三层加绒保暖锁温；落肩版型；抗静电不起球 【视觉外观】深藏青色重磅连帽卫衣，双层立体大帽兜无抽绳极简设计，腹前袋鼠兜，内层厚实复合银狐绒。",
+    "image_path": "/static/images/SKU-APP-004.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-004.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-005",
+    "category": "apparel",
+    "sub_category": "windbreaker",
+    "title": "森马 都市防泼水轻薄防风外套 户外休闲连帽夹克",
+    "brand": "Semir",
+    "original_price": 199.0,
+    "final_price": 139.0,
+    "specs": {
+      "waterproof_mm": 3000,
+      "weight_g": 370
+    },
+    "highlights": [
+      "3000mm防小雨泼水",
+      "370g常规整衣重量",
+      "撞色插肩袖时尚百搭",
+      "可收纳进袋"
+    ],
+    "visual_description": "米白拼海军蓝撞色连帽风衣夹克，下摆抽绳调节，胸前简约字母印花，偏日常休闲廓形。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "撞色连帽防风夹克 户外休闲外套 商品图",
+    "retrieval_text": "【商品】森马 都市防泼水轻薄防风外套 户外休闲连帽夹克 【品牌】Semir 【类目】apparel/windbreaker (户外冲锋衣) 【价格】到手价¥139.0 (原价¥199.0，直降¥60.0) 【核心规格】静水压防水指数:3000mm | 整衣重量:370g 【核心卖点】3000mm防小雨泼水；370g常规整衣重量；撞色插肩袖时尚百搭；可收纳进袋 【视觉外观】米白拼海军蓝撞色连帽风衣夹克，下摆抽绳调节，胸前简约字母印花，偏日常休闲廓形。",
+    "image_path": "/static/images/SKU-APP-005.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-005.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-006",
+    "category": "apparel",
+    "sub_category": "windbreaker",
+    "title": "骆驼 高海拔专业三合一硬壳冲锋衣 15000mm防水抗寒防风外套",
+    "brand": "CAMEL",
+    "original_price": 799.0,
+    "final_price": 569.0,
+    "specs": {
+      "waterproof_mm": 15000,
+      "weight_g": 395
+    },
+    "highlights": [
+      "15000mm专业高山硬壳防水",
+      "三合一可拆卸内胆系统",
+      "YKK双向防水拉链",
+      "耐磨防刮"
+    ],
+    "visual_description": "曜石黑挺括硬壳冲锋衣，高立领防风帽带抽绳卡扣，肩肘部加厚耐磨拼接，配可拆卸内胆挂载扣。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "骆驼 黑色 三合一冲锋衣 户外外套 商品图",
+    "retrieval_text": "【商品】骆驼 高海拔专业三合一硬壳冲锋衣 15000mm防水抗寒防风外套 【品牌】CAMEL 【类目】apparel/windbreaker (户外冲锋衣) 【价格】到手价¥569.0 (原价¥799.0，直降¥230.0) 【核心规格】静水压防水指数:15000mm | 整衣重量:395g 【核心卖点】15000mm专业高山硬壳防水；三合一可拆卸内胆系统；YKK双向防水拉链；耐磨防刮 【视觉外观】曜石黑挺括硬壳冲锋衣，高立领防风帽带抽绳卡扣，肩肘部加厚耐磨拼接，配可拆卸内胆挂载扣。",
+    "image_path": "/static/images/SKU-APP-006.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-006.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-007",
+    "category": "apparel",
+    "sub_category": "hoodie",
+    "title": "早秋轻薄 220g/㎡ 纯棉透气基础款圆领卫衣 打底外穿皆宜",
+    "brand": "BasicLab",
+    "original_price": 99.0,
+    "final_price": 69.0,
+    "specs": {
+      "fabric_weight_gm2": 220
+    },
+    "highlights": [
+      "220g/㎡面料轻盈透气不闷汗",
+      "落肩版型",
+      "柔顺亲肤不起球"
+    ],
+    "visual_description": "燕麦杏色轻薄圆领长袖卫衣，合身微松剪裁，袖口与下摆弹性罗纹收口，适合春秋季单穿或叠穿。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "燕麦色 基础款 圆领长袖卫衣 商品图",
+    "retrieval_text": "【商品】早秋轻薄 220g/㎡ 纯棉透气基础款圆领卫衣 打底外穿皆宜 【品牌】BasicLab 【类目】apparel/hoodie (卫衣) 【价格】到手价¥69.0 (原价¥99.0，直降¥30.0) 【核心规格】面料克重:220g/㎡ 【核心卖点】220g/㎡面料轻盈透气不闷汗；落肩版型；柔顺亲肤不起球 【视觉外观】燕麦杏色轻薄圆领长袖卫衣，合身微松剪裁，袖口与下摆弹性罗纹收口，适合春秋季单穿或叠穿。",
+    "image_path": "/static/images/SKU-APP-007.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-007.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-008",
+    "category": "apparel",
+    "sub_category": "hoodie",
+    "title": "街头廓形 360g/㎡ 重磅水洗做旧拉链连帽卫衣外套",
+    "brand": "StreetVibe",
+    "original_price": 189.0,
+    "final_price": 139.0,
+    "specs": {
+      "fabric_weight_gm2": 360
+    },
+    "highlights": [
+      "360g/㎡高克重面料挺括有型",
+      "复古水洗炭灰工艺",
+      "落肩版型",
+      "双向金属拉链不起球"
+    ],
+    "visual_description": "水洗炭灰色拉链连帽卫衣，做旧复古炒色质感，宽大落肩袖，正面古银色金属拉链贯通。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "水洗炭灰 拉链连帽卫衣 商品图",
+    "retrieval_text": "【商品】街头廓形 360g/㎡ 重磅水洗做旧拉链连帽卫衣外套 【品牌】StreetVibe 【类目】apparel/hoodie (卫衣) 【价格】到手价¥139.0 (原价¥189.0，直降¥50.0) 【核心规格】面料克重:360g/㎡ 【核心卖点】360g/㎡高克重面料挺括有型；复古水洗炭灰工艺；落肩版型；双向金属拉链不起球 【视觉外观】水洗炭灰色拉链连帽卫衣，做旧复古炒色质感，宽大落肩袖，正面古银色金属拉链贯通。",
+    "image_path": "/static/images/SKU-APP-008.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-008.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-009",
+    "category": "apparel",
+    "sub_category": "knit_cardigan",
+    "title": "慵懒风 310g/㎡ 软糯绵羊毛混纺 V领单排扣针织开衫外套",
+    "brand": "WarmKnit",
+    "original_price": 199.0,
+    "final_price": 149.0,
+    "specs": {
+      "fabric_weight_gm2": 310
+    },
+    "highlights": [
+      "310g/㎡厚实针织面料",
+      "软糯不扎贴身穿",
+      "抗起球纱线不易起球",
+      "复古琥珀牛角扣"
+    ],
+    "visual_description": "焦糖驼色V领宽松针织开衫，表面细腻绒感，门襟五粒琥珀纹纽扣，两侧对称插袋。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "驼色 V领针织开衫 毛衣外套 商品图",
+    "retrieval_text": "【商品】慵懒风 310g/㎡ 软糯绵羊毛混纺 V领单排扣针织开衫外套 【品牌】WarmKnit 【类目】apparel/knit_cardigan (针织开衫) 【价格】到手价¥149.0 (原价¥199.0，直降¥50.0) 【核心规格】面料克重:310g/㎡ 【核心卖点】310g/㎡厚实针织面料；软糯不扎贴身穿；抗起球纱线不易起球；复古琥珀牛角扣 【视觉外观】焦糖驼色V领宽松针织开衫，表面细腻绒感，门襟五粒琥珀纹纽扣，两侧对称插袋。",
+    "image_path": "/static/images/SKU-APP-009.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-009.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-010",
+    "category": "apparel",
+    "sub_category": "knit_cardigan",
+    "title": "春季薄款 200g/㎡ 冰丝棉透气空调衫针织开衫",
+    "brand": "UniqCraft",
+    "original_price": 129.0,
+    "final_price": 89.0,
+    "specs": {
+      "fabric_weight_gm2": 200
+    },
+    "highlights": [
+      "200g/㎡轻薄透气针织",
+      "软糯不扎",
+      "机洗不易起球不变形"
+    ],
+    "visual_description": "雾霾蓝细针平纹薄款针织开衫，垂坠感强，简约同色小圆扣，适合办公室空调房叠穿。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "雾霾蓝 薄款针织开衫 外套 商品图",
+    "retrieval_text": "【商品】春季薄款 200g/㎡ 冰丝棉透气空调衫针织开衫 【品牌】UniqCraft 【类目】apparel/knit_cardigan (针织开衫) 【价格】到手价¥89.0 (原价¥129.0，直降¥40.0) 【核心规格】面料克重:200g/㎡ 【核心卖点】200g/㎡轻薄透气针织；软糯不扎；机洗不易起球不变形 【视觉外观】雾霾蓝细针平纹薄款针织开衫，垂坠感强，简约同色小圆扣，适合办公室空调房叠穿。",
+    "image_path": "/static/images/SKU-APP-010.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-010.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-011",
+    "category": "apparel",
+    "sub_category": "knit_cardigan",
+    "title": "学院风 380g/㎡ 重磅粗针麻花编织加厚毛衣针织开衫",
+    "brand": "CampusClub",
+    "original_price": 259.0,
+    "final_price": 189.0,
+    "specs": {
+      "fabric_weight_gm2": 380
+    },
+    "highlights": [
+      "380g/㎡加厚重磅针织保暖",
+      "立体复古麻花绞花织法",
+      "软糯不扎",
+      "不易起球"
+    ],
+    "visual_description": "奶油白粗针绞花针织开衫，领口袖口藏青撞色条纹装饰，厚实饱满有分量感。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "学院风 奶油白 麻花针织开衫 毛衣 商品图",
+    "retrieval_text": "【商品】学院风 380g/㎡ 重磅粗针麻花编织加厚毛衣针织开衫 【品牌】CampusClub 【类目】apparel/knit_cardigan (针织开衫) 【价格】到手价¥189.0 (原价¥259.0，直降¥70.0) 【核心规格】面料克重:380g/㎡ 【核心卖点】380g/㎡加厚重磅针织保暖；立体复古麻花绞花织法；软糯不扎；不易起球 【视觉外观】奶油白粗针绞花针织开衫，领口袖口藏青撞色条纹装饰，厚实饱满有分量感。",
+    "image_path": "/static/images/SKU-APP-011.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-011.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-012",
+    "category": "apparel",
+    "sub_category": "knit_cardigan",
+    "title": "日系极简 260g/㎡ 纯棉华夫格肌理立领拉链针织开衫",
+    "brand": "BasicLab",
+    "original_price": 169.0,
+    "final_price": 119.0,
+    "specs": {
+      "fabric_weight_gm2": 260
+    },
+    "highlights": [
+      "260g/㎡立体华夫格透气肌理",
+      "软糯不扎",
+      "精梳棉不易起球"
+    ],
+    "visual_description": "炭黑色华夫格凹凸纹理针织开衫，微立领拉链款式，干练利落不显臃肿。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "黑色 华夫格 拉链针织开衫 商品图",
+    "retrieval_text": "【商品】日系极简 260g/㎡ 纯棉华夫格肌理立领拉链针织开衫 【品牌】BasicLab 【类目】apparel/knit_cardigan (针织开衫) 【价格】到手价¥119.0 (原价¥169.0，直降¥50.0) 【核心规格】面料克重:260g/㎡ 【核心卖点】260g/㎡立体华夫格透气肌理；软糯不扎；精梳棉不易起球 【视觉外观】炭黑色华夫格凹凸纹理针织开衫，微立领拉链款式，干练利落不显臃肿。",
+    "image_path": "/static/images/SKU-APP-012.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-012.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-013",
+    "category": "apparel",
+    "sub_category": "cargo_pants",
+    "title": "日系军绿纯棉斜纹多口袋直筒工装裤 水洗耐磨长裤",
+    "brand": "Military Lab",
+    "original_price": 179.0,
+    "final_price": 129.0,
+    "specs": {
+      "material": "cotton",
+      "fit": "regular"
+    },
+    "highlights": [
+      "100%纯棉加密斜纹布",
+      "大腿立体风琴多口袋",
+      "合身直筒修饰腿型",
+      "耐磨耐洗"
+    ],
+    "visual_description": "经典橄榄军绿色直筒工装长裤，两侧带翻盖暗扣大口袋，纯棉水洗哑光质感，裤型挺括。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "军绿色 纯棉直筒多口袋工装裤 商品图",
+    "retrieval_text": "【商品】日系军绿纯棉斜纹多口袋直筒工装裤 水洗耐磨长裤 【品牌】Military Lab 【类目】apparel/cargo_pants (工装裤) 【价格】到手价¥129.0 (原价¥179.0，直降¥50.0) 【核心规格】主面料:cotton(纯棉) | 版型:regular(合身直筒) 【核心卖点】100%纯棉加密斜纹布；大腿立体风琴多口袋；合身直筒修饰腿型；耐磨耐洗 【视觉外观】经典橄榄军绿色直筒工装长裤，两侧带翻盖暗扣大口袋，纯棉水洗哑光质感，裤型挺括。",
+    "image_path": "/static/images/SKU-APP-013.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-013.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-014",
+    "category": "apparel",
+    "sub_category": "cargo_pants",
+    "title": "户外机能防撕裂尼龙宽松阔腿伞兵工装裤 抽绳束脚两穿",
+    "brand": "PioneerCamp",
+    "original_price": 219.0,
+    "final_price": 159.0,
+    "specs": {
+      "material": "nylon",
+      "fit": "loose"
+    },
+    "highlights": [
+      "防撕裂格子尼龙耐磨面料",
+      "膝部立体打褶宽松阔腿",
+      "裤脚抽绳束脚垂感阔腿两穿",
+      "多口袋"
+    ],
+    "visual_description": "暗夜黑宽松廓形机能伞兵裤，膝盖处立体折叠剪裁，微光泽防泼水尼龙面料，裤脚配弹力猪鼻扣抽绳。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "黑色 尼龙宽松伞兵工装裤 商品图",
+    "retrieval_text": "【商品】户外机能防撕裂尼龙宽松阔腿伞兵工装裤 抽绳束脚两穿 【品牌】PioneerCamp 【类目】apparel/cargo_pants (工装裤) 【价格】到手价¥159.0 (原价¥219.0，直降¥60.0) 【核心规格】主面料:nylon(防撕裂尼龙) | 版型:loose(宽松阔腿) 【核心卖点】防撕裂格子尼龙耐磨面料；膝部立体打褶宽松阔腿；裤脚抽绳束脚垂感阔腿两穿；多口袋 【视觉外观】暗夜黑宽松廓形机能伞兵裤，膝盖处立体折叠剪裁，微光泽防泼水尼龙面料，裤脚配弹力猪鼻扣抽绳。",
+    "image_path": "/static/images/SKU-APP-014.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-014.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-015",
+    "category": "apparel",
+    "sub_category": "cargo_pants",
+    "title": "都市通勤弹力棉混纺修身束脚工装九分裤 显高利落",
+    "brand": "CleanFit",
+    "original_price": 149.0,
+    "final_price": 99.0,
+    "specs": {
+      "material": "cotton_blend",
+      "fit": "slim"
+    },
+    "highlights": [
+      "高弹力棉混纺蹲坐不紧绷",
+      "上宽下窄修身束脚",
+      "隐形拉链多口袋",
+      "耐磨抗皱"
+    ],
+    "visual_description": "卡其色修身小脚工装裤，罗纹弹力束脚口，侧面贴合式斜插拉链袋，线条干净利落。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "卡其色 修身束脚工装裤 商品图",
+    "retrieval_text": "【商品】都市通勤弹力棉混纺修身束脚工装九分裤 显高利落 【品牌】CleanFit 【类目】apparel/cargo_pants (工装裤) 【价格】到手价¥99.0 (原价¥149.0，直降¥50.0) 【核心规格】主面料:cotton_blend(棉混纺) | 版型:slim(修身版型) 【核心卖点】高弹力棉混纺蹲坐不紧绷；上宽下窄修身束脚；隐形拉链多口袋；耐磨抗皱 【视觉外观】卡其色修身小脚工装裤，罗纹弹力束脚口，侧面贴合式斜插拉链袋，线条干净利落。",
+    "image_path": "/static/images/SKU-APP-015.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-015.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-016",
+    "category": "apparel",
+    "sub_category": "cargo_pants",
+    "title": "美式复古高密涤纶抗皱宽松阔腿多袋工装长裤",
+    "brand": "StreetVibe",
+    "original_price": 139.0,
+    "final_price": 89.0,
+    "specs": {
+      "material": "polyester",
+      "fit": "loose"
+    },
+    "highlights": [
+      "免烫抗皱聚酯纤维",
+      "垂坠阔腿大廓形",
+      "大容量多口袋",
+      "耐磨不粘毛"
+    ],
+    "visual_description": "深灰色宽松阔腿工装裤，垂感顺滑抗皱面料，双膝加固贴布与立体工装侧袋设计。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "深灰色 宽松阔腿工装裤 商品图",
+    "retrieval_text": "【商品】美式复古高密涤纶抗皱宽松阔腿多袋工装长裤 【品牌】StreetVibe 【类目】apparel/cargo_pants (工装裤) 【价格】到手价¥89.0 (原价¥139.0，直降¥50.0) 【核心规格】主面料:polyester(聚酯纤维) | 版型:loose(宽松阔腿) 【核心卖点】免烫抗皱聚酯纤维；垂坠阔腿大廓形；大容量多口袋；耐磨不粘毛 【视觉外观】深灰色宽松阔腿工装裤，垂感顺滑抗皱面料，双膝加固贴布与立体工装侧袋设计。",
+    "image_path": "/static/images/SKU-APP-016.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-016.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-017",
+    "category": "apparel",
+    "sub_category": "tshirt",
+    "title": "重磅 280g/㎡ 新疆长绒棉纯白短袖T恤 防凸点不透肉打底衫",
+    "brand": "UniqCraft",
+    "original_price": 89.0,
+    "final_price": 59.0,
+    "specs": {
+      "fabric_weight_gm2": 280
+    },
+    "highlights": [
+      "280g/㎡高克重重磅不透",
+      "二本针加固领口不变形",
+      "100%新疆长绒棉"
+    ],
+    "visual_description": "纯净本白色重磅圆领短袖T恤，加宽粗罗纹高密领口，面料厚实硬挺不贴身。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "重磅纯白圆领短袖T恤 男款女款 商品图",
+    "retrieval_text": "【商品】重磅 280g/㎡ 新疆长绒棉纯白短袖T恤 防凸点不透肉打底衫 【品牌】UniqCraft 【类目】apparel/tshirt (短袖T恤) 【价格】到手价¥59.0 (原价¥89.0，直降¥30.0) 【核心规格】面料克重:280g/㎡ 【核心卖点】280g/㎡高克重重磅不透；二本针加固领口不变形；100%新疆长绒棉 【视觉外观】纯净本白色重磅圆领短袖T恤，加宽粗罗纹高密领口，面料厚实硬挺不贴身。",
+    "image_path": "/static/images/SKU-APP-017.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-017.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-018",
+    "category": "apparel",
+    "sub_category": "tshirt",
+    "title": "夏日凉感 190g/㎡ 精梳棉透气吸汗基础款短袖T恤",
+    "brand": "BasicLab",
+    "original_price": 59.0,
+    "final_price": 39.0,
+    "specs": {
+      "fabric_weight_gm2": 190
+    },
+    "highlights": [
+      "190g/㎡轻薄透气排汗",
+      "领口不变形",
+      "亲肤柔软打底"
+    ],
+    "visual_description": "浅雾蓝基础款合身短袖T恤，丝光柔顺棉质表面，车线工整细腻。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "浅蓝色 纯棉基础款短袖T恤 商品图",
+    "retrieval_text": "【商品】夏日凉感 190g/㎡ 精梳棉透气吸汗基础款短袖T恤 【品牌】BasicLab 【类目】apparel/tshirt (短袖T恤) 【价格】到手价¥39.0 (原价¥59.0，直降¥20.0) 【核心规格】面料克重:190g/㎡ 【核心卖点】190g/㎡轻薄透气排汗；领口不变形；亲肤柔软打底 【视觉外观】浅雾蓝基础款合身短袖T恤，丝光柔顺棉质表面，车线工整细腻。",
+    "image_path": "/static/images/SKU-APP-018.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-018.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-019",
+    "category": "apparel",
+    "sub_category": "tshirt",
+    "title": "美式高街 310g/㎡ 超重磅水洗炭黑落肩廓形短袖T恤",
+    "brand": "StreetVibe",
+    "original_price": 119.0,
+    "final_price": 79.0,
+    "specs": {
+      "fabric_weight_gm2": 310
+    },
+    "highlights": [
+      "310g/㎡殿堂级重磅不透",
+      "复古酵洗炭黑质感",
+      "三本针领口不变形"
+    ],
+    "visual_description": "复古水洗炭黑色五分袖落肩T恤，粗犷美式肌理棉感，立体廓形藏肉显瘦。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "水洗炭黑 重磅落肩短袖T恤 商品图",
+    "retrieval_text": "【商品】美式高街 310g/㎡ 超重磅水洗炭黑落肩廓形短袖T恤 【品牌】StreetVibe 【类目】apparel/tshirt (短袖T恤) 【价格】到手价¥79.0 (原价¥119.0，直降¥40.0) 【核心规格】面料克重:310g/㎡ 【核心卖点】310g/㎡殿堂级重磅不透；复古酵洗炭黑质感；三本针领口不变形 【视觉外观】复古水洗炭黑色五分袖落肩T恤，粗犷美式肌理棉感，立体廓形藏肉显瘦。",
+    "image_path": "/static/images/SKU-APP-019.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-019.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-APP-020",
+    "category": "apparel",
+    "sub_category": "tshirt",
+    "title": "索罗娜 Sorona 240g/㎡ 凉感抗皱重磅短袖T恤 久穿不垮",
+    "brand": "CleanFit",
+    "original_price": 99.0,
+    "final_price": 69.0,
+    "specs": {
+      "fabric_weight_gm2": 240
+    },
+    "highlights": [
+      "240g/㎡黄金克重重磅不透",
+      "Sorona纤维冰感抗皱",
+      "机洗50次领口不变形"
+    ],
+    "visual_description": "森林绿微宽松短袖T恤，面料自带微弹光泽与垂坠感，久折无折痕。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "墨绿色 重磅纯色短袖T恤 商品图",
+    "retrieval_text": "【商品】索罗娜 Sorona 240g/㎡ 凉感抗皱重磅短袖T恤 久穿不垮 【品牌】CleanFit 【类目】apparel/tshirt (短袖T恤) 【价格】到手价¥69.0 (原价¥99.0，直降¥30.0) 【核心规格】面料克重:240g/㎡ 【核心卖点】240g/㎡黄金克重重磅不透；Sorona纤维冰感抗皱；机洗50次领口不变形 【视觉外观】森林绿微宽松短袖T恤，面料自带微弹光泽与垂坠感，久折无折痕。",
+    "image_path": "/static/images/SKU-APP-020.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-APP-020.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-001",
+    "category": "beauty",
+    "sub_category": "sunscreen",
+    "title": "珀莱雅 轻享阳光水感防晒霜 60ml 大容量户外高倍防晒乳 SPF50+ PA++++",
+    "brand": "PROYA",
+    "original_price": 119.0,
+    "final_price": 89.0,
+    "specs": {
+      "pa": "pa_plus_plus_plus_plus",
+      "spf": 50,
+      "volume_ml": 60
+    },
+    "highlights": [
+      "SPF50+ PA++++全波段高倍防晒",
+      "60ml全身涂抹大瓶装",
+      "水感成膜快不搓泥",
+      "不泛白"
+    ],
+    "visual_description": "鹅黄色扁圆流线型软管瓶身，金色旋盖，正面印有醒目SPF50+ PA++++字样，乳液质地轻盈水润。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "防晒霜 SPF50+ PA++++ 60ml 黄色瓶 商品图",
+    "retrieval_text": "【商品】珀莱雅 轻享阳光水感防晒霜 60ml 大容量户外高倍防晒乳 SPF50+ PA++++ 【品牌】PROYA 【类目】beauty/sunscreen (防晒霜) 【价格】到手价¥89.0 (原价¥119.0，直降¥30.0) 【核心规格】PA 防护等级:pa_plus_plus_plus_plus(PA++++) | 防晒指数 SPF:50 | 净含量:60ml 【核心卖点】SPF50+ PA++++全波段高倍防晒；60ml全身涂抹大瓶装；水感成膜快不搓泥；不泛白 【视觉外观】鹅黄色扁圆流线型软管瓶身，金色旋盖，正面印有醒目SPF50+ PA++++字样，乳液质地轻盈水润。",
+    "image_path": "/static/images/SKU-BEA-001.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-001.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-002",
+    "category": "beauty",
+    "sub_category": "sunscreen",
+    "title": "蜜丝婷 小黄帽清爽防晒乳 30ml 便携装高倍面部防晒霜 SPF50+ PA++++",
+    "brand": "Mistine",
+    "original_price": 79.0,
+    "final_price": 55.0,
+    "specs": {
+      "pa": "pa_plus_plus_plus_plus",
+      "spf": 50,
+      "volume_ml": 30
+    },
+    "highlights": [
+      "SPF50+ PA++++热带级防晒力",
+      "30ml随身便携",
+      "跟妆服帖不搓泥",
+      "清爽不泛白"
+    ],
+    "visual_description": "白色管身搭配活力亮黄色斜面瓶盖（小黄帽造型），小巧30ml管体方便放进随身化妆包。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "蜜丝婷 小黄帽防晒霜 SPF50+ 商品图",
+    "retrieval_text": "【商品】蜜丝婷 小黄帽清爽防晒乳 30ml 便携装高倍面部防晒霜 SPF50+ PA++++ 【品牌】Mistine 【类目】beauty/sunscreen (防晒霜) 【价格】到手价¥55.0 (原价¥79.0，直降¥24.0) 【核心规格】PA 防护等级:pa_plus_plus_plus_plus(PA++++) | 防晒指数 SPF:50 | 净含量:30ml 【核心卖点】SPF50+ PA++++热带级防晒力；30ml随身便携；跟妆服帖不搓泥；清爽不泛白 【视觉外观】白色管身搭配活力亮黄色斜面瓶盖（小黄帽造型），小巧30ml管体方便放进随身化妆包。",
+    "image_path": "/static/images/SKU-BEA-002.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-002.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-003",
+    "category": "beauty",
+    "sub_category": "sunscreen",
+    "title": "薇诺娜 清透温和日常通勤防晒乳 30ml 敏感肌物理防晒 SPF30 PA+++",
+    "brand": "Winona",
+    "original_price": 69.0,
+    "final_price": 45.0,
+    "specs": {
+      "spf": 30,
+      "pa": "pa_plus_plus_plus",
+      "volume_ml": 30
+    },
+    "highlights": [
+      "SPF30 PA+++日常室内通勤",
+      "温和免卸妆",
+      "不搓泥",
+      "不泛白"
+    ],
+    "visual_description": "医美极简红白配色细长按压管，真空泵头干净卫生，适合日常低强度紫外线防护。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "薇诺娜 清透防晒乳 红白瓶 商品图",
+    "retrieval_text": "【商品】薇诺娜 清透温和日常通勤防晒乳 30ml 敏感肌物理防晒 SPF30 PA+++ 【品牌】Winona 【类目】beauty/sunscreen (防晒霜) 【价格】到手价¥45.0 (原价¥69.0，直降¥24.0) 【核心规格】防晒指数 SPF:30 | PA 防护等级:pa_plus_plus_plus(PA+++) | 净含量:30ml 【核心卖点】SPF30 PA+++日常室内通勤；温和免卸妆；不搓泥；不泛白 【视觉外观】医美极简红白配色细长按压管，真空泵头干净卫生，适合日常低强度紫外线防护。",
+    "image_path": "/static/images/SKU-BEA-003.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-003.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-004",
+    "category": "beauty",
+    "sub_category": "facial_cream",
+    "title": "适乐肤 C霜 三重神经酰胺NP深层保湿修护面霜 50ml 干敏皮救星",
+    "brand": "CeraVe",
+    "original_price": 109.0,
+    "final_price": 79.0,
+    "specs": {
+      "key_ingredient": "ceramide_np",
+      "skin_type": "dry_sensitive",
+      "volume_ml": 50
+    },
+    "highlights": [
+      "三重神经酰胺NP强韧屏障",
+      "MVE渐进缓释24小时保湿",
+      "干敏皮换季修护屏障",
+      "无香精不闷痘"
+    ],
+    "visual_description": "蓝白医疗感广口罐装面霜，膏体呈绵密冰淇淋质地，哑光清爽不泛油光。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "适乐肤 C霜 神经酰胺保湿面霜 蓝白罐 商品图",
+    "retrieval_text": "【商品】适乐肤 C霜 三重神经酰胺NP深层保湿修护面霜 50ml 干敏皮救星 【品牌】CeraVe 【类目】beauty/facial_cream (保湿修护面霜) 【价格】到手价¥79.0 (原价¥109.0，直降¥30.0) 【核心规格】核心成分:ceramide_np(神经酰胺NP) | 适用肤质:dry_sensitive(干敏肌) | 净含量:50ml 【核心卖点】三重神经酰胺NP强韧屏障；MVE渐进缓释24小时保湿；干敏皮换季修护屏障；无香精不闷痘 【视觉外观】蓝白医疗感广口罐装面霜，膏体呈绵密冰淇淋质地，哑光清爽不泛油光。",
+    "image_path": "/static/images/SKU-BEA-004.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-004.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-005",
+    "category": "beauty",
+    "sub_category": "facial_cream",
+    "title": "优色林 依克多因舒缓修护霜 50ml 混油皮维稳退红保湿乳霜",
+    "brand": "Eucerin",
+    "original_price": 169.0,
+    "final_price": 129.0,
+    "specs": {
+      "key_ingredient": "ectoin",
+      "skin_type": "combination",
+      "volume_ml": 50
+    },
+    "highlights": [
+      "高纯度依克多因抵御光老泛红",
+      "轻盈凝乳质地适合混合肌",
+      "修护屏障",
+      "不闷痘"
+    ],
+    "visual_description": "白色磨砂真空按压瓶配暗红品牌标，乳白色半透明凝霜质地，一抹化水易吸收。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "舒缓修护面霜 真空按压瓶 护肤品 商品图",
+    "retrieval_text": "【商品】优色林 依克多因舒缓修护霜 50ml 混油皮维稳退红保湿乳霜 【品牌】Eucerin 【类目】beauty/facial_cream (保湿修护面霜) 【价格】到手价¥129.0 (原价¥169.0，直降¥40.0) 【核心规格】核心成分:ectoin(依克多因) | 适用肤质:combination(混合肌) | 净含量:50ml 【核心卖点】高纯度依克多因抵御光老泛红；轻盈凝乳质地适合混合肌；修护屏障；不闷痘 【视觉外观】白色磨砂真空按压瓶配暗红品牌标，乳白色半透明凝霜质地，一抹化水易吸收。",
+    "image_path": "/static/images/SKU-BEA-005.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-005.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-006",
+    "category": "beauty",
+    "sub_category": "facial_cream",
+    "title": "理肤泉 B5多效修护霜 40ml 泛醇积雪草厚敷急救面霜",
+    "brand": "LaRochePosay",
+    "original_price": 119.0,
+    "final_price": 85.0,
+    "specs": {
+      "key_ingredient": "vitamin_b5",
+      "skin_type": "dry_sensitive",
+      "volume_ml": 40
+    },
+    "highlights": [
+      "5%高浓度维生素B5泛醇",
+      "修护屏障淡化红印",
+      "干敏皮安心配方"
+    ],
+    "visual_description": "蓝白药妆风铝塑软管包装，尖嘴细口精准控量，丰润白色乳霜质地。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "理肤泉 B5修复霜 40ml 软管 商品图",
+    "retrieval_text": "【商品】理肤泉 B5多效修护霜 40ml 泛醇积雪草厚敷急救面霜 【品牌】LaRochePosay 【类目】beauty/facial_cream (保湿修护面霜) 【价格】到手价¥85.0 (原价¥119.0，直降¥34.0) 【核心规格】核心成分:vitamin_b5(维生素B5(泛醇)) | 适用肤质:dry_sensitive(干敏肌) | 净含量:40ml 【核心卖点】5%高浓度维生素B5泛醇；修护屏障淡化红印；干敏皮安心配方 【视觉外观】蓝白药妆风铝塑软管包装，尖嘴细口精准控量，丰润白色乳霜质地。",
+    "image_path": "/static/images/SKU-BEA-006.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-006.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-007",
+    "category": "beauty",
+    "sub_category": "facial_cream",
+    "title": "科颜氏 高保湿清爽水杨酸控油果冻面霜 60ml 油痘肌无油啫喱",
+    "brand": "Kiehls",
+    "original_price": 189.0,
+    "final_price": 139.0,
+    "specs": {
+      "key_ingredient": "salicylic_acid",
+      "skin_type": "oily_acne",
+      "volume_ml": 60
+    },
+    "highlights": [
+      "微脂水杨酸温和控油疏通毛孔",
+      "无油果冻啫喱不闷痘",
+      "油痘肌夏季清爽保湿"
+    ],
+    "visual_description": "冰蓝色半透明磨砂罐，打开为晶莹剔透的水蓝色果冻啫喱凝露，触肤冰凉清爽。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "蓝色果冻啫喱保湿面霜 60ml 罐装 商品图",
+    "retrieval_text": "【商品】科颜氏 高保湿清爽水杨酸控油果冻面霜 60ml 油痘肌无油啫喱 【品牌】Kiehls 【类目】beauty/facial_cream (保湿修护面霜) 【价格】到手价¥139.0 (原价¥189.0，直降¥50.0) 【核心规格】核心成分:salicylic_acid(水杨酸) | 适用肤质:oily_acne(油痘肌) | 净含量:60ml 【核心卖点】微脂水杨酸温和控油疏通毛孔；无油果冻啫喱不闷痘；油痘肌夏季清爽保湿 【视觉外观】冰蓝色半透明磨砂罐，打开为晶莹剔透的水蓝色果冻啫喱凝露，触肤冰凉清爽。",
+    "image_path": "/static/images/SKU-BEA-007.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-007.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-008",
+    "category": "beauty",
+    "sub_category": "amino_cleanser",
+    "title": "芙丽芳丝 净润氨基酸温和洁面乳液 100ml 日本进口敏感肌洗面奶",
+    "brand": "Freeplus",
+    "original_price": 119.0,
+    "final_price": 79.0,
+    "specs": {
+      "volume_ml": 100
+    },
+    "highlights": [
+      "100ml温和氨基酸液体洁面",
+      "温和不假滑洗后不紧绷",
+      "无皂基配方"
+    ],
+    "visual_description": "蓝白极简泵装洁面乳液瓶，白色按压头设计，挤出为细腻珍珠白凝乳液体，加水揉搓泡沫绵密。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "芙丽芳丝 氨基酸洁面 100ml 蓝白瓶 商品图",
+    "retrieval_text": "【商品】芙丽芳丝 净润氨基酸温和洁面乳液 100ml 日本进口敏感肌洗面奶 【品牌】Freeplus 【类目】beauty/amino_cleanser (氨基酸洁面) 【价格】到手价¥79.0 (原价¥119.0，直降¥40.0) 【核心规格】净含量:100ml 【核心卖点】100ml温和氨基酸液体洁面；温和不假滑洗后不紧绷；无皂基配方 【视觉外观】蓝白极简泵装洁面乳液瓶，白色按压头设计，挤出为细腻珍珠白凝乳液体，加水揉搓泡沫绵密。",
+    "image_path": "/static/images/SKU-BEA-008.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-008.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-009",
+    "category": "beauty",
+    "sub_category": "amino_cleanser",
+    "title": "至本 舒颜修护氨基酸洁面泡 150ml 按压自动起泡慕斯",
+    "brand": "ZHIBEN",
+    "original_price": 68.0,
+    "final_price": 49.0,
+    "specs": {
+      "volume_ml": 150
+    },
+    "highlights": [
+      "150ml大容量一按出云朵泡",
+      "可卸防晒与淡妆",
+      "温和不假滑"
+    ],
+    "visual_description": "纯白极简圆柱起泡瓶，宽大防滑按压泵头，按压即出绵密丰盈的白色云朵慕斯泡沫。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "至本 氨基酸洁面慕斯 白色起泡瓶 商品图",
+    "retrieval_text": "【商品】至本 舒颜修护氨基酸洁面泡 150ml 按压自动起泡慕斯 【品牌】ZHIBEN 【类目】beauty/amino_cleanser (氨基酸洁面) 【价格】到手价¥49.0 (原价¥68.0，直降¥19.0) 【核心规格】净含量:150ml 【核心卖点】150ml大容量一按出云朵泡；可卸防晒与淡妆；温和不假滑 【视觉外观】纯白极简圆柱起泡瓶，宽大防滑按压泵头，按压即出绵密丰盈的白色云朵慕斯泡沫。",
+    "image_path": "/static/images/SKU-BEA-009.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-009.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-010",
+    "category": "beauty",
+    "sub_category": "amino_cleanser",
+    "title": "溪木源 山茶花氨基酸洁面乳 80ml 温和控油洗面奶",
+    "brand": "Simpcare",
+    "original_price": 59.0,
+    "final_price": 39.0,
+    "specs": {
+      "volume_ml": 80
+    },
+    "highlights": [
+      "80ml便携山茶花精粹洗卸合一",
+      "可卸防晒",
+      "温和不假滑"
+    ],
+    "visual_description": "浅米色磨砂软管配木纹质感瓶盖，管身印有手绘山茶花图案，清新自然风格。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "溪木源 山茶花氨基酸洗面奶 80ml 商品图",
+    "retrieval_text": "【商品】溪木源 山茶花氨基酸洁面乳 80ml 温和控油洗面奶 【品牌】Simpcare 【类目】beauty/amino_cleanser (氨基酸洁面) 【价格】到手价¥39.0 (原价¥59.0，直降¥20.0) 【核心规格】净含量:80ml 【核心卖点】80ml便携山茶花精粹洗卸合一；可卸防晒；温和不假滑 【视觉外观】浅米色磨砂软管配木纹质感瓶盖，管身印有手绘山茶花图案，清新自然风格。",
+    "image_path": "/static/images/SKU-BEA-010.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-010.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-011",
+    "category": "beauty",
+    "sub_category": "b5_serum",
+    "title": "修丽可 色修B5保湿舒缓精华液 30ml 泛醇透明质酸退红修护",
+    "brand": "SkinCeuticals",
+    "original_price": 239.0,
+    "final_price": 169.0,
+    "specs": {
+      "volume_ml": 30
+    },
+    "highlights": [
+      "高浓度维生素B5协同小分子玻尿酸",
+      "急救舒缓泛红",
+      "无油水感质地清爽"
+    ],
+    "visual_description": "透明玻璃滴管瓶，内置淡翠绿色澄澈精华原液，配黑色胶头玻璃吸管精准取量。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "绿色玻璃滴管瓶 B5舒缓精华液 30ml 商品图",
+    "retrieval_text": "【商品】修丽可 色修B5保湿舒缓精华液 30ml 泛醇透明质酸退红修护 【品牌】SkinCeuticals 【类目】beauty/b5_serum (B5修护精华液) 【价格】到手价¥169.0 (原价¥239.0，直降¥70.0) 【核心规格】净含量:30ml 【核心卖点】高浓度维生素B5协同小分子玻尿酸；急救舒缓泛红；无油水感质地清爽 【视觉外观】透明玻璃滴管瓶，内置淡翠绿色澄澈精华原液，配黑色胶头玻璃吸管精准取量。",
+    "image_path": "/static/images/SKU-BEA-011.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-011.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-012",
+    "category": "beauty",
+    "sub_category": "b5_serum",
+    "title": "乐敦 CC/B5积雪草屏障修护精华液 50ml 大容量院线装",
+    "brand": "Mentholatum",
+    "original_price": 129.0,
+    "final_price": 89.0,
+    "specs": {
+      "volume_ml": 50
+    },
+    "highlights": [
+      "50ml大碗耐用",
+      "换季舒缓泛红干痒",
+      "质地清爽不粘腻"
+    ],
+    "visual_description": "医用级深蓝色避光玻璃滴管瓶，50ml大容量瓶身，清透水状精华流动性极佳。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "蓝色玻璃滴管瓶 B5保湿精华液 50ml 商品图",
+    "retrieval_text": "【商品】乐敦 CC/B5积雪草屏障修护精华液 50ml 大容量院线装 【品牌】Mentholatum 【类目】beauty/b5_serum (B5修护精华液) 【价格】到手价¥89.0 (原价¥129.0，直降¥40.0) 【核心规格】净含量:50ml 【核心卖点】50ml大碗耐用；换季舒缓泛红干痒；质地清爽不粘腻 【视觉外观】医用级深蓝色避光玻璃滴管瓶，50ml大容量瓶身，清透水状精华流动性极佳。",
+    "image_path": "/static/images/SKU-BEA-012.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-012.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-013",
+    "category": "beauty",
+    "sub_category": "salicylic_pads",
+    "title": "施泰福 Stridex 水杨酸棉片 0.5%温和型 绿色装新手刷酸去闭口",
+    "brand": "Stridex",
+    "original_price": 69.0,
+    "final_price": 45.0,
+    "specs": {
+      "concentration_pct": 0.5
+    },
+    "highlights": [
+      "0.5%低浓度水杨酸温和建立耐受",
+      "含芦荟舒缓不拔干",
+      "控油去闭口黑头"
+    ],
+    "visual_description": "白底鲜绿色标签圆罐包装，内含双面纹理纯棉圆片（一面珍珠纹二次清洁、一面平纹湿敷），附防尘小镊子。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "Stridex 绿色 0.5% 水杨酸棉片 商品图",
+    "retrieval_text": "【商品】施泰福 Stridex 水杨酸棉片 0.5%温和型 绿色装新手刷酸去闭口 【品牌】Stridex 【类目】beauty/salicylic_pads (水杨酸棉片) 【价格】到手价¥45.0 (原价¥69.0，直降¥24.0) 【核心规格】水杨酸浓度:0.5% 【核心卖点】0.5%低浓度水杨酸温和建立耐受；含芦荟舒缓不拔干；控油去闭口黑头 【视觉外观】白底鲜绿色标签圆罐包装，内含双面纹理纯棉圆片（一面珍珠纹二次清洁、一面平纹湿敷），附防尘小镊子。",
+    "image_path": "/static/images/SKU-BEA-013.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-013.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-014",
+    "category": "beauty",
+    "sub_category": "salicylic_pads",
+    "title": "博乐达 2.0%超分子水杨酸祛痘调理棉片 进阶强效控油去痘印",
+    "brand": "Broda",
+    "original_price": 109.0,
+    "final_price": 75.0,
+    "specs": {
+      "concentration_pct": 2.0
+    },
+    "highlights": [
+      "2.0%超分子水杨酸深入毛孔溶脂",
+      "强效控油去闭口脓包痘",
+      "无酒精配方"
+    ],
+    "visual_description": "红白专业院线风圆盒包装，内浸满高浓度超分子水杨酸精华液的加厚网格棉片。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "红色 2% 水杨酸祛痘棉片 圆罐 商品图",
+    "retrieval_text": "【商品】博乐达 2.0%超分子水杨酸祛痘调理棉片 进阶强效控油去痘印 【品牌】Broda 【类目】beauty/salicylic_pads (水杨酸棉片) 【价格】到手价¥75.0 (原价¥109.0，直降¥34.0) 【核心规格】水杨酸浓度:2.0% 【核心卖点】2.0%超分子水杨酸深入毛孔溶脂；强效控油去闭口脓包痘；无酒精配方 【视觉外观】红白专业院线风圆盒包装，内浸满高浓度超分子水杨酸精华液的加厚网格棉片。",
+    "image_path": "/static/images/SKU-BEA-014.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-014.jpg",
+    "inventory": 100,
+    "status": "active"
+  },
+  {
+    "sku_id": "SKU-BEA-015",
+    "category": "beauty",
+    "sub_category": "lip_balm",
+    "title": "依泉 柔润护唇膏 4ml 小白管角鲨烷保湿滋润防干裂润唇膏",
+    "brand": "Uriage",
+    "original_price": 49.0,
+    "final_price": 32.0,
+    "specs": {
+      "volume_ml": 4
+    },
+    "highlights": [
+      "牛油果树果脂修护干裂死皮",
+      "哑光打底不粘腻不猪油嘴",
+      "无香精日夜可用"
+    ],
+    "visual_description": "纯白色纤细圆管旋转唇膏（小白管），斜切面乳白色膏体，小巧便携。",
+    "visual_description_source": "calibrated_from_retained_image",
+    "is_synthetic_benchmark": true,
+    "search_query": "依泉 小白管 柔润护唇膏 商品图",
+    "retrieval_text": "【商品】依泉 柔润护唇膏 4ml 小白管角鲨烷保湿滋润防干裂润唇膏 【品牌】Uriage 【类目】beauty/lip_balm (润唇膏) 【价格】到手价¥32.0 (原价¥49.0，直降¥17.0) 【核心规格】净含量:4ml 【核心卖点】牛油果树果脂修护干裂死皮；哑光打底不粘腻不猪油嘴；无香精日夜可用 【视觉外观】纯白色纤细圆管旋转唇膏（小白管），斜切面乳白色膏体，小巧便携。",
+    "image_path": "/static/images/SKU-BEA-015.jpg",
+    "cos_image_url": "https://yu-picture-1413830206.cos.ap-guangzhou.myqcloud.com/ai-sales-assistant/images/SKU-BEA-015.jpg",
+    "inventory": 100,
+    "status": "active"
+  }
+]
