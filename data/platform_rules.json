@@ -1,0 +1,66 @@
+[
+  {
+    "rule_id": "RULE-AFTER-001",
+    "rule_type": "aftersales",
+    "rule_version": "v2026.10",
+    "title": "7天无理由退换货规则（受控基准简化自淘宝公开规则）",
+    "max_days": 7,
+    "window_hours": 168,
+    "anchor_field": "signed_at",
+    "fallback_anchor_field": null,
+    "include_boundary": true,
+    "allow_unsigned": false,
+    "require_unopened": true,
+    "content": "【确定性核验契约】仅限已签收订单（order_status='delivered' 且 signed_at 非空）：自实际签收时刻（signed_at，Asia/Shanghai 时区）起算滚动 168 小时内（0 <= elapsed_hours <= 168.0，含 168 小时整点边界），且商品完好未拆封（is_opened=false），可申请7天无理由退货；若订单尚未签收（pending/shipped）、已拆封（is_opened=true）或距签收时刻超过 168 小时（elapsed_hours > 168.0），则不支持7天无理由退货。",
+    "source_reference": {
+      "platform": "淘宝网公开规则中心",
+      "source_title": "《淘宝网七天无理由退货规范》",
+      "source_url": "https://rulechannel.taobao.com/",
+      "retrieved_at": "2026-10-10",
+      "mock_simplification_note": "原公开规则以签收次日零时起算满168小时且按类目区分完好标准；本项目作为求职演示基准，统一简化为自 signed_at 精确时刻起算滚动 168.0 小时（含端点）且统一以布尔字段 is_opened=false 表征未拆封完好，消除跨日零时与自然日折算歧义。"
+    }
+  },
+  {
+    "rule_id": "RULE-PRICE-001",
+    "rule_type": "price_guarantee",
+    "rule_version": "v2026.10",
+    "title": "15天全程价格保护规则（受控基准简化自淘宝公开规则）",
+    "max_days": 15,
+    "window_hours": 360,
+    "anchor_field": "signed_at",
+    "fallback_anchor_field": "paid_at",
+    "include_boundary": true,
+    "allow_unsigned": true,
+    "require_unopened": false,
+    "content": "【确定性核验契约】购买带价保标识（has_price_guarantee=true）的商品后：已签收订单自实际签收时刻（signed_at）起算滚动 360 小时内（0 <= elapsed_hours <= 360.0，含边界）；未签收订单（pending/shipped 且 signed_at 为空）自实际付款时刻（paid_at）起算滚动 360 小时内（0 <= elapsed_hours <= 360.0）。在有效期内若同一 SKU 当前到手价（final_price）低于历史实付金额（pay_amount），无论是否拆封（is_opened 不限），均可申请退还正差额（refund_diff = pay_amount - final_price > 0）。",
+    "source_reference": {
+      "platform": "淘宝网公开规则中心",
+      "source_title": "《淘宝网价格保护服务规范》",
+      "source_url": "https://rulechannel.taobao.com/",
+      "retrieved_at": "2026-10-10",
+      "mock_simplification_note": "原公开规则排除限时秒杀/满减凑单/百亿补贴等复杂除外场景；本项目已砍掉算券凑单模块，统一简化为对比订单历史实付价 pay_amount 与商品当前 final_price 的直接差额，所有演示订单默认 has_price_guarantee=true。"
+    }
+  },
+  {
+    "rule_id": "RULE-SHIP-001",
+    "rule_type": "shipping",
+    "rule_version": "v2026.10",
+    "title": "退货运费险与极速退款服务说明（受控基准简化自淘宝公开规则）",
+    "depends_on_rule_id": "RULE-AFTER-001",
+    "max_days": 7,
+    "window_hours": 168,
+    "anchor_field": "signed_at",
+    "fallback_anchor_field": null,
+    "include_boundary": true,
+    "allow_unsigned": false,
+    "require_unopened": true,
+    "content": "【确定性核验契约】凡持有运费险标识（has_freight_insurance=true）且通过 RULE-AFTER-001（7天无理由退货资格核验，168 小时窗口内未拆封）的订单，选择官方合作快递上门取件可直接抵扣首重退货运费；快递员揽收上传有效物流单号后触发极速垫付退款。",
+    "source_reference": {
+      "platform": "淘宝网公开规则中心",
+      "source_title": "《退货运费险服务规范》",
+      "source_url": "https://rulechannel.taobao.com/",
+      "retrieved_at": "2026-10-10",
+      "mock_simplification_note": "简化为布尔字段 has_freight_insurance=true 且前置依赖 RULE-AFTER-001 判定通过，不引入真实保险理赔风控中台。"
+    }
+  }
+]

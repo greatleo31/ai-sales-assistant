@@ -1,0 +1,572 @@
+{
+  "$comment": "spec_key 的权威定义：单位、默认比较方向、取值范围、离散整数标记、枚举词表、商品事实展示标签(display_label/display_labels)与中文查询触发同义词(zh_aliases)。注意：zh_aliases 仅用于用户 Query 侧匹配，严禁反向拼入商品 retrieval_text 充当商品事实。",
+  "version": "2026-10-11.r2",
+  "rules": {
+    "numeric_specs": "值必须是有限 JSON number（禁止 bool/NaN/Inf），不带单位、不带 '+'、不带任何单位字母。声明 integer=true 的离散维度必须为严格整数(int)。展示用字符串只进 title / highlights。",
+    "enum_specs": "值必须取自本文件 vocabulary 声明的封闭词表（小写 snake_case）。商品事实展示只使用 display_labels 中的中性标签；用户 Query 通过 zh_aliases 与 matching_policy 映射到枚举值或候选集。型号名（如 GaN-65W-Pro、TTC金粉轴V2）不进枚举，进 title。",
+    "fact_vs_query_alias_isolation": "构建 retrieval_text 时，只允许使用 sub_category.display_label 与 enum_spec.display_labels[val] 以及 SKU 自身真实属性，严禁把 zh_aliases 列表拼接进商品检索语料（防止将圆领卫衣注入连帽卫衣、金粉轴注入红轴）。",
+    "price_judgement": "预算约束只对 final_price 判定；original_price 仅用于 price_explain_card 的直降差额解释及历史订单价保测试。",
+    "relaxation_path_a": "保规格、松预算：对用户提取出的全部规格条件 AND 过滤，在命中集合内取 min(final_price)。",
+    "relaxation_path_b": "保预算、松规格（数值型基准）：只锁 sub_category + final_price <= max_price，不拿任何单个规格阈值过滤；在预算内同子类目商品上基于数值 spec range 计算多规格归一化接近度得分 Closeness(s) = 1 - mean(deficit_i / span_i)，取第 1 名。",
+    "category_lock": "单品类检索与松弛强制锁死在同一 sub_category 内执行，防止跨子类目串品。"
+  },
+  "matching_policy": {
+    "normalization": [
+      "unicode_nfkc",
+      "ascii_lower",
+      "fullwidth_to_halfwidth",
+      "strip_whitespace_around_operators"
+    ],
+    "span_resolution": "longest_match_first",
+    "span_resolution_doc": "在同一文本区间内若命中多个候选 alias（如 'PA++++' 同时包含 'PA+'/'PA++'/'PA+++'，或 '有声段落轴' 包含 '段落轴'，或 '混油皮' 包含 '油皮'），按规范化后字符长度降序优先匹配最长 alias，并消费该字符区间，禁止子区间重复触发短 alias。",
+    "boundary_rules": {
+      "pa_plus_guard": "匹配 PA+ / PA++ / PA+++ 时，右侧相邻字符不得为 '+'（正则：(?<!\\+)(pa\\+{1,4})(?!\\+)）。",
+      "numeric_token_guard": "含数字的 alias（如 87键、98键、104键、5Gbps、10Gbps、40Gbps）左侧相邻字符不得为阿拉伯数字。"
+    },
+    "negation_prefixes": ["不要", "不需要", "并非", "不是", "不选", "排除", "不买", "别推", "拒绝", "不考虑"],
+    "negation_window_chars": 4,
+    "multi_sub_category_policy": "当同一条 Query 在不重叠区间命中多个不同 sub_category（如 '买面霜和防晒' 命中 facial_cream + sunscreen，或复合词 '连帽卫衣开衫' 同时涉及 hoodie + knit_cardigan），优先检查是否存在更长的专有复合词规则；若确属多品类意图，返回 matched_sub_categories 列表并标记 ambiguity_status='multi_sub_category'，禁止盲目只取第一个词锁死单子类目。"
+  },
+  "ambiguous_terms": {
+    "108键": {
+      "scope": "mechanical_keyboard.layout",
+      "action": "soft_or_clarify",
+      "candidates": ["104_keys"],
+      "reason": "108键比104键多4颗右上角多媒体键，物理键数不等价，不得硬映射为 104_keys 硬过滤条件；可作为全尺寸偏好提示或引导选择 104_keys。"
+    },
+    "全尺寸": {
+      "scope": "mechanical_keyboard.layout",
+      "action": "candidate_set",
+      "candidates": ["104_keys", "98_keys"],
+      "reason": "全尺寸通常指代 104_keys，但部分用户包含紧凑全尺寸 98_keys，作为候选集而非唯一硬过滤。"
+    },
+    "全肤质": {
+      "scope": "facial_cream.skin_type",
+      "action": "no_hard_filter",
+      "candidates": ["dry_sensitive", "oily_acne", "combination", "neutral"],
+      "reason": "全肤质代表不限制适用肤质，不应硬映射为单一 neutral（中性肌）而过滤掉其余肤质商品。"
+    },
+    "普通肤质": {
+      "scope": "facial_cream.skin_type",
+      "action": "soft_or_clarify",
+      "candidates": ["neutral", "combination"],
+      "reason": "普通肤质口语指代模糊，不直接等价于严格中性皮。"
+    },
+    "敏感肌": {
+      "scope": "facial_cream.skin_type",
+      "action": "soft_preference",
+      "candidates": ["dry_sensitive"],
+      "soft_keyword": "敏感肌",
+      "reason": "敏感肌包含干敏与油敏，不能无条件推出干性(dry_sensitive)；应作为软约束关键词参与检索加权，仅当明确说'干敏皮/干敏肌'时才触发 dry_sensitive 硬枚举。"
+    },
+    "USB3.2": {
+      "scope": "usb_hub_cable.protocol",
+      "action": "candidate_set",
+      "candidates": ["usb3.0", "usb3.2gen2"],
+      "reason": "USB-IF 命名中 USB3.2 Gen1(5Gbps) 与 USB3.2 Gen2(10Gbps) 均含 USB3.2 前缀，未写明 Gen2 或 10Gbps 时不得直接硬映射为 usb3.2gen2。"
+    },
+    "连帽卫衣开衫": {
+      "scope": "sub_category",
+      "action": "compound_sub_category",
+      "primary_sub_category": "hoodie",
+      "candidates": ["hoodie", "knit_cardigan"],
+      "reason": "拉链连帽卫衣开衫在服饰类目归属卫衣(hoodie)，不归入毛衣针织开衫(knit_cardigan)。"
+    }
+  },
+  "categories": {
+    "3c_digital": ["laptop_bag", "gan_charger", "mechanical_keyboard", "nc_headphones", "power_bank", "usb_hub_cable"],
+    "apparel": ["hoodie", "knit_cardigan", "windbreaker", "cargo_pants", "tshirt"],
+    "beauty": ["facial_cream", "amino_cleanser", "sunscreen", "b5_serum", "salicylic_pads", "lip_balm"]
+  },
+  "sub_categories": {
+    "laptop_bag": {
+      "category": "3c_digital",
+      "count": 6,
+      "display_label": "笔记本电脑包",
+      "zh_aliases": ["电脑包", "内胆包", "笔记本包", "游戏本包", "电脑双肩包", "笔记本内胆包"],
+      "specs": {
+        "screen_size": {
+          "type": "number",
+          "integer": false,
+          "unit": "寸",
+          "op": ">=",
+          "label": "可容纳的最大笔记本尺寸",
+          "range": [13.3, 17.3]
+        }
+      },
+      "soft_constraints": ["防震", "气囊", "防泼水", "轻便"]
+    },
+    "gan_charger": {
+      "category": "3c_digital",
+      "count": 5,
+      "display_label": "氮化镓快充充电器",
+      "zh_aliases": ["充电器", "快充头", "氮化镓", "充电头", "快充充电器", "GaN充电器"],
+      "specs": {
+        "power_w": {
+          "type": "number",
+          "integer": true,
+          "unit": "W",
+          "op": ">=",
+          "label": "最大输出功率",
+          "range": [30, 140]
+        },
+        "ports": {
+          "type": "number",
+          "integer": true,
+          "unit": "口",
+          "op": ">=",
+          "label": "可用接口数量",
+          "range": [1, 4]
+        }
+      },
+      "soft_constraints": ["氮化镓", "折叠插脚", "体积小巧"],
+      "vocabulary_note": "接口组合（如 2C1A）只进 highlights，不进 specs.ports。"
+    },
+    "mechanical_keyboard": {
+      "category": "3c_digital",
+      "count": 4,
+      "display_label": "机械键盘",
+      "zh_aliases": ["机械键盘", "键盘", "客制化键盘", "游戏键盘"],
+      "specs": {
+        "switch_type": {
+          "type": "enum",
+          "op": "==",
+          "label": "轴体手感",
+          "vocabulary": ["linear", "tactile", "clicky"],
+          "display_labels": {
+            "linear": "线性轴",
+            "tactile": "段落轴",
+            "clicky": "有声段落轴"
+          },
+          "zh_aliases": {
+            "linear": ["线性轴", "红轴", "金粉轴", "快银轴", "直上直下"],
+            "tactile": ["段落轴", "茶轴", "提前大段落", "微段落"],
+            "clicky": ["青轴", "有声段落轴", "脆响青轴"]
+          }
+        },
+        "layout": {
+          "type": "enum",
+          "op": "==",
+          "label": "配列",
+          "vocabulary": ["87_keys", "98_keys", "104_keys"],
+          "display_labels": {
+            "87_keys": "87键配列",
+            "98_keys": "98键配列",
+            "104_keys": "104键全尺寸配列"
+          },
+          "zh_aliases": {
+            "87_keys": ["87键", "87配列", "TKL", "无数字区"],
+            "98_keys": ["98键", "98配列", "紧凑98键"],
+            "104_keys": ["104键", "104配列", "104键全尺寸"]
+          }
+        },
+        "connectivity": {
+          "type": "enum",
+          "op": "==",
+          "label": "连接方式",
+          "vocabulary": ["wired", "bluetooth", "2.4g", "triple_mode"],
+          "display_labels": {
+            "wired": "有线单模",
+            "bluetooth": "蓝牙双模",
+            "2.4g": "2.4G无线",
+            "triple_mode": "三模无线"
+          },
+          "zh_aliases": {
+            "wired": ["有线", "单模有线"],
+            "bluetooth": ["蓝牙", "蓝牙双模"],
+            "2.4g": ["2.4G", "2.4G无线"],
+            "triple_mode": ["三模", "三模无线", "蓝牙2.4G有线三模"]
+          }
+        }
+      },
+      "soft_constraints": ["热插拔", "Gasket", "RGB"]
+    },
+    "nc_headphones": {
+      "category": "3c_digital",
+      "count": 4,
+      "display_label": "头戴式降噪耳机",
+      "zh_aliases": ["降噪耳机", "头戴式耳机", "蓝牙耳机", "主动降噪耳机", "耳机"],
+      "specs": {
+        "anc_db": {
+          "type": "number",
+          "integer": true,
+          "unit": "dB",
+          "op": ">=",
+          "label": "降噪深度",
+          "range": [25, 48]
+        },
+        "battery_h": {
+          "type": "number",
+          "integer": true,
+          "unit": "h",
+          "op": ">=",
+          "label": "单次续航",
+          "range": [20, 65]
+        },
+        "weight_g": {
+          "type": "number",
+          "integer": true,
+          "unit": "g",
+          "op": "<=",
+          "label": "整机重量",
+          "range": [180, 300]
+        }
+      },
+      "soft_constraints": ["久戴不夹头", "空间音频"]
+    },
+    "power_bank": {
+      "category": "3c_digital",
+      "count": 3,
+      "display_label": "移动电源/充电宝",
+      "zh_aliases": ["充电宝", "移动电源", "自带线充电宝"],
+      "specs": {
+        "capacity_mah": {
+          "type": "number",
+          "integer": true,
+          "unit": "mAh",
+          "op": ">=",
+          "label": "标称容量",
+          "range": [5000, 20000]
+        },
+        "output_w": {
+          "type": "number",
+          "integer": false,
+          "unit": "W",
+          "op": ">=",
+          "label": "最大输出功率",
+          "range": [18, 100]
+        },
+        "weight_g": {
+          "type": "number",
+          "integer": true,
+          "unit": "g",
+          "op": "<=",
+          "label": "整机重量",
+          "range": [150, 250]
+        }
+      },
+      "soft_constraints": ["自带线", "登机可带"]
+    },
+    "usb_hub_cable": {
+      "category": "3c_digital",
+      "count": 3,
+      "display_label": "Type-C拓展坞",
+      "zh_aliases": ["拓展坞", "扩展坞", "分线器", "转接头", "Type-C拓展坞"],
+      "specs": {
+        "port_count": {
+          "type": "number",
+          "integer": true,
+          "unit": "口",
+          "op": ">=",
+          "label": "扩展接口数量",
+          "range": [3, 8]
+        },
+        "protocol": {
+          "type": "enum",
+          "op": "==",
+          "label": "协议规格",
+          "vocabulary": ["usb2.0", "usb3.0", "usb3.2gen2", "thunderbolt4"],
+          "display_labels": {
+            "usb2.0": "USB2.0协议",
+            "usb3.0": "USB3.0(5Gbps)",
+            "usb3.2gen2": "USB3.2 Gen2(10Gbps)",
+            "thunderbolt4": "雷电4(40Gbps)"
+          },
+          "zh_aliases": {
+            "usb2.0": ["USB2.0", "2.0协议"],
+            "usb3.0": ["USB3.0", "USB3.1Gen1", "5Gbps"],
+            "usb3.2gen2": ["USB3.2Gen2", "USB3.2 Gen2", "10Gbps"],
+            "thunderbolt4": ["雷电4", "Thunderbolt4", "40Gbps"]
+          }
+        }
+      },
+      "soft_constraints": ["铝合金外壳", "免驱"]
+    },
+    "hoodie": {
+      "category": "apparel",
+      "count": 4,
+      "display_label": "卫衣",
+      "zh_aliases": ["卫衣", "连帽卫衣", "圆领卫衣", "重磅卫衣"],
+      "specs": {
+        "fabric_weight_gm2": {
+          "type": "number",
+          "integer": true,
+          "unit": "g/㎡",
+          "op": ">=",
+          "label": "面料克重",
+          "range": [180, 420]
+        }
+      },
+      "soft_constraints": ["落肩版型", "不起球", "三层加绒"]
+    },
+    "knit_cardigan": {
+      "category": "apparel",
+      "count": 4,
+      "display_label": "针织开衫",
+      "zh_aliases": ["针织开衫", "毛衣开衫", "针织外套", "开衫"],
+      "specs": {
+        "fabric_weight_gm2": {
+          "type": "number",
+          "integer": true,
+          "unit": "g/㎡",
+          "op": ">=",
+          "label": "面料克重",
+          "range": [180, 400]
+        }
+      },
+      "soft_constraints": ["软糯不扎", "不易起球"]
+    },
+    "windbreaker": {
+      "category": "apparel",
+      "count": 4,
+      "display_label": "户外冲锋衣",
+      "zh_aliases": ["冲锋衣", "防风外套", "防水冲锋衣", "三合一冲锋衣"],
+      "specs": {
+        "waterproof_mm": {
+          "type": "number",
+          "integer": true,
+          "unit": "mm",
+          "op": ">=",
+          "label": "静水压防水指数",
+          "range": [3000, 15000]
+        },
+        "weight_g": {
+          "type": "number",
+          "integer": true,
+          "unit": "g",
+          "op": "<=",
+          "label": "整衣重量",
+          "range": [250, 400]
+        }
+      },
+      "soft_constraints": ["三合一", "可收纳进袋"]
+    },
+    "cargo_pants": {
+      "category": "apparel",
+      "count": 4,
+      "display_label": "工装裤",
+      "zh_aliases": ["工装裤", "休闲长裤", "多袋工装裤", "机能工装裤"],
+      "specs": {
+        "material": {
+          "type": "enum",
+          "op": "==",
+          "label": "主面料",
+          "vocabulary": ["cotton", "polyester", "cotton_blend", "nylon"],
+          "display_labels": {
+                "cotton": "纯棉",
+                "polyester": "聚酯纤维",
+                "cotton_blend": "棉混纺",
+                "nylon": "防撕裂尼龙"
+          },
+          "zh_aliases": {
+            "cotton": ["纯棉", "全棉", "100%棉"],
+            "polyester": ["聚酯纤维", "涤纶"],
+            "cotton_blend": ["棉混纺", "涤棉", "弹力棉"],
+            "nylon": ["尼龙", "锦纶", "防撕裂尼龙"]
+          }
+        },
+        "fit": {
+          "type": "enum",
+          "op": "==",
+          "label": "版型",
+          "vocabulary": ["slim", "regular", "loose"],
+          "display_labels": {
+            "slim": "修身版型",
+            "regular": "合身直筒",
+            "loose": "宽松阔腿"
+          },
+          "zh_aliases": {
+            "slim": ["修身", "窄版", "束脚修身"],
+            "regular": ["合身", "直筒", "标准版型"],
+            "loose": ["宽松", "阔腿", "大廓形"]
+          }
+        }
+      },
+      "soft_constraints": ["耐磨", "多口袋"]
+    },
+    "tshirt": {
+      "category": "apparel",
+      "count": 4,
+      "display_label": "短袖T恤",
+      "zh_aliases": ["T恤", "短袖", "重磅T恤", "打底衫", "短袖T恤"],
+      "specs": {
+        "fabric_weight_gm2": {
+          "type": "number",
+          "integer": true,
+          "unit": "g/㎡",
+          "op": ">=",
+          "label": "面料克重",
+          "range": [180, 320]
+        }
+      },
+      "soft_constraints": ["重磅不透", "领口不变形"]
+    },
+    "facial_cream": {
+      "category": "beauty",
+      "count": 4,
+      "display_label": "保湿修护面霜",
+      "zh_aliases": ["面霜", "修护霜", "保湿面霜", "乳霜"],
+      "specs": {
+        "key_ingredient": {
+          "type": "enum",
+          "op": "==",
+          "label": "核心成分",
+          "vocabulary": ["ceramide_np", "ectoin", "hyaluronic_acid", "vitamin_b5", "salicylic_acid"],
+          "display_labels": {
+            "ceramide_np": "神经酰胺NP",
+            "ectoin": "依克多因",
+            "hyaluronic_acid": "透明质酸(玻尿酸)",
+            "vitamin_b5": "维生素B5(泛醇)",
+            "salicylic_acid": "水杨酸"
+          },
+          "zh_aliases": {
+            "ceramide_np": ["神经酰胺", "神经酰胺NP"],
+            "ectoin": ["依克多因"],
+            "hyaluronic_acid": ["玻尿酸", "透明质酸"],
+            "vitamin_b5": ["维生素B5", "泛醇", "B5成分"],
+            "salicylic_acid": ["水杨酸"]
+          }
+        },
+        "skin_type": {
+          "type": "enum",
+          "op": "==",
+          "label": "适用肤质",
+          "vocabulary": ["dry_sensitive", "oily_acne", "combination", "neutral"],
+          "display_labels": {
+            "dry_sensitive": "干敏肌",
+            "oily_acne": "油痘肌",
+            "combination": "混合肌",
+            "neutral": "中性肌"
+          },
+          "zh_aliases": {
+            "dry_sensitive": ["干敏皮", "干敏肌", "干性敏感肌"],
+            "oily_acne": ["油痘肌", "油皮", "油痘皮"],
+            "combination": ["混油皮", "混干皮", "混合肌"],
+            "neutral": ["中性皮", "中性肌", "中性肤质"]
+          }
+        },
+        "volume_ml": {
+          "type": "number",
+          "integer": true,
+          "unit": "ml",
+          "op": ">=",
+          "label": "净含量",
+          "range": [30, 80]
+        }
+      },
+      "soft_constraints": ["修护屏障", "不闷痘"]
+    },
+    "amino_cleanser": {
+      "category": "beauty",
+      "count": 3,
+      "display_label": "氨基酸洁面",
+      "zh_aliases": ["洁面", "洗面奶", "氨基酸洁面", "洁面慕斯"],
+      "specs": {
+        "volume_ml": {
+          "type": "number",
+          "integer": true,
+          "unit": "ml",
+          "op": ">=",
+          "label": "净含量",
+          "range": [80, 150]
+        }
+      },
+      "soft_constraints": ["温和不假滑", "可卸防晒"]
+    },
+    "sunscreen": {
+      "category": "beauty",
+      "count": 3,
+      "display_label": "防晒霜",
+      "zh_aliases": ["防晒", "防晒霜", "防晒乳", "隔离防晒"],
+      "specs": {
+        "spf": {
+          "type": "number",
+          "integer": true,
+          "unit": "",
+          "op": ">=",
+          "label": "防晒指数 SPF",
+          "range": [30, 50],
+          "vocabulary_note": "只存纯整数，50 表示 SPF50/SPF50+；'SPF50+ PA++++' 进 title/highlights。"
+        },
+        "pa": {
+          "type": "enum",
+          "op": "==",
+          "label": "PA 防护等级",
+          "vocabulary": ["pa_plus", "pa_plus_plus", "pa_plus_plus_plus", "pa_plus_plus_plus_plus"],
+          "display_labels": {
+            "pa_plus": "PA+",
+            "pa_plus_plus": "PA++",
+            "pa_plus_plus_plus": "PA+++",
+            "pa_plus_plus_plus_plus": "PA++++"
+          },
+          "zh_aliases": {
+            "pa_plus": ["PA+"],
+            "pa_plus_plus": ["PA++"],
+            "pa_plus_plus_plus": ["PA+++"],
+            "pa_plus_plus_plus_plus": ["PA++++", "四个加号"]
+          }
+        },
+        "volume_ml": {
+          "type": "number",
+          "integer": true,
+          "unit": "ml",
+          "op": ">=",
+          "label": "净含量",
+          "range": [30, 80]
+        }
+      },
+      "soft_constraints": ["不搓泥", "不泛白"]
+    },
+    "b5_serum": {
+      "category": "beauty",
+      "count": 2,
+      "display_label": "B5修护精华液",
+      "zh_aliases": ["B5精华", "修护精华", "精华液", "舒缓精华"],
+      "specs": {
+        "volume_ml": {
+          "type": "number",
+          "integer": true,
+          "unit": "ml",
+          "op": ">=",
+          "label": "净含量",
+          "range": [15, 50]
+        }
+      },
+      "soft_constraints": ["舒缓泛红", "质地清爽"]
+    },
+    "salicylic_pads": {
+      "category": "beauty",
+      "count": 2,
+      "display_label": "水杨酸棉片",
+      "zh_aliases": ["水杨酸棉片", "刷酸棉片", "祛痘棉片", "棉片"],
+      "specs": {
+        "concentration_pct": {
+          "type": "number",
+          "integer": false,
+          "unit": "%",
+          "op": "<=",
+          "label": "水杨酸浓度",
+          "range": [0.5, 2.0]
+        }
+      },
+      "soft_constraints": ["控油去闭口"]
+    },
+    "lip_balm": {
+      "category": "beauty",
+      "count": 1,
+      "display_label": "润唇膏",
+      "zh_aliases": ["润唇膏", "唇膏", "护唇膏"],
+      "specs": {
+        "volume_ml": {
+          "type": "number",
+          "integer": true,
+          "unit": "ml",
+          "op": ">=",
+          "label": "净含量",
+          "range": [3, 15]
+        }
+      },
+      "soft_constraints": ["不粘腻"]
+    }
+  }
+}
