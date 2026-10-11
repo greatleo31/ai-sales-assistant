@@ -175,10 +175,49 @@ python -B scripts/test_module3_engine.py
 
 # Module 4: 272K orchestrator, 10-turn static_prefix_md5 invariance & SSE E2E tests
 python -B scripts/test_module4_pipeline.py
+
+# Module 5: 50-query benchmark, 110 factual grounding assertions & 3 A/B ablation studies
+python -B scripts/run_eval.py
+python -B scripts/test_e2e_showcase.py
 ```
+
+---
+
+## 50-Query Benchmark & Three-Dimension A/B Ablation Results
+
+Reproduced deterministically via `python -B scripts/run_eval.py` (`data/eval_benchmark_50queries.json` $\rightarrow$ `data/eval_results_summary.json`):
+
+- **Overall 50-Query Benchmark Pass Rate**: **`50 / 50 (100.0%)`** across all 5 business scenarios (`conflict_relaxation`: `10/10`, `multimodal_exact_search`: `15/15`, `order_query`: `8/8`, `aftersales_verify`: `10/10`, `safety_and_escalation`: `7/7`).
+- **Zero-Hallucination Factual Grounding Gate**: **`110` assertions verified, `0` hallucinations (`0.0%` Hallucination Rate)**.
+
+### Experiment 1 — Retrieval & Reranking Mode A/B (`Q01`–`Q25`)
+
+| Retrieval Configuration | Exact Hit@1 (%) | Exact Hit@3 (%) | Exact MRR | Hard-Constraint Violation (%) $\downarrow$ | Conflict Path A+B Acc (%) $\uparrow$ | Mean Latency (ms) |
+|---|---:|---:|---:|---:|---:|---:|
+| **BM25-only (Unfiltered Global)** | 88.0% | 100.0% | 0.9200 | **73.85%** | **30.0%** | 17.61 |
+| **Dense-only (Unfiltered 1024-d)** | 84.0% | 92.0% | 0.8867 | **75.38%** | **20.0%** | 11.95 |
+| **Hard-Filter + BM25-only** | 100.0% | 100.0% | 1.0000 | **0.0%** | **100.0%** | 1.21 |
+| **Hard-Filter + Dense-only** | 100.0% | 100.0% | 1.0000 | **0.0%** | **100.0%** | 2.62 |
+| **Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)** | **100.0%** | **100.0%** | **1.0000** | **0.0%** | **100.0%** | **2.59** |
+
+### Experiment 2 — 272K Prompt Prefix Cache Alignment A/B (10-Turn Multi-Intent Session)
+
+| Prompt Architecture | Static Prefix MD5 | Unique MD5s (10 Turns) | MD5 Stability (%) $\uparrow$ | Static Prefix Tokens | Dynamic Suffix Tokens | Avg Static Ratio (%) | 10-Turn KV Cached Tokens $\uparrow$ |
+|---|---|---:|---:|---:|---:|---:|---:|
+| **Boundary-Split (Proposed)** | `4729a6f0dbaa02d0dc8a2c93b0d22b7b` | **1 / 10** | **100.0%** | **1,947** | 221 ~ 791 | **78.26%** | **17,523** |
+| **Monolithic (Baseline)** | `DRIFTS_EVERY_TURN` | **10 / 10** | **0.0%** | **0** | 1,993 ~ 2,032 | **0.0%** | **0** |
+
+### Experiment 3 — Cognitive Decision Gating Architecture A/B
+
+| Decision Gating Architecture | 50-Query Intent Acc (%) $\uparrow$ | Colloquial Multi-Signal Acc (%) $\uparrow$ | Mean Local/Cached Latency (ms) | `>800ms` SLA Breach (%) $\downarrow$ |
+|---|---:|---:|---:|---:|
+| **Naive Keyword Baseline** | **76.0%** | **25.0%** | 0.001 | 0.0% |
+| **LocalRule-Only Engine (Fail-Closed)** | **94.0%** | **87.5%** | 0.035 | 0.0% |
+| **Proposed (Jev System One + Cache + Fail-Closed Fallback)** | **100.0%** | **100.0%** | 0.104 | **0.0%** |
 
 ---
 
 ## License
 
 Released under the [MIT License](./LICENSE).
+

@@ -755,6 +755,296 @@
       },
       "jev_rtt_ms": 1140.1,
       "created_at": "2026-10-11T14:37:51.006113+00:00"
+    },
+    "2a114ba4abfd2bf3bfd7ba4bd414195e6025c9035e4f8b0501965067fe39f9b2": {
+      "cache_key": "2a114ba4abfd2bf3bfd7ba4bd414195e6025c9035e4f8b0501965067fe39f9b2",
+      "model": "jev-latest",
+      "model_version": "jev-1.13.0",
+      "state": "订单 ORD-20261001-008 现在降价了，帮我核验 15 天价保能退多少差价？",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 1.0,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.0,
+            "aftersales_qa": 1.0,
+            "privacy_guard": 0.0,
+            "chitchat": 0.0
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.01
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 2.08,
+          "confidence": 0.9,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 0.01,
+            "1": 0.0,
+            "2": 0.94,
+            "3": 0.0,
+            "4": 0.05
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1013,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 2120.82,
+      "created_at": "2026-10-11T15:23:36.998158+00:00"
+    },
+    "41d673cb1ff5caf76932fb4ef996cab7f48d6b9a609f5294c4b152bc26b20e6c": {
+      "cache_key": "41d673cb1ff5caf76932fb4ef996cab7f48d6b9a609f5294c4b152bc26b20e6c",
+      "model": "jev-latest",
+      "model_version": "jev-1.13.0",
+      "state": "订单 ORD-20261001-002 我买的时候就是 89 元，帮我核验一下有没有 15 天价格保护差价可以退？",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 1.0,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.0,
+            "aftersales_qa": 1.0,
+            "privacy_guard": 0.0,
+            "chitchat": 0.0
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.15
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.02
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 1.94,
+          "confidence": 0.92,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 0.04,
+            "1": 0.0,
+            "2": 0.95,
+            "3": 0.0,
+            "4": 0.01
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1027,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 2426.02,
+      "created_at": "2026-10-11T15:26:28.635935+00:00"
+    },
+    "239b66fd16e9b5e7fa00d8a32c44b8db9abd1381598ccea29c5d4ee969be5ee2": {
+      "cache_key": "239b66fd16e9b5e7fa00d8a32c44b8db9abd1381598ccea29c5d4ee969be5ee2",
+      "model": "jev-latest",
+      "model_version": "jev-1.13.0",
+      "state": "太垃圾了！充电器发烫冒烟严重怀疑是翻新假货，立刻去消协和工商局举报你们，给我接人工主管！",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 1.0,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.0,
+            "aftersales_qa": 1.0,
+            "privacy_guard": 0.0,
+            "chitchat": 0.0
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.52
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.22
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.99
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 0.0,
+          "confidence": 1.0,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 1.0,
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1018,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 1859.12,
+      "created_at": "2026-10-11T15:26:30.496970+00:00"
+    },
+    "07d4891f0cba475c0aaa764648cf8917bada0c9b7907860122e0a4d091769d5d": {
+      "cache_key": "07d4891f0cba475c0aaa764648cf8917bada0c9b7907860122e0a4d091769d5d",
+      "model": "jev-latest",
+      "model_version": "jev-1.13.0",
+      "state": "我已经问了你们三遍了怎么还是机器人车轱辘话？！别废话了赶紧给我转人工客服！",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 0.51,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.01,
+            "aftersales_qa": 0.61,
+            "privacy_guard": 0.0,
+            "chitchat": 0.38
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.04
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.68
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.98
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 0.01,
+          "confidence": 1.0,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 1.0,
+            "1": 0.0,
+            "2": 0.0,
+            "3": 0.0,
+            "4": 0.0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1012,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 2086.58,
+      "created_at": "2026-10-11T15:26:32.587056+00:00"
+    },
+    "99510cf589ebb4d2bbb59b9fb12c06c5ee2c5054fd4f59f677ea9fdf486608b7": {
+      "cache_key": "99510cf589ebb4d2bbb59b9fb12c06c5ee2c5054fd4f59f677ea9fdf486608b7",
+      "model": "jev-latest",
+      "model_version": "jev-1.13.0",
+      "state": "之前在你家入的那个酷态科100W充电头现在便宜了40块钱，订单ORD-20261001-008能补差价吗？",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 1.0,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.0,
+            "aftersales_qa": 1.0,
+            "privacy_guard": 0.0,
+            "chitchat": 0.0
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.74
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.02
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 1.87,
+          "confidence": 0.82,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 0.09,
+            "1": 0.0,
+            "2": 0.89,
+            "3": 0.0,
+            "4": 0.02
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1024,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 1467.03,
+      "created_at": "2026-10-11T15:26:34.057176+00:00"
     }
   }
 }
