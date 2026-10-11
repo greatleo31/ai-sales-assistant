@@ -1,0 +1,81 @@
+{
+  "$comment": "硬约束冲突对的唯一真源：数据生成器(scripts/generate_catalog.py)与自洽性闸门(scripts/validate_catalog.py)共同消费本文件，禁止在代码里重复硬编码冲突路径的价格与规格数值。",
+  "version": "2026-10-11.r2",
+  "assertions": [
+    "目录中不存在同时满足全部 hard_constraints 的 SKU（否则不成其为冲突）",
+    "path_a 的 SKU 满足全部 specs 规格条件，且仅违反预算（final_price > max_price），并在同子类目 Path A 候选中严格唯一最低价",
+    "path_b 的 SKU 满足预算（final_price <= max_price），且至少违反一个 specs 规格条件，并在同子类目 Path B 候选中按多规格归一化接近度严格唯一排名第 1"
+  ],
+  "pairs": [
+    {
+      "id": "C1",
+      "sub_category": "laptop_bag",
+      "query": "帮我找个 20 元以内的 17 寸防震游戏本电脑包",
+      "hard_constraints": [
+        { "key": "final_price", "op": "<=", "value": 20 },
+        { "key": "screen_size", "op": ">=", "value": 17 }
+      ],
+      "soft_constraints": ["防震"],
+      "conflict_reason": "当前演示商品目录内不存在同时满足 final_price<=20 且 screen_size>=17 的笔记本电脑包",
+      "path_a": { "sku_id": "SKU-3C-008", "expect": { "final_price": 29.9, "screen_size": 17.3 } },
+      "path_b": { "sku_id": "SKU-3C-009", "expect": { "final_price": 18.9, "screen_size": 15.6 } }
+    },
+    {
+      "id": "C2",
+      "sub_category": "gan_charger",
+      "query": "50 块以内、100W、还得有三个口的氮化镓充电器",
+      "hard_constraints": [
+        { "key": "final_price", "op": "<=", "value": 50 },
+        { "key": "power_w", "op": ">=", "value": 100 },
+        { "key": "ports", "op": ">=", "value": 3 }
+      ],
+      "soft_constraints": ["体积小巧"],
+      "conflict_reason": "当前演示商品目录内不存在同时满足 final_price<=50、power_w>=100 且 ports>=3 的氮化镓充电器",
+      "path_a": { "sku_id": "SKU-3C-010", "expect": { "final_price": 129.0, "power_w": 100, "ports": 3 } },
+      "path_b": { "sku_id": "SKU-3C-011", "expect": { "final_price": 45.0, "power_w": 65, "ports": 2 } }
+    },
+    {
+      "id": "C3",
+      "sub_category": "power_bank",
+      "query": "60 元以内、2 万毫安、还要不超过 200 克能塞口袋的充电宝",
+      "hard_constraints": [
+        { "key": "final_price", "op": "<=", "value": 60 },
+        { "key": "capacity_mah", "op": ">=", "value": 20000 },
+        { "key": "weight_g", "op": "<=", "value": 200 }
+      ],
+      "soft_constraints": ["自带线"],
+      "conflict_reason": "当前演示商品目录内不存在同时满足 final_price<=60、capacity_mah>=20000 且 weight_g<=200 的充电宝",
+      "path_a": { "sku_id": "SKU-3C-012", "expect": { "final_price": 119.0, "capacity_mah": 20000, "weight_g": 195 } },
+      "path_b": { "sku_id": "SKU-3C-013", "expect": { "final_price": 55.0, "capacity_mah": 10000, "weight_g": 185 } },
+      "fix_note": "初版 path_a 的 215g 违反自身 weight_g<=200、path_b 的 69 元违反自身 final_price<=60，两条路径都会被过滤成 None。已改为 195g / 55 元。"
+    },
+    {
+      "id": "C4",
+      "sub_category": "windbreaker",
+      "query": "200 元以内、10000mm 防水的冲锋衣，还得轻到 300 克以内",
+      "hard_constraints": [
+        { "key": "final_price", "op": "<=", "value": 200 },
+        { "key": "waterproof_mm", "op": ">=", "value": 10000 },
+        { "key": "weight_g", "op": "<=", "value": 300 }
+      ],
+      "soft_constraints": ["三合一"],
+      "conflict_reason": "当前演示商品目录内不存在同时满足 final_price<=200、waterproof_mm>=10000 且 weight_g<=300 的冲锋衣",
+      "path_a": { "sku_id": "SKU-APP-001", "expect": { "final_price": 399.0, "waterproof_mm": 10000, "weight_g": 280 } },
+      "path_b": { "sku_id": "SKU-APP-002", "expect": { "final_price": 179.0, "waterproof_mm": 5000, "weight_g": 320 } }
+    },
+    {
+      "id": "C5",
+      "sub_category": "sunscreen",
+      "query": "60 元以内、SPF50+、还要 60ml 大瓶的防晒霜",
+      "hard_constraints": [
+        { "key": "final_price", "op": "<=", "value": 60 },
+        { "key": "spf", "op": ">=", "value": 50 },
+        { "key": "volume_ml", "op": ">=", "value": 60 }
+      ],
+      "soft_constraints": ["不搓泥"],
+      "conflict_reason": "当前演示商品目录内不存在同时满足 final_price<=60、spf>=50 且 volume_ml>=60 的防晒霜",
+      "path_a": { "sku_id": "SKU-BEA-001", "expect": { "final_price": 89.0, "spf": 50, "volume_ml": 60 } },
+      "path_b": { "sku_id": "SKU-BEA-002", "expect": { "final_price": 55.0, "spf": 50, "volume_ml": 30 } }
+    }
+  ]
+}
