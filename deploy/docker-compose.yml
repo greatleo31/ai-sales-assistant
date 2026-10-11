@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  pgvector-db:
+    image: pgvector/pgvector:pg16
+    container_name: ai-sales-pgvector
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be explicitly configured in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-ai_sales_assistant}
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./seed_60skus_full.sql:/docker-entrypoint-initdb.d/02_seed_60skus_full.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-ai_sales_assistant}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgvector_data:
+    driver: local
