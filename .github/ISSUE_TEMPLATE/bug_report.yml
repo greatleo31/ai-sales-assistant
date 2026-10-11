@@ -1,0 +1,41 @@
+name: Bug Report / Audit Remediation
+description: Report a deterministic gate violation, spec-text drift, retrieval pollution, or runtime defect
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to track defects discovered during adversarial testing, static gate validation, or independent code review.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      options:
+        - "Blocker (Prevents downstream module freeze or causes factual hallucination)"
+        - "High (Breaks category isolation, RRF ranking, or SLA fallback guarantee)"
+        - "Medium (Edge-case input handling or non-fatal schema drift)"
+        - "Low (Code hygiene, typing, or telemetry precision)"
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Symptom & Root Cause Analysis
+      description: Describe the exact failure mode, affected files/lines, and why the defect occurs.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproduction Steps / Adversarial Probe
+      description: Provide the exact command or input payload that triggers the defect.
+    validations:
+      required: true
+  - type: textarea
+    id: fix_verification
+    attributes:
+      label: Remediation & Regression Test Contract
+      description: How is the defect resolved, and which automated test prevents recurrence?
+    validations:
+      required: true
