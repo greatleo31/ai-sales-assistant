@@ -20,6 +20,7 @@ import asyncio
 import json
 import logging
 import time
+import uuid
 from dataclasses import dataclass, field
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
@@ -27,6 +28,7 @@ import httpx
 
 from app.config import settings
 from app.core.telemetry import count_tokens_exact
+from app.services.admin_analytics_service import analytics_service
 from app.services.constraint_extractor import ConstraintExtractor
 from app.services.jev_router import JevDecisionRouter
 from app.services.multimodal_rag import MultimodalRAGEngine
@@ -338,32 +340,58 @@ class ShoppingAgentOrchestrator:
         timeout_sec: float = 18.0,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
-        调用 `POST https://go.penguin.ooo/api/v1/responses` (`deepseek-flash`) 流式接口：
-          - `instructions` 传入 100% 字节级恒定的静态系统提示词前缀 (`static_prefix`)；
-          - `input` 传入动态策略后缀、多轮历史与当前用户消息；
-          - 实时产出 `{"type": "delta", "delta": "..."}` 与结束时的 `{"type": "usage", "usage": {...}}`。
+        调用主生成模型流式接口，同时兼容：
+          1. OpenAI `chat` 协议 (`POST http://127.0.0.1:8367/v1/chat/completions`, key=`123`)：
+             - `messages[0]` (`role="system"`) 传入 100% 字节级恒定的静态系统提示词前缀 (`static_prefix`)，触发服务端硬件级 KV Prefix Cache；
+             - `messages[1]` (`role="user"`) 传入动态策略后缀、多轮历史与当前用户消息；
+          2. OpenAI `responses` 协议 (`POST /v1/responses`)：
+             - `instructions` 传入 `static_prefix`，`input` 传入 `input_text`。
         """
         headers = {
             "Authorization": f"Bearer {node.api_key}",
             "Content-Type": "application/json",
             "Accept": "text/event-stream",
         }
-        payload = {
-            "model": node.model,
-            "instructions": instructions,
-            "input": input_text,
-            "reasoning": {"effort": "low"},
-            "stream": True,
-        }
+        is_chat_protocol = (
+            node.protocol.lower() in ("chat", "chat_completions")
+            or node.url.rstrip("/").endswith("/chat/completions")
+            or node.url.rstrip("/").endswith("/v1")
+        )
+        effective_model = node.model
+        if effective_model in ("api-v4.1-flash", "deepseek-v4.1-flash"):
+            effective_model = "deepseek-flash"
+
+        if is_chat_protocol:
+            target_url = node.url.rstrip("/")
+            if not target_url.endswith("/chat/completions"):
+                target_url = f"{target_url}/chat/completions"
+            payload: Dict[str, Any] = {
+                "model": effective_model,
+                "messages": [
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": input_text},
+                ],
+                "thinking": {"type": "disabled"},
+                "stream": True,
+            }
+        else:
+            target_url = node.url
+            payload = {
+                "model": effective_model,
+                "instructions": instructions,
+                "input": input_text,
+                "reasoning": {"effort": "low"},
+                "stream": True,
+            }
 
         async with httpx.AsyncClient(timeout=timeout_sec) as client:
             async with client.stream(
-                "POST", node.url, headers=headers, json=payload
+                "POST", target_url, headers=headers, json=payload
             ) as resp:
                 if resp.status_code != 200:
                     body = await resp.aread()
                     raise RuntimeError(
-                        f"/v1/responses HTTP {resp.status_code}: {body[:200]!r}"
+                        f"LLM stream HTTP {resp.status_code} ({target_url}): {body[:200]!r}"
                     )
 
                 current_event = ""
@@ -384,15 +412,42 @@ class ShoppingAgentOrchestrator:
                     except Exception:
                         continue
 
-                    evt_type = evt_obj.get("type") or current_event
-                    if evt_type == "response.output_text.delta":
-                        delta_txt = evt_obj.get("delta", "")
-                        if delta_txt:
-                            yield {"type": "delta", "delta": delta_txt}
-                    elif evt_type == "response.completed":
-                        resp_obj = evt_obj.get("response") or {}
-                        usage_obj = resp_obj.get("usage") or {}
-                        yield {"type": "usage", "usage": usage_obj}
+                    if current_event == "error" or evt_obj.get("type") == "error":
+                        err_msg = (evt_obj.get("error") or {}).get("message") or str(evt_obj)
+                        raise RuntimeError(f"LLM stream error event: {err_msg}")
+
+                    if is_chat_protocol or evt_obj.get("object") == "chat.completion.chunk":
+                        choices = evt_obj.get("choices") or []
+                        if choices:
+                            delta_obj = choices[0].get("delta") or {}
+                            delta_txt = delta_obj.get("content")
+                            if delta_txt:
+                                yield {"type": "delta", "delta": delta_txt}
+                        usage_raw = evt_obj.get("usage")
+                        if isinstance(usage_raw, dict) and usage_raw:
+                            cached_tok = int(
+                                (usage_raw.get("prompt_tokens_details") or {}).get("cached_tokens")
+                                or usage_raw.get("prompt_cache_hit_tokens")
+                                or 0
+                            )
+                            yield {
+                                "type": "usage",
+                                "usage": {
+                                    "input_tokens": int(usage_raw.get("prompt_tokens") or 0),
+                                    "output_tokens": int(usage_raw.get("completion_tokens") or 0),
+                                    "input_tokens_details": {"cached_tokens": cached_tok},
+                                },
+                            }
+                    else:
+                        evt_type = evt_obj.get("type") or current_event
+                        if evt_type == "response.output_text.delta":
+                            delta_txt = evt_obj.get("delta", "")
+                            if delta_txt:
+                                yield {"type": "delta", "delta": delta_txt}
+                        elif evt_type == "response.completed":
+                            resp_obj = evt_obj.get("response") or {}
+                            usage_obj = resp_obj.get("usage") or {}
+                            yield {"type": "usage", "usage": usage_obj}
 
     async def stream_chat(
         self,
@@ -403,6 +458,9 @@ class ShoppingAgentOrchestrator:
         allow_remote_llm: bool = True,
         allow_remote_embedding: bool = False,
         retrieval_mode: str = "hybrid_rrf",
+        tenant_id: str = "tenant_all",
+        client_ip: str = "127.0.0.1",
+        user_agent: str = "Mozilla/5.0",
     ) -> AsyncGenerator[str, None]:
         """
         执行全链路状态机并按序 yield 标准 SSE 帧：
@@ -417,6 +475,7 @@ class ShoppingAgentOrchestrator:
         ttft_ms: Optional[float] = None
         clean_query = (query or "").strip()
         conv_history = list(history or [])
+        message_id = f"msg-{uuid.uuid4().hex[:12]}"
 
         # ====================================================================
         # Step 1: ContentGuard 输入安全护栏（零延迟同步拦截）
@@ -428,7 +487,10 @@ class ShoppingAgentOrchestrator:
         if input_guard.action == GuardAction.BLOCK:
             # 输入触发 Prompt 注入或违法违禁词，Fail-Closed 安全阻断并输出完整 6 类 SSE 事件
             blocked_meta = {
+                "message_id": message_id,
                 "session_id": session_id,
+                "tenant_id": tenant_id,
+                "client_ip": client_ip,
                 "primary_intent": "privacy_guard",
                 "intent_confidence": 1.0,
                 "confidence_tier": "high",
@@ -455,17 +517,15 @@ class ShoppingAgentOrchestrator:
                 "sub_category": None,
                 "jev_rtt_ms": 0.0,
             }
+            empty_cards = {
+                "product_cards": [],
+                "price_explain_cards": [],
+                "order_cards": [],
+                "aftersales_card": None,
+                "handoff_card": None,
+            }
             yield format_sse_event("decision_meta", blocked_meta)
-            yield format_sse_event(
-                "ui_cards",
-                {
-                    "product_cards": [],
-                    "price_explain_cards": [],
-                    "order_cards": [],
-                    "aftersales_card": None,
-                    "handoff_card": None,
-                },
-            )
+            yield format_sse_event("ui_cards", empty_cards)
             safe_msg = input_guard.safe_reply or "抱歉，您的请求触发了平台安全护栏，我是电商导购助手，很高兴为您提供选品与订单售后咨询。"
             ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
             yield format_sse_event("text_delta", {"delta": safe_msg})
@@ -480,48 +540,97 @@ class ShoppingAgentOrchestrator:
             )
             align = prompt_pkg["alignment_metrics"]
             total_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
-            yield format_sse_event(
-                "telemetry",
-                {
-                    "ttft_ms": ttft_ms,
-                    "total_rtt_ms": total_ms,
-                    "rag_retrieve_ms": 0.0,
-                    "jev_rtt_ms": 0.0,
-                    "index_mode": "none",
-                    "db_backend": self.rag_engine.db_backend,
-                    "recall_channels": {
-                        "sub_category_pool": 0,
-                        "hard_filtered": 0,
-                        "bm25_hits": 0,
-                        "pgvector_halfvec_hits": 0,
-                        "relaxed_candidates": 0,
-                    },
-                    "prefix_cache_aligned": align["prefix_cache_aligned"],
-                    "static_prefix_md5": align["static_prefix_md5"],
-                    "static_prefix_tokens": align["static_prefix_tokens"],
-                    "dynamic_suffix_tokens": align["dynamic_suffix_tokens"],
-                    "static_ratio_pct": align["static_ratio_pct"],
-                    "tokenizer": align["tokenizer"],
-                    "context_window_limit": self.context_window_limit,
-                    "history_tokens": 0,
-                    "jev_input_tokens": 0,
-                    "jev_output_tokens": 0,
-                    "jev_cache_hit": False,
-                    "llm_input_tokens": 0,
-                    "llm_output_tokens": count_tokens_exact(safe_msg),
-                    "llm_cached_tokens": 0,
-                    "gateway_node": "content_guard_shortcircuit",
-                    "circuit_breaker_state": self.llm_router.primary_node.breaker.state,
-                    "rtc_voice_enabled": settings.enable_rtc_voice,
+            blocked_telemetry = {
+                "ttft_ms": ttft_ms,
+                "total_rtt_ms": total_ms,
+                "rag_retrieve_ms": 0.0,
+                "jev_rtt_ms": 0.0,
+                "index_mode": "none",
+                "db_backend": self.rag_engine.db_backend,
+                "recall_channels": {
+                    "sub_category_pool": 0,
+                    "hard_filtered": 0,
+                    "bm25_hits": 0,
+                    "pgvector_halfvec_hits": 0,
+                    "relaxed_candidates": 0,
                 },
+                "prefix_cache_aligned": align["prefix_cache_aligned"],
+                "static_prefix_md5": align["static_prefix_md5"],
+                "static_prefix_tokens": align["static_prefix_tokens"],
+                "dynamic_suffix_tokens": align["dynamic_suffix_tokens"],
+                "static_ratio_pct": align["static_ratio_pct"],
+                "tokenizer": align["tokenizer"],
+                "context_window_limit": self.context_window_limit,
+                "history_tokens": 0,
+                "jev_input_tokens": 0,
+                "jev_output_tokens": 0,
+                "jev_cache_hit": False,
+                "llm_input_tokens": 0,
+                "llm_output_tokens": count_tokens_exact(safe_msg),
+                "llm_cached_tokens": 0,
+                "gateway_node": "content_guard_shortcircuit",
+                "circuit_breaker_state": self.llm_router.primary_node.breaker.state,
+                "rtc_voice_enabled": settings.enable_rtc_voice,
+            }
+            yield format_sse_event("telemetry", blocked_telemetry)
+            analytics_service.record_chat_turn(
+                message_id=message_id,
+                session_id=session_id,
+                tenant_id=tenant_id,
+                client_ip=client_ip,
+                user_agent=user_agent,
+                user_query=clean_query,
+                ai_response=safe_msg,
+                decision_meta=blocked_meta,
+                ui_cards=empty_cards,
+                telemetry=blocked_telemetry,
             )
             yield format_sse_event("done", "[DONE]")
             return
 
         # ====================================================================
-        # Step 2: asyncio.gather 并发执行 JevDecisionRouter 与硬约束提取 + 预检索
+        # Step 2: 多轮上下文类目锁继承 + asyncio.gather 并发执行 JevDecisionRouter 与预检索
         # ====================================================================
         extracted = self.extractor.extract(clean_query)
+
+        # 全平台未覆盖品类词表（优先检测当前句是否切换到未上架新品类）
+        missing_item_keywords = [
+            "空气炸锅", "电饭煲", "微波炉", "咖啡机", "破壁机", "榨汁机", "吹风机", "吸尘器",
+            "扫地机器人", "洗地机", "洗衣机", "冰箱", "空调", "电视", "投影仪", "显卡",
+            "主板", "内存条", "固态硬盘", "显示器", "无线鼠标", "电竞鼠标", "鼠标", "游戏手柄",
+            "手机", "平板", "iPad", "智能手表", "手环", "相机", "无人机", "筋膜枪",
+            "电动牙刷", "剃须刀", "越野跑鞋", "跑鞋", "运动鞋", "篮球鞋", "球鞋", "皮鞋",
+            "马丁靴", "连衣裙", "半身裙", "牛仔裤", "羽绒服", "行李箱", "拉杆箱", "墨镜",
+            "冻干猫粮", "猫粮", "狗粮", "猫砂", "咖啡", "零食", "奶粉", "香水", "口红",
+            "粉底液", "眼影", "洗发水", "沐浴露", "护手霜",
+        ]
+        has_missing_kw_in_current = any(kw in clean_query for kw in missing_item_keywords)
+
+        # 若当前追问（如“把预算放宽到 230 元以内，再帮我找一轮最合适的款式”）省略了商品名，
+        # 自动从最近的历史对话轮次继承 sub_category 类目锁与未被覆盖的规格条件，防止跨类目漂移到 SKU-3C-001（笔记本内胆包）
+        effective_rag_query = clean_query
+        if not extracted.get("sub_category") and not has_missing_kw_in_current and conv_history:
+            user_hist = [m for m in reversed(conv_history) if m.get("role") == "user"]
+            all_hist = user_hist + [m for m in reversed(conv_history) if m.get("role") != "user"]
+            for h_msg in all_hist:
+                h_text = str(h_msg.get("content") or "").strip()
+                if not h_text:
+                    continue
+                h_ext = self.extractor.extract(h_text)
+                if h_ext.get("sub_category"):
+                    inherited_sub = h_ext["sub_category"]
+                    extracted["sub_category"] = inherited_sub
+                    extracted["matched_sub_categories"] = [inherited_sub]
+                    extracted["sub_category_ambiguity"] = "none"
+                    effective_rag_query = f"{inherited_sub} {clean_query}"
+
+                    # 继承历史对话中的软约束偏好（不强锁上一轮已冲突的硬规格，使放宽预算后能正常筛出同品类候选）
+                    if h_msg.get("role") == "user":
+                        for sc in h_ext.get("soft_constraints") or []:
+                            if sc not in (extracted.get("soft_constraints") or []):
+                                extracted.setdefault("soft_constraints", []).append(sc)
+                    break
+
         jev_task = asyncio.create_task(
             self.jev_router.evaluate_async(
                 state=clean_query,
@@ -532,7 +641,7 @@ class ShoppingAgentOrchestrator:
         # 并发启动 RAG 预检索（若最终意图不需要 RAG 则丢弃结果，零串行等待损耗）
         rag_pre_task = asyncio.create_task(
             self.rag_engine.search_async(
-                query=clean_query,
+                query=effective_rag_query,
                 extracted_constraints=extracted,
                 mode=retrieval_mode,
                 allow_remote_embedding=allow_remote_embedding,
@@ -551,15 +660,28 @@ class ShoppingAgentOrchestrator:
         jev_decision["handoff_guard"] = handoff_guard
 
         # ====================================================================
-        # Step 3: 按意图路由至多模态 RAG、确定性订单查询或售后秒级核验工具
+        # Step 3: 按意图路由至多模态 RAG、确定性订单查询、售后核验或「缺货品类心愿单钩子」
         # ====================================================================
         rag_result: Optional[Dict[str, Any]] = None
         order_result: Optional[Dict[str, Any]] = None
         aftersales_result: Optional[Dict[str, Any]] = None
+        tenant_rejection_msg: Optional[str] = None
+        wishlist_card: Optional[Dict[str, Any]] = None
 
         has_product_constraints = bool(
             extracted.get("sub_category") or extracted.get("hard_constraints")
         )
+
+        detected_missing_item: Optional[str] = None
+        if (
+            not extracted.get("sub_category")
+            and primary_intent not in ("order_query", "aftersales_qa", "privacy_guard")
+            and not handoff_guard
+        ):
+            for kw in missing_item_keywords:
+                if kw in clean_query:
+                    detected_missing_item = kw
+                    break
 
         if primary_intent == "order_query":
             order_result = self.order_tools.query_order_status(
@@ -575,10 +697,49 @@ class ShoppingAgentOrchestrator:
                 order_id=aftersales_result.get("order_id") or entities.get("order_id"),
                 query_text=clean_query,
             )
+        elif detected_missing_item:
+            primary_intent = "product_recommend"
+            jev_decision["primary_intent"] = "product_recommend"
+            hook_rec = analytics_service.record_wishlist_hook(
+                missing_item=detected_missing_item,
+                user_query=clean_query,
+                session_id=session_id,
+                client_ip=client_ip,
+                user_subscribed=False,
+            )
+            wishlist_card = {
+                "card_type": "wishlist_card",
+                "hook_id": hook_rec.get("hook_id", "wish-live"),
+                "missing_item": detected_missing_item,
+                "query": clean_query,
+                "title": f"暂无「{detected_missing_item}」在售商品",
+                "subtitle": "我们会尽快安排采买上架，点击下方按钮登记到货提醒",
+                "budget_options": ["¥100以内", "¥100-300", "¥300-800", "¥800以上"],
+                "request_count": int(hook_rec.get("request_count") or 1),
+                "status": hook_rec.get("status", "pending"),
+            }
+            rag_result = None
+            tenant_rejection_msg = (
+                f"抱歉，惠购目前暂无「{detected_missing_item}」相关商品，我们会尽快安排补货上架。"
+                f"您可以点击上方卡片一键登记心愿单，上架后第一时间通知您。"
+            )
         elif primary_intent == "product_recommend" or (
             jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat")
         ) or has_product_constraints:
-            rag_result = pre_rag_result
+            candidate_sub_cat = (
+                pre_rag_result.get("sub_category")
+                if pre_rag_result
+                else extracted.get("sub_category")
+            )
+            allowed, reject_msg, _ = analytics_service.check_tenant_category_access(
+                tenant_id=tenant_id,
+                sub_category=candidate_sub_cat,
+            )
+            if not allowed:
+                rag_result = None
+                tenant_rejection_msg = reject_msg
+            else:
+                rag_result = pre_rag_result
 
         # ====================================================================
         # Step 4: 发送 SSE 事件 1 —— `event: decision_meta`
@@ -596,7 +757,10 @@ class ShoppingAgentOrchestrator:
         )
 
         decision_meta_payload = {
+            "message_id": message_id,
             "session_id": session_id,
+            "tenant_id": tenant_id,
+            "client_ip": client_ip,
             "primary_intent": primary_intent,
             "intent_confidence": jev_decision.get("intent_confidence", 1.0),
             "confidence_tier": jev_decision.get("confidence_tier", "high"),
@@ -653,6 +817,7 @@ class ShoppingAgentOrchestrator:
                 else None
             ),
             "handoff_card": handoff_card,
+            "wishlist_card": wishlist_card,
         }
         yield format_sse_event("ui_cards", ui_cards_payload)
 
@@ -688,7 +853,11 @@ class ShoppingAgentOrchestrator:
                 h_lines.append(f"- {m['role']}: {m['content']}")
             history_block = "\n" + "\n".join(h_lines) + "\n"
 
-        llm_input_text = f"{dynamic_suffix}{history_block}\n请直接基于以上真源数据回复用户：{clean_query}"
+        c_end_format_rule = (
+            "\n【C端客户界面排版硬约束】：直接输出面向消费者的清爽纯中文与列表，"
+            "严禁输出 `<br>`、`<div>` 等任何 HTML 标签，严禁输出 `$...$`、`\\rightarrow` 等 LaTeX 数学公式符号或 Markdown 表格线。\n"
+        )
+        llm_input_text = f"{dynamic_suffix}{history_block}{c_end_format_rule}\n请直接基于以上真源数据回复用户：{clean_query}"
 
         # ====================================================================
         # Step 7: 调用主生成模型 (/v1/responses) 或确定性合成器，经滑动窗口过滤推送 `text_delta`
@@ -702,7 +871,25 @@ class ShoppingAgentOrchestrator:
         emitted_full_text_parts: List[str] = []
 
         remote_succeeded = False
-        if allow_remote_llm and selected_node.api_key:
+        if tenant_rejection_msg:
+            gateway_node_used = "tenant-isolation-guard"
+            chunk_size = 28
+            for i in range(0, len(tenant_rejection_msg), chunk_size):
+                piece = tenant_rejection_msg[i : i + chunk_size]
+                safe_piece = stream_filter.filter_delta(piece)
+                if safe_piece:
+                    if ttft_ms is None:
+                        ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+                    emitted_full_text_parts.append(safe_piece)
+                    yield format_sse_event("text_delta", {"delta": safe_piece})
+            tail_piece = stream_filter.flush()
+            if tail_piece:
+                if ttft_ms is None:
+                    ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+                emitted_full_text_parts.append(tail_piece)
+                yield format_sse_event("text_delta", {"delta": tail_piece})
+            remote_succeeded = True
+        elif allow_remote_llm and selected_node.api_key:
             t_llm_0 = time.perf_counter()
             try:
                 async for item in self._stream_remote_responses_api(
@@ -887,7 +1074,25 @@ class ShoppingAgentOrchestrator:
         }
         yield format_sse_event("telemetry", telemetry_payload)
 
+        # 实时审计入库 (AdminAnalyticsService)
+        try:
+            analytics_service.record_chat_turn(
+                message_id=message_id,
+                session_id=session_id,
+                tenant_id=tenant_id,
+                client_ip=client_ip,
+                user_agent=user_agent,
+                user_query=clean_query,
+                response_text=full_emitted_text,
+                decision_meta=decision_meta_payload,
+                ui_cards=ui_cards_payload,
+                telemetry=telemetry_payload,
+            )
+        except Exception as audit_err:
+            logger.warning(f"[ShoppingAgentOrchestrator] 审计日志写入异常: {audit_err}")
+
         # ====================================================================
         # Step 10: 发送 SSE 事件 6 —— `event: done`
         # ====================================================================
         yield format_sse_event("done", "[DONE]")
+
