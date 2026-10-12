@@ -417,13 +417,101 @@ class EntityTracker:
 
 
 # ==============================================================================
-# 4. 滑动窗口违规词/伪造优惠券与 FunctionCall 标记流式拦截器
+# 4. C端富文本净化器 (CustomerTextNormalizer) 与滑动窗口流式拦截器 (SlidingWindowStreamFilter)
 # ==============================================================================
+class CustomerTextNormalizer:
+    """
+    面向 C 端客户的流式/全量文本净化器：
+      1. 根治 HTML 标签裸露：将 `<br>`, `<br/>`, `<br />`, `</p>`, `</div>`, `</li>` 转为自然换行 `\n`，
+         剥离其余 HTML 标签（如 `<p>`, `<span>`, `<div>`, `<table>`, `<script>` 等），并解码 `&nbsp;` 等实体；
+      2. 根治 LaTeX 数学符号与公式定界符裸露：
+         - 将 `\\rightarrow` / `\\to` -> `→`，`\\ge` / `\\geq` -> `≥`，`\\le` / `\\leq` -> `≤`，
+           `\\times` / `\\cdot` -> `×`，`\\div` -> `÷`，`\\approx` -> `≈`，`\\pm` -> `±`，`\\Delta` -> `差额`；
+         - 剥离 `\\text{...}`, `\\mathbf{...}`, `\\mathrm{...}` 外壳及 `$$...$$`, `\\[...\\]`, `\\(...\\)`, `$...$` 数学定界符；
+      3. 根治生硬 Markdown 结构裸露：剥离行首 `#{1,6}` 标题井号与 `|---|---|` 表格分割线，保留自然的 `**重点加粗**` 与列表项。
+    """
+
+    _BR_TAG_RE = re.compile(r"<\s*(?:br\s*/?|/p|/div|/li|/tr)\s*>", re.IGNORECASE)
+    _STRIP_TAG_RE = re.compile(
+        r"<\s*/?\s*(?:p|div|span|strong|b|em|i|u|ul|ol|li|table|thead|tbody|tr|td|th|hr|img|a|code|pre|blockquote|font|sup|sub|h[1-6]|script|style|iframe)\b[^>]*>",
+        re.IGNORECASE,
+    )
+    _LATEX_TEXT_WRAP_RE = re.compile(r"\\(?:text|mathrm|mathbf|mathit|textbf)\s*\{([^{}]*)\}")
+    _LATEX_FRAC_RE = re.compile(r"\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}")
+    _BLOCK_MATH_RE = re.compile(r"\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)")
+    _INLINE_MATH_RE = re.compile(r"(?<![\\A-Za-z0-9])\$([^\$\n]{1,80}?)\$(?![0-9])")
+    _MD_HEADING_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
+    _MD_TABLE_SEP_RE = re.compile(r"(?m)^\s*\|[\s\-:|]+\|\s*\n?")
+
+    _LATEX_SYMBOL_MAP: List[Tuple[re.Pattern, str]] = [
+        (re.compile(r"\\(?:rightarrow|longrightarrow|Rightarrow|to)\b"), "→"),
+        (re.compile(r"\\(?:leftarrow|longleftarrow|Leftarrow)\b"), "←"),
+        (re.compile(r"\\(?:leftrightarrow|Leftrightarrow)\b"), "↔"),
+        (re.compile(r"\\(?:ge|geq|geqslant)\b"), "≥"),
+        (re.compile(r"\\(?:le|leq|leqslant)\b"), "≤"),
+        (re.compile(r"\\(?:neq|ne)\b"), "≠"),
+        (re.compile(r"\\(?:times|cdot)\b"), "×"),
+        (re.compile(r"\\div\b"), "÷"),
+        (re.compile(r"\\(?:approx|sim|simeq)\b"), "≈"),
+        (re.compile(r"\\pm\b"), "±"),
+        (re.compile(r"\\Delta\b"), "差额"),
+        (re.compile(r"\\infty\b"), "∞"),
+        (re.compile(r"\\%"), "%"),
+        (re.compile(r"\\¥"), "¥"),
+    ]
+
+    _HTML_ENTITY_MAP: List[Tuple[str, str]] = [
+        ("&nbsp;", " "),
+        ("&gt;", ">"),
+        ("&lt;", "<"),
+        ("&amp;", "&"),
+        ("&quot;", '"'),
+        ("&#39;", "'"),
+        ("&yen;", "¥"),
+    ]
+
+    @classmethod
+    def normalize(cls, text: str) -> str:
+        if not text:
+            return ""
+        out = text
+
+        # 1. HTML 换行标签转 \n，其余已知 HTML 标签剥离
+        out = cls._BR_TAG_RE.sub("\n", out)
+        out = cls._STRIP_TAG_RE.sub("", out)
+        for ent, rep in cls._HTML_ENTITY_MAP:
+            if ent in out:
+                out = out.replace(ent, rep)
+
+        # 2. LaTeX 数学结构与符号转自然语言/Unicode
+        for _ in range(2):
+            out = cls._LATEX_TEXT_WRAP_RE.sub(r"\1", out)
+            out = cls._LATEX_FRAC_RE.sub(r"\1/\2", out)
+
+        out = cls._BLOCK_MATH_RE.sub(
+            lambda m: (m.group(1) or m.group(2) or m.group(3) or "").strip(),
+            out,
+        )
+        out = cls._INLINE_MATH_RE.sub(lambda m: m.group(1).strip(), out)
+
+        for pat, sym in cls._LATEX_SYMBOL_MAP:
+            out = pat.sub(sym, out)
+
+        # 3. 剥离 Markdown 标题井号与表格分割线
+        out = cls._MD_HEADING_RE.sub("", out)
+        out = cls._MD_TABLE_SEP_RE.sub("", out)
+
+        # 折叠过多连续空行
+        out = re.sub(r"\n{3,}", "\n\n", out)
+        return out
+
+
 class SlidingWindowStreamFilter:
     """
-    流式输出双层过滤器：
+    流式输出三层过滤器：
       1. 拦截跨 chunk 拆分的 <|FunctionCallBegin|>...<|FunctionCallEnd|> 原始标记；
-      2. 维护跨 chunk 滑动窗口，拦截违规敏感词与违背 HANDOFF §2 的伪造叠加神券话术（如“隐藏优惠券”、“叠加满减券”）。
+      2. 维护跨 chunk 滑动窗口，拦截违规敏感词与违背 HANDOFF §2 的伪造叠加神券话术（如“隐藏优惠券”、“叠加满减券”）；
+      3. 跨 chunk 实时净化 HTML 标签（`<br>` 等）、LaTeX 数学公式（`$...$`、`\\le`、`\\rightarrow` 等）与生硬 Markdown 标记。
     """
 
     FORBIDDEN_STREAM_PATTERNS: List[Tuple[re.Pattern, str]] = [
@@ -431,11 +519,23 @@ class SlidingWindowStreamFilter:
         (re.compile(r"SYSTEM_PROMPT_DYNAMIC_BOUNDARY"), ""),
     ]
 
-    def __init__(self, overlap_chars: int = 12) -> None:
+    # 检测滑动窗口末尾可能尚未闭合的 HTML 标签、HTML 实体、LaTeX 反斜杠命令或未配对的 $ 公式
+    _INCOMPLETE_TAIL_RE = re.compile(
+        r"(?:<[^>]{0,40}|&[a-zA-Z0-9#]{0,8}|\\[a-zA-Z]{0,16}(?:\{[^{}]{0,20})?|\$[^\$\n]{0,30})$"
+    )
+
+    def __init__(self, overlap_chars: int = 16) -> None:
         self._in_func_call: bool = False
         self._marker_buf: str = ""
         self._window_buf: str = ""
         self._overlap_chars: int = overlap_chars
+
+    def _apply_filters(self, text: str) -> str:
+        out = text
+        for pat, replacement in self.FORBIDDEN_STREAM_PATTERNS:
+            out = pat.sub(replacement, out)
+        out = CustomerTextNormalizer.normalize(out)
+        return out
 
     def filter_delta(self, delta: str) -> Optional[str]:
         if not delta:
@@ -450,7 +550,6 @@ class SlidingWindowStreamFilter:
                 content = content.split("<|FunctionCallEnd|>")[-1]
                 self._in_func_call = False
             else:
-                # 保留末尾可能半截的 <|FunctionCallEnd|> 前缀
                 if "<|" in content:
                     idx = content.rfind("<|")
                     self._marker_buf = content[idx:]
@@ -492,14 +591,20 @@ class SlidingWindowStreamFilter:
         if not content:
             return None
 
-        # 滑动窗口拼接检查跨 chunk 违禁词/伪造神券词
+        # 滑动窗口拼接并执行违禁词 + HTML/LaTeX/Markdown 净化
         combined = self._window_buf + content
-        for pat, replacement in self.FORBIDDEN_STREAM_PATTERNS:
-            combined = pat.sub(replacement, combined)
+        combined = self._apply_filters(combined)
 
-        if len(combined) > self._overlap_chars:
-            emit_part = combined[: -self._overlap_chars]
-            self._window_buf = combined[-self._overlap_chars :]
+        # 检查末尾是否存在半截的 HTML 标签 (<br...)、LaTeX 命令 (\right...) 或未闭合的 $...
+        holdback = self._overlap_chars
+        m_tail = self._INCOMPLETE_TAIL_RE.search(combined)
+        if m_tail:
+            tail_len = len(combined) - m_tail.start()
+            holdback = max(holdback, tail_len)
+
+        if len(combined) > holdback:
+            emit_part = combined[:-holdback]
+            self._window_buf = combined[-holdback:]
             return emit_part if emit_part else None
         else:
             self._window_buf = combined
@@ -509,8 +614,7 @@ class SlidingWindowStreamFilter:
         rem = self._window_buf + self._marker_buf
         self._window_buf = ""
         self._marker_buf = ""
-        for pat, replacement in self.FORBIDDEN_STREAM_PATTERNS:
-            rem = pat.sub(replacement, rem)
+        rem = self._apply_filters(rem)
         return rem if rem else None
 
 
