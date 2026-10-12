@@ -17,5 +17,9 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Frontend Dependencies
+node_modules/
+*/node_modules/
+
 # Local Internal Specs (kept locally, excluded from public English repository)
 HANDOFF.md

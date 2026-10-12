@@ -1,41 +1,41 @@
-name: Bug Report / Audit Remediation
-description: Report a deterministic gate violation, spec-text drift, retrieval pollution, or runtime defect
-title: "[BUG] "
+name: 缺陷反馈 / 审计修复报告
+description: 提交确定性闸门违背、规格文本漂移、跨切片标签污染、检索降级或运行时缺陷
+title: "[缺陷] "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this template to track defects discovered during adversarial testing, static gate validation, or independent code review.
+        本模板用于跟踪在对抗探针、数据闸门静态自洽性检查、跨 Chunk 边界流式清洗或代码审查中发现的系统缺陷。
   - type: dropdown
     id: severity
     attributes:
-      label: Severity Level
+      label: 缺陷严重级别
       options:
-        - "Blocker (Prevents downstream module freeze or causes factual hallucination)"
-        - "High (Breaks category isolation, RRF ranking, or SLA fallback guarantee)"
-        - "Medium (Edge-case input handling or non-fatal schema drift)"
-        - "Low (Code hygiene, typing, or telemetry precision)"
+        - "阻断性 Blocker (阻碍下游模块冻结、导致事实幻觉或价格违规)"
+        - "严重 High (破坏品类隔离、RRF 排序断层、跨切片流式清洗漏网或 SLA 降级失效)"
+        - "中等 Medium (边界条件输入异常、前端展示错位或非致命 Schema 漂移)"
+        - "轻微 Low (代码整洁度、类型注解标注或遥测统计精度)"
     validations:
       required: true
   - type: textarea
     id: root_cause
     attributes:
-      label: Symptom & Root Cause Analysis
-      description: Describe the exact failure mode, affected files/lines, and why the defect occurs.
+      label: 缺陷现象与根本原因分析
+      description: 详细描述失败现象、受影响的文件及代码行号，并分析缺陷根本原因。
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
-      label: Minimal Reproduction Steps / Adversarial Probe
-      description: Provide the exact command or input payload that triggers the defect.
+      label: 最小复现步骤 / 对抗探针
+      description: 提供能够触发缺陷的精确输入 Query、命令或测试 Payload。
     validations:
       required: true
   - type: textarea
     id: fix_verification
     attributes:
-      label: Remediation & Regression Test Contract
-      description: How is the defect resolved, and which automated test prevents recurrence?
+      label: 修复方案与防回归测试契约
+      description: 该缺陷如何被解决？通过哪些自动化单元测试或断言确保不再复现？
     validations:
       required: true

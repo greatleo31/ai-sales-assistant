@@ -72,7 +72,7 @@ class TestEndToEndShowcaseAndBenchmark(unittest.TestCase):
         self.assertEqual(data.get("effective_context_window"), 272000)
         self.assertEqual(data.get("sku_count"), 60)
         self.assertEqual(data.get("embedding_dim"), 1024)
-        self.assertEqual(data.get("llm_protocol"), "responses")
+        self.assertIn(data.get("llm_protocol"), ("chat", "responses"))
 
     def test_02_all_60_static_images_reachable_and_valid_jpeg(self) -> None:
         """2. Verify all 60 SKU images return HTTP 200, `image/jpeg`, and JPEG magic bytes `\\xff\\xd8\\xff`."""

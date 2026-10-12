@@ -1,50 +1,54 @@
-name: Feature Request / Architecture Module
-description: Propose a new architectural module, capability, or deterministic benchmark suite
-title: "[FEAT] "
+name: 新特性建议 / 架构模块提案
+description: 提交新架构模块、核心业务能力或确定性基准评测套件
+title: "[特性] "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for proposing a new feature or architectural module for **AI Sales Assistant**. Please complete the engineering contract below.
+        感谢为 **「惠购」全栈 AI 导购与运营治理系统** 提交特性或架构模块提案！请依照工程契约填写以下信息。
   - type: dropdown
     id: module
     attributes:
-      label: Target Architectural Layer
-      description: Which subsystem does this feature belong to?
+      label: 目标架构分层
+      description: 本特性属于系统哪个核心子系统？
       options:
-        - "Module 1: Catalog Schema, Spec Registry & Deterministic Validator Gate"
-        - "Module 2: Multimodal Assets (COS/Local), Gemini-Embedding-2 (1024d) & Vector Store"
-        - "Module 3: System One (Jev) Gating, Local Rule Governance & Hybrid RAG Relaxation"
-        - "Module 4: 272K Context Orchestrator, Deterministic Order Tools & Typed SSE Showcase"
-        - "Module 5: 50-Query Benchmark Suite, A/B Ablations & End-to-End Verification"
+        - "模块一：商品目录 Schema、17子类目注册表与 27 断言数据自洽性静态闸门"
+        - "模块二：多模态图像双落盘 (COS/Local)、Gemini-Embedding-2 (1024维) 与向量存储"
+        - "模块三：System One (Jev) 800ms 认知分流门控、本地规则治理与混合 RAG 双路径松弛"
+        - "模块四：272K 上下文状态机、Prefix Cache 静态前缀对齐、确定性售后工具与 Typed SSE 流式接口"
+        - "模块五：50 题全场景评测基准、零幻觉断言门禁与三维 A/B 消融实验套件"
+        - "端侧系统：C 端「惠购」H5 移动导购助手与 5 类 Generative UI 流式交互卡片"
+        - "运营管理：B 端 OA 运营管理后台、缺货心愿单池反哺与全链路审计监控"
     validations:
       required: true
   - type: textarea
     id: problem
     attributes:
-      label: Motivation & Architectural Context
-      description: Why is this capability required, and what production guarantee does it establish?
-      placeholder: Describe the latency, accuracy, or safety problem addressed by this module...
+      label: 业务背景与架构动机
+      description: 为什么需要这项能力？它解决了什么生产级或导购交互瓶颈？
+      placeholder: 请阐述本模块所解决的业务延迟、事实准确率、双端交互或合规安全问题...
     validations:
       required: true
   - type: textarea
     id: deliverables
     attributes:
-      label: Core Deliverables & File Contracts
-      description: List the target modules, schemas, endpoints, or CLI scripts.
+      label: 核心交付物与文件清单
+      description: 列出计划新增或修改的模块文件、Schema、接口端点或测试脚本。
       placeholder: |
         - `app/services/...`
+        - `h5-frontend/...`
+        - `admin-frontend/...`
         - `scripts/test_...`
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
-      label: Deterministic Acceptance Criteria
-      description: Define the exact verification commands and zero-regression assertions required before merging.
+      label: 确定性验收标准
+      description: 定义合并前必须通过的自动化验收命令与零回归断言要求。
       placeholder: |
-        - [ ] `python -B scripts/validate_catalog.py` exits with code 0
-        - [ ] Unit and adversarial tests pass 100%
+        - [ ] `python -B scripts/validate_catalog.py` 退出码为 0，27 项断言全绿
+        - [ ] 对应模块回归与端到端测试 100% 通过
     validations:
       required: true
