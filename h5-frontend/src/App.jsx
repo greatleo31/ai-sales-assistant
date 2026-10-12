@@ -2,6 +2,26 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CustomerRichText } from './utils/streamSanitizer';
 
 /* ==========================================================================
+   0. 全局唯一 ID 生成器与生产级数值精度防漂移工具函数
+   ========================================================================== */
+let globalMessageCounter = 0;
+const nextSafeId = (prefix) =>
+  `${prefix}-${Date.now()}-${(++globalMessageCounter).toString(36)}`;
+
+function safeFormatPrice(val, defaultVal = '0') {
+  const num = Number(val);
+  if (!Number.isFinite(num)) return defaultVal;
+  return num.toFixed(1).replace(/\.0$/, '');
+}
+
+function safeCalcDiscount(orig, final) {
+  const o = Math.round((Number(orig) || 0) * 100);
+  const f = Math.round((Number(final) || 0) * 100);
+  const diff = Math.max(0, o - f);
+  return (diff / 100).toFixed(1).replace(/\.0$/, '');
+}
+
+/* ==========================================================================
    1. 精简矢量图标库（严格克制，仅用于顶栏、卡片底部拇指/重答、输入框与订单弹窗）
    ========================================================================== */
 const IconMore = () => (
@@ -427,18 +447,11 @@ function ProductGenUICard({ products, priceCards }) {
     <div className="hg-inbubble-section">
       {products.slice(0, 3).map((item) => {
         const skuId = item.sku_id;
-        const priceInfo = priceMap[skuId];
-        const finalPrice = Number(item.final_price ?? item.price ?? 0)
-          .toFixed(1)
-          .replace(/\.0$/, '');
-        const origPrice = Number(
-          item.original_price ?? priceInfo?.original_price ?? finalPrice
-        )
-          .toFixed(1)
-          .replace(/\.0$/, '');
-        const discount = Math.max(0, Number(origPrice) - Number(finalPrice))
-          .toFixed(1)
-          .replace(/\.0$/, '');
+        const rawFinal = item.final_price ?? item.price ?? 0;
+        const rawOrig = item.original_price ?? priceInfo?.original_price ?? rawFinal;
+        const finalPrice = safeFormatPrice(rawFinal);
+        const origPrice = safeFormatPrice(rawOrig);
+        const discount = safeCalcDiscount(rawOrig, rawFinal);
         const highlights = item.highlights || item.matched_tags || [];
         const isExpanded = expandedSku === skuId;
 
@@ -607,8 +620,13 @@ function RelaxationGenUICard({ products, maxBudget, subCategory, onSendPrompt })
  * 缺货品类心愿单浅灰钩子块
  */
 function WishlistGenUICard({ card, sessionId }) {
+  const defaultOptions = ['¥100以内', '¥100-300', '¥300-800', '¥800以上'];
+  const budgetOptions =
+    Array.isArray(card.budget_options) && card.budget_options.length > 0
+      ? card.budget_options
+      : defaultOptions;
   const [selectedBudget, setSelectedBudget] = useState(
-    (card.budget_options && card.budget_options[1]) || '¥100-300'
+    budgetOptions[1] || budgetOptions[0] || '¥100-300'
   );
   const [submitted, setSubmitted] = useState(false);
 
@@ -637,7 +655,7 @@ function WishlistGenUICard({ card, sessionId }) {
         {card.title || `暂无「${card.missing_item}」`}
       </div>
       <div className="hg-chip-row">
-        {(card.budget_options || ['¥100以内', '¥100-300', '¥300-800', '¥800以上']).map((opt) => (
+        {budgetOptions.map((opt) => (
           <button
             key={opt}
             type="button"
@@ -754,6 +772,26 @@ export default function App() {
   const [showScrollFab, setShowScrollFab] = useState(false);
 
   const mainScrollRef = useRef(null);
+  const activePacerRef = useRef(null);
+  const abortControllerRef = useRef(null);
+
+  const stopCurrentStream = () => {
+    if (activePacerRef.current) {
+      clearInterval(activePacerRef.current);
+      activePacerRef.current = null;
+    }
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCurrentStream();
+    };
+  }, []);
 
   const triggerToast = (msg) => {
     setToastMsg(msg);
@@ -784,9 +822,10 @@ export default function App() {
   };
 
   /**
-   * 点 3：人眼舒适速度的动态字流节拍器（Adaptive Typewriter Pacing）
+   * 点 3：人眼舒适速度的动态字流节拍器（带生命周期保护与定时器防泄漏）
    */
   const playSmoothText = (msgId, fullText, extraPatch = {}) => {
+    stopCurrentStream();
     setIsStreaming(true);
     let cursor = 0;
     const totalLen = fullText.length;
@@ -818,9 +857,11 @@ export default function App() {
 
       if (cursor >= totalLen) {
         clearInterval(timer);
+        activePacerRef.current = null;
         setIsStreaming(false);
       }
     }, 28);
+    activePacerRef.current = timer;
   };
 
   /**
@@ -855,8 +896,8 @@ export default function App() {
     };
 
     const cfg = configs[type] || configs.buy;
-    const uId = `u-${Date.now()}`;
-    const aId = `a-${Date.now() + 1}`;
+    const uId = nextSafeId('u');
+    const aId = nextSafeId('a');
 
     setMessages((prev) => [
       ...prev,
@@ -882,8 +923,8 @@ export default function App() {
    * 点 9：消息助手长对话总结（检测长对话中的预算卡点、售后时效与选购注意事项，无定时任务）
    */
   const runLongConversationSummary = (userTriggerText) => {
-    const uId = `u-${Date.now()}`;
-    const aId = `a-${Date.now() + 1}`;
+    const uId = nextSafeId('u');
+    const aId = nextSafeId('a');
     const userTurns = messages.filter((m) => m.role === 'user');
 
     let summaryReply = '';
@@ -918,10 +959,20 @@ export default function App() {
 
   /**
    * 发送普通消息并按人眼可读速度动态流式渲染 SSE
+   * 支持 AbortController 中断、30s 响应超时、事件状态复位与原地重答机制
    */
-  const sendMessage = async (rawQuery, attachedProducts = null) => {
+  const sendMessage = async (
+    rawQuery,
+    attachedProducts = null,
+    targetMsgId = null,
+    overrideHistory = null
+  ) => {
     const query = (rawQuery ?? inputText).trim();
-    if (!query || isStreaming) return;
+    if (!query) return;
+    if (isStreaming && !targetMsgId) return;
+
+    // 终止前序流与旧定时器，防止状态冲突
+    stopCurrentStream();
     setInputText('');
     setShowPlusTray(false);
 
@@ -933,34 +984,67 @@ export default function App() {
       return;
     }
 
-    const userMsg = {
-      id: `u-${Date.now()}`,
-      role: 'user',
-      text: query,
-      sentProducts: attachedProducts,
-    };
-    const assistantMsgId = `a-${Date.now() + 1}`;
-    const placeholderAssistant = {
-      id: assistantMsgId,
-      serverMessageId: assistantMsgId,
-      role: 'assistant',
-      userPrompt: query,
-      text: '',
-      decisionMeta: null,
-      uiCards: {},
-      followupPills: [],
-      feedback: null,
-    };
+    const isRetry = Boolean(targetMsgId);
+    const assistantMsgId = targetMsgId || nextSafeId('a');
+    const userMsgId = nextSafeId('u');
 
-    const historyPayload = messages
-      .filter((m) => m.text)
-      .slice(-6)
-      .map((m) => ({ role: m.role, content: m.text }));
+    let historyPayload = [];
+    if (overrideHistory) {
+      historyPayload = overrideHistory;
+    } else {
+      historyPayload = messages
+        .filter((m) => m.text)
+        .slice(-6)
+        .map((m) => ({ role: m.role, content: m.text }));
+    }
 
-    setMessages((prev) => [...prev, userMsg, placeholderAssistant]);
+    if (isRetry) {
+      // 原地重试：保留原用户提问，重置对应 AI 气泡所有动态状态
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantMsgId
+            ? {
+                ...m,
+                text: '',
+                decisionMeta: null,
+                uiCards: {},
+                followupPills: [],
+                feedback: null,
+              }
+            : m
+        )
+      );
+    } else {
+      const userMsg = {
+        id: userMsgId,
+        role: 'user',
+        text: query,
+        sentProducts: attachedProducts,
+      };
+      const placeholderAssistant = {
+        id: assistantMsgId,
+        serverMessageId: assistantMsgId,
+        role: 'assistant',
+        userPrompt: query,
+        text: '',
+        decisionMeta: null,
+        uiCards: {},
+        followupPills: [],
+        feedback: null,
+      };
+      setMessages((prev) => [...prev, userMsg, placeholderAssistant]);
+    }
+
     setIsStreaming(true);
 
-    // 建立平滑字符输出队列，解决后端返回过快导致页面瞬间刷完的问题
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // 30s 响应超时兜底定时器
+    const timeoutId = setTimeout(() => {
+      controller.abort('Network timeout (30s)');
+    }, 30000);
+
     const charQueue = [];
     let sseFinished = false;
     let displayedText = '';
@@ -981,9 +1065,11 @@ export default function App() {
         }
       } else if (sseFinished) {
         clearInterval(pacer);
+        activePacerRef.current = null;
         setIsStreaming(false);
       }
     }, 28);
+    activePacerRef.current = pacer;
 
     try {
       const response = await fetch('/api/v1/chat/stream', {
@@ -995,7 +1081,10 @@ export default function App() {
           tenant_id: 'tenant_all',
           history: historyPayload,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok || !response.body) {
         throw new Error(`HTTP ${response.status}`);
@@ -1004,7 +1093,7 @@ export default function App() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
-      let currentEvent = '';
+      let currentEvent = 'message';
 
       while (true) {
         const { value, done } = await reader.read();
@@ -1015,12 +1104,19 @@ export default function App() {
 
         for (const rawLine of lines) {
           const line = rawLine.trim();
-          if (!line) continue;
+          if (!line) {
+            // W3C SSE 规范：空行标志着一个事件块的结束，重置事件为默认值
+            currentEvent = 'message';
+            continue;
+          }
           if (line.startsWith('event:')) {
             currentEvent = line.slice(6).trim();
           } else if (line.startsWith('data:')) {
             const dataStr = line.slice(5).trim();
-            if (dataStr === '[DONE]') continue;
+            if (dataStr === '[DONE]') {
+              sseFinished = true;
+              break;
+            }
             let parsed = null;
             try {
               parsed = JSON.parse(dataStr);
@@ -1058,11 +1154,22 @@ export default function App() {
             }
           }
         }
+        if (sseFinished) break;
       }
       sseFinished = true;
-    } catch {
-      clearInterval(pacer);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (activePacerRef.current) {
+        clearInterval(activePacerRef.current);
+        activePacerRef.current = null;
+      }
       setIsStreaming(false);
+
+      if (err.name === 'AbortError') {
+        // 请求由用户主动中断或发生新请求，静默退出
+        return;
+      }
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMsgId
@@ -1074,7 +1181,7 @@ export default function App() {
   };
 
   /**
-   * 点击「↻ 重答」
+   * 点击「↻ 重答」：原地重置历史消息，杜绝上下文污染与重复提问气泡堆叠
    */
   const handleRetry = (msg) => {
     if (isStreaming) return;
@@ -1082,9 +1189,15 @@ export default function App() {
       triggerAssistantTab(msg.assistantPreset);
       return;
     }
-    if (msg.userPrompt) {
-      sendMessage(msg.userPrompt);
-    }
+    if (!msg.userPrompt) return;
+
+    const msgIdx = messages.findIndex((m) => m.id === msg.id);
+    const truncatedHistory = (msgIdx > 0 ? messages.slice(0, msgIdx) : messages)
+      .filter((m) => m.text && m.id !== msg.id)
+      .slice(-6)
+      .map((m) => ({ role: m.role, content: m.text }));
+
+    sendMessage(msg.userPrompt, null, msg.id, truncatedHistory);
   };
 
   const handleFeedback = async (msg, rating) => {
@@ -1136,12 +1249,19 @@ export default function App() {
     setSheetOpen(false);
 
     if (sheetTab === 'cart') {
-      // 1:1 复刻截图1：发送「帮我生成省钱方案」+ 右上角选中商品缩略图卡片，AI 返回省钱方案
-      const totalOrig = chosen.reduce((acc, c) => acc + c.orig_price, 0);
-      const totalFinal = chosen.reduce((acc, c) => acc + c.price, 0);
-      const savedAmount = Math.max(6.5, totalOrig - totalFinal).toFixed(2);
-      const uId = `u-${Date.now()}`;
-      const aId = `a-${Date.now() + 1}`;
+      // 消除浮点数累加漂移：采用分级整数运算
+      const totalOrigCents = chosen.reduce(
+        (acc, c) => acc + Math.round((Number(c.orig_price) || 0) * 100),
+        0
+      );
+      const totalFinalCents = chosen.reduce(
+        (acc, c) => acc + Math.round((Number(c.price) || 0) * 100),
+        0
+      );
+      const savedCents = Math.max(650, totalOrigCents - totalFinalCents);
+      const savedAmount = (savedCents / 100).toFixed(2);
+      const uId = nextSafeId('u');
+      const aId = nextSafeId('a');
       const replyText = `已生成省钱方案，最多**共可省${savedAmount}元**\n现处于官方大促直降期，已为你从活动会场、百亿补贴与店铺立减通道搜寻优惠。检测到你勾选的 ${chosen.length} 款商品可享官方直降优惠，已为你生成最划算的到手方案：`;
 
       setMessages((prev) => [
@@ -1184,9 +1304,10 @@ export default function App() {
   };
 
   /**
-   * 点 2：右上角「新对话」
+   * 点 2：右上角「新对话」：确保前序流与定时器被彻底中断
    */
   const handleStartNewChat = () => {
+    stopCurrentStream();
     setMessages([]);
     setSessionId(`hg-${Date.now().toString(36)}`);
     setShowPlusTray(false);

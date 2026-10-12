@@ -12,6 +12,7 @@
   --ink-secondary: oklch(0.42 0.01 260); /* #4E535C 次级正文 */
   --muted: oklch(0.60 0.01 260);         /* #828792 辅助灰 */
   --accent: oklch(0.65 0.22 38);         /* #FF5500 活力橙 */
+  --tenant-accent: var(--accent);        /* 动态商户主题基色契约 */
   --accent-hover: oklch(0.60 0.22 38);
   --accent-disabled: #FFAD80;            /* 确认选择未勾选浅橙 */
   --accent-soft: oklch(0.96 0.03 42);
@@ -20,6 +21,27 @@
   --line: oklch(0.92 0.004 260);
   --font-sans: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-num: 'Outfit', 'Noto Sans SC', sans-serif;
+}
+
+/* iOS 27 液态毛玻璃与系统级降级契约 */
+.hg-glass-layer {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  .hg-glass-layer {
+    background: var(--surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 * {

@@ -470,7 +470,14 @@ def relax_constraints_safely(
                 )
             )
 
-        scored_b.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+        # 严格多维 Tie-breaker 确定性排序：
+        # 1. -item[0]: num_score 降序（多规格接近度越高越优先）
+        # 2. -item[1]: enum_score 降序（枚举条件命中率越高越优先）
+        # 3. float(item[4]["final_price"]): 最终售价升序（价格越低越优先）
+        # 4. item[3]: sku_id 升序（严格确定性 ASCII 字典序唯一 Tie-breaker，彻底杜绝遍历抖动）
+        scored_b.sort(
+            key=lambda item: (-item[0], -item[1], float(item[4]["final_price"]), item[3])
+        )
         best_num_score, _, _, _, path_b_sku = scored_b[0]
         path_b_closeness = round(best_num_score, 4)
 

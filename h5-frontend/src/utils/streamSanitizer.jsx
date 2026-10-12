@@ -11,8 +11,13 @@ export function sanitizeCustomerStreamText(rawText, isStreaming = false) {
   if (!rawText) return '';
   let text = String(rawText);
 
-  // 1. 剥离内部协议标记
-  text = text.replace(/<\|FunctionCallBegin\|>[\s\S]*?<\|FunctionCallEnd\|>/g, '');
+  // 1. 剥离内部协议标记（支持流式未闭合前缀贪婪剥离）
+  if (isStreaming) {
+    text = text.replace(/<\|FunctionCallBegin\|>[\s\S]*?(?:<\|FunctionCallEnd\|>|$)/g, '');
+    text = text.replace(/<\|[A-Za-z0-9_]*$/g, '');
+  } else {
+    text = text.replace(/<\|FunctionCallBegin\|>[\s\S]*?<\|FunctionCallEnd\|>/g, '');
+  }
   text = text.replace(/<\|[A-Za-z0-9_]+?\|>/g, '');
 
   // 2. HTML 换行与块级标签 -> 自然换行，其余 HTML 标签安全剥离
@@ -54,6 +59,8 @@ export function sanitizeCustomerStreamText(rawText, isStreaming = false) {
   text = text.replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, '$1/$2');
   text = text.replace(/\$\$([\s\S]*?)\$\$/g, '$1');
   text = text.replace(/\$([^$\n]+?)\$/g, '$1');
+  // 若残留无意义独立公式界定符 $ 则清理，保留跟数字相连的美元金额符号（如 $19.9 转换为 ¥19.9）
+  text = text.replace(/\$(\d+(?:\.\d{1,2})?)/g, '¥$1');
   text = text.replace(/\$/g, '');
 
   // 5. 流式尾部半截标签防闪烁（如末尾刚输出 `<b` 或 `\right`）
@@ -83,7 +90,7 @@ export function sanitizeCustomerStreamText(rawText, isStreaming = false) {
   }
   text = cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 
-  // 7. 流式未闭合粗体 `**` 自动自愈闭合
+  // 7. 流式未闭合粗体 `**` 智能自愈闭合（杜绝死循环吞星号）
   const boldCount = (text.match(/\*\*/g) || []).length;
   if (boldCount % 2 === 1) {
     if (text.endsWith('**')) {
@@ -91,9 +98,6 @@ export function sanitizeCustomerStreamText(rawText, isStreaming = false) {
     } else {
       text = `${text}**`;
     }
-  }
-  if (isStreaming && text.endsWith('*') && !text.endsWith('**')) {
-    text = text.slice(0, -1);
   }
 
   return text;
@@ -104,7 +108,8 @@ export function sanitizeCustomerStreamText(rawText, isStreaming = false) {
  */
 function renderInlineTokens(lineText, keyPrefix = 'in') {
   if (!lineText) return null;
-  const tokenRegex = /(\*\*[^*]+\*\*|`[^`]+`|¥\d+(?:\.\d{1,2})?)/g;
+  // 增强价格正则：兼容带空格及千分位数字
+  const tokenRegex = /(\*\*[^*]+\*\*|`[^`]+`|¥\s*\d+(?:,\d{3})*(?:\.\d{1,2})?)/g;
   const parts = lineText.split(tokenRegex);
 
   return parts.map((part, idx) => {
@@ -113,7 +118,7 @@ function renderInlineTokens(lineText, keyPrefix = 'in') {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
       const inner = part.slice(2, -2);
       // 若加粗内容本身是价格，赋予高光珊瑚金样式
-      if (/^¥\d+(?:\.\d{1,2})?$/.test(inner.trim())) {
+      if (/^¥\s*\d+(?:,\d{3})*(?:\.\d{1,2})?$/.test(inner.trim())) {
         return (
           <span key={key} className="ios-inline-price">
             {inner}
@@ -133,7 +138,7 @@ function renderInlineTokens(lineText, keyPrefix = 'in') {
         </span>
       );
     }
-    if (/^¥\d+(?:\.\d{1,2})?$/.test(part)) {
+    if (/^¥\s*\d+(?:,\d{3})*(?:\.\d{1,2})?$/.test(part)) {
       return (
         <span key={key} className="ios-inline-price">
           {part}
