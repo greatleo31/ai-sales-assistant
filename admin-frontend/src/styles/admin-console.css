@@ -1571,3 +1571,35 @@ html, body {
     letter-spacing: 0;
   }
 }
+
+/* ==========================================================================
+   零数据纯净空状态优雅卡片 (Empty State Cards)
+   ========================================================================== */
+.oa-empty-card {
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.oa-empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.oa-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.oa-empty-desc {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}

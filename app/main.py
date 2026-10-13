@@ -24,7 +24,10 @@ from pydantic import BaseModel, Field
 
 from app.config import DATA_DIR, ROOT_DIR, settings
 from app.core.chat_orchestrator import ShoppingAgentOrchestrator
-from app.services.admin_analytics_service import get_admin_analytics_service
+from app.services.admin_analytics_service import (
+    get_admin_analytics_service,
+    get_static_constitution_metrics,
+)
 from app.services.order_tools import (
     evaluate_aftersales_eligibility,
     query_order_status,
@@ -558,6 +561,7 @@ async def admin_runtime_status_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：获取底层生成节点、熔断器、Jev 缓存与 Prefix Cache 运行状态快照。"""
     primary_node = orchestrator.llm_router.primary_node
     jev_cache = json.loads(settings.jev_cache_path.read_text(encoding="utf-8")) if settings.jev_cache_path.exists() else {}
+    real_md5, real_static_tokens = get_static_constitution_metrics()
     return {
         "status": "ok",
         "gateway_node": primary_node.name,
@@ -568,8 +572,8 @@ async def admin_runtime_status_endpoint() -> Dict[str, Any]:
         "circuit_breaker_failures": primary_node.breaker.failure_count,
         "ewma_latency_ms": primary_node.ewma_latency_ms,
         "effective_context_window": settings.effective_context_window,
-        "static_prefix_md5": "d313736e0462445e200a1b25c2310987",
-        "static_prefix_tokens": 2396,
+        "static_prefix_md5": real_md5,
+        "static_prefix_tokens": real_static_tokens,
         "jev_model": settings.jev_model,
         "jev_cache_entries": len(jev_cache.get("entries", {})),
         "embedding_model": settings.embedding_model,

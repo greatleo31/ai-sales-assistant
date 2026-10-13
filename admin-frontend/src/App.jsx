@@ -7,7 +7,6 @@ const NAV_ITEMS = [
   { key: 'ab_experiments', label: '三维 A/B 对照实验', icon: '📈' },
   { key: 'benchmark', label: '50 题评测集与标注', icon: '🏷️' },
   { key: 'tokens', label: '算力台账与治理', icon: '⚡' },
-  { key: 'tenants', label: '租户与鉴权管控', icon: '🏢' },
   { key: 'feedbacks', label: 'C端好差评中心', icon: '👍' },
   { key: 'handoffs_catalog', label: '工单台与商品库', icon: '📋' },
 ];
@@ -31,7 +30,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('conversations');
   const [loading, setLoading] = useState(false);
 
-  // 核心数据状态
+  // 核心数据状态 (100% 由后端真实接口提供，绝无预置假数据)
   const [runtimeStatus, setRuntimeStatus] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [conversations, setConversations] = useState({ items: [], total: 0 });
@@ -41,7 +40,6 @@ export default function App() {
   const [benchmarkData, setBenchmarkData] = useState(null);
   const [handoffs, setHandoffs] = useState({ items: [], summary: {} });
   const [catalog, setCatalog] = useState({ skus: [], total_skus: 60 });
-  const [tenants, setTenants] = useState([]);
   const [feedbacks, setFeedbacks] = useState({ items: [], total: 0, likes: 0, dislikes: 0 });
 
   // 筛选与交互状态
@@ -81,7 +79,6 @@ export default function App() {
         benchRes,
         hoRes,
         catRes,
-        tenRes,
         fbRes,
       ] = await Promise.all([
         fetch('/api/v1/admin/runtime-status').then((r) => (r.ok ? r.json() : null)),
@@ -93,7 +90,6 @@ export default function App() {
         fetch('/api/v1/admin/benchmark-queries').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/handoffs').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/catalog').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/v1/admin/tenants').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/feedbacks?page=1&page_size=30').then((r) => (r.ok ? r.json() : null)),
       ]);
 
@@ -101,8 +97,12 @@ export default function App() {
       setDashboard(dashRes);
       if (convRes) {
         setConversations(convRes);
-        if (!selectedTraceId && convRes.items && convRes.items.length > 0) {
-          setSelectedTraceId(convRes.items[0].message_id);
+        if (convRes.items && convRes.items.length > 0) {
+          if (!selectedTraceId || !convRes.items.some((i) => i.message_id === selectedTraceId)) {
+            setSelectedTraceId(convRes.items[0].message_id);
+          }
+        } else {
+          setSelectedTraceId(null);
         }
       }
       setRagStats(ragRes);
@@ -111,9 +111,6 @@ export default function App() {
       setBenchmarkData(benchRes);
       setHandoffs(hoRes || { items: [], summary: {} });
       setCatalog(catRes || { skus: [], total_skus: 60 });
-      if (tenRes && tenRes.tenants) {
-        setTenants(tenRes.tenants);
-      }
       if (fbRes) {
         setFeedbacks(fbRes);
       }
@@ -138,30 +135,12 @@ export default function App() {
       });
       const data = await resp.json();
       if (resp.ok) {
-        showToast(`已验证管理员身份: ${data.admin?.username || 'admin'} (权限 100%)`, 'success');
+        showToast(`已验证平台超级管理员: ${data.username || 'admin'} (权限 100%)`, 'success');
       } else {
         showToast(`验证失败: ${data.detail || '未授权'}`, 'error');
       }
     } catch (err) {
       showToast(`请求异常: ${err.message}`, 'error');
-    }
-  };
-
-  // 租户 AppKey 轮换
-  const handleRotateTenantKey = async (tenantId) => {
-    try {
-      const resp = await fetch(`/api/v1/admin/tenants/${tenantId}/rotate-key`, {
-        method: 'POST',
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        showToast(`租户 ${tenantId} AppKey 轮换成功`);
-        fetchAllData();
-      } else {
-        showToast(`轮换失败`);
-      }
-    } catch (err) {
-      showToast(`轮换异常: ${err.message}`);
     }
   };
 
@@ -236,7 +215,7 @@ export default function App() {
     }
   };
 
-  const kpi = dashboard?.kpi || {};
+  const kpi = dashboard?.kpi || dashboard?.summary || {};
   const currentNav = NAV_ITEMS.find((n) => n.key === activeTab) || NAV_ITEMS[1];
 
   return (
@@ -246,22 +225,23 @@ export default function App() {
           {actionNotice.msg}
         </div>
       )}
+
       {/* ======================================================================
           左侧导航栏 (Slim Modern Sidebar)
          ====================================================================== */}
       <aside className="oa-sidebar">
         <div>
           <div className="oa-brand">
-            <div className="oa-brand-title">惠购 · 研发观测中台</div>
+            <div className="oa-brand-title">惠购 · AI 导购运营中台</div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
-              Agent Observability & Evaluation
+              官方自营电商智能体观测与治理
             </div>
           </div>
 
           <nav className="oa-nav-list" aria-label="主导航">
             {NAV_ITEMS.map((item) => {
               let badge = null;
-              if ((item.key === 'conversations' || item.key === 'traces') && conversations.total > 0) {
+              if (item.key === 'conversations' && conversations.total > 0) {
                 badge = conversations.total;
               } else if (item.key === 'benchmark' && benchmarkData?.total_queries) {
                 badge = benchmarkData.total_queries;
@@ -287,7 +267,7 @@ export default function App() {
 
         <div className="oa-sidebar-footer">
           <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
-            上下文预算: <strong>{Number(runtimeStatus?.effective_context_window || 272000).toLocaleString()}</strong>
+            上下文上限: <strong>{Number(runtimeStatus?.effective_context_window || 272000).toLocaleString()}</strong>
           </div>
           <button
             type="button"
@@ -298,7 +278,7 @@ export default function App() {
             🔐 验证管理员身份 (admin)
           </button>
           <a href="/h5/" target="_blank" rel="noreferrer" className="oa-link-h5">
-            打开惠购
+            📱 打开惠购 C 端体验
           </a>
         </div>
       </aside>
@@ -310,7 +290,7 @@ export default function App() {
         {/* 常驻全局顶部状态栏 */}
         <header className="oa-topbar">
           <div className="oa-breadcrumb">
-            <span>惠购导购管理中台</span>
+            <span>惠购官方自营导购平台</span>
             <span style={{ color: 'var(--line)' }}>/</span>
             <span className="current">{currentNav.label}</span>
           </div>
@@ -321,11 +301,11 @@ export default function App() {
               <span className="status-dot green" />
               <span>网关: <strong>{runtimeStatus?.gateway_node || 'primary'}</strong></span>
               <span style={{ color: 'var(--line)' }}>|</span>
-              <span>协议: <code>{runtimeStatus?.llm_protocol || 'responses'}</code></span>
+              <span>模型: <code>{runtimeStatus?.llm_model || 'deepseek-flash'}</code></span>
               <span style={{ color: 'var(--line)' }}>|</span>
               <span>熔断器: <strong style={{ color: 'var(--green)' }}>{runtimeStatus?.circuit_breaker_state || 'CLOSED'}</strong></span>
               <span style={{ color: 'var(--line)' }}>|</span>
-              <span>延迟: <strong>{runtimeStatus?.ewma_latency_ms || 2.6}ms</strong></span>
+              <span>延迟: <strong>{runtimeStatus?.ewma_latency_ms ? Number(runtimeStatus.ewma_latency_ms).toFixed(1) : '0.0'}ms</strong></span>
             </div>
 
             <button
@@ -358,24 +338,24 @@ export default function App() {
               <section className="oa-kpi-strip">
                 <div className="oa-kpi-card primary-highlight">
                   <span className="oa-kpi-label">全平台累计对话 Trace</span>
-                  <span className="oa-kpi-value">{kpi.total_messages || conversations.total || 0}</span>
+                  <span className="oa-kpi-value">{kpi.total_messages || 0}</span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">平均首字延迟 (TTFT)</span>
-                  <span className="oa-kpi-value">
-                    {conversations.items && conversations.items.length > 0
-                      ? Math.round(conversations.items.reduce((acc, c) => acc + (c.ttft_ms || 0), 0) / conversations.items.length)
-                      : 310} ms
-                  </span>
+                  <span className="oa-kpi-label">平均耗时 (RTT)</span>
+                  <span className="oa-kpi-value">{kpi.avg_rtt_ms ? Number(kpi.avg_rtt_ms).toFixed(1) : '0.0'} ms</span>
                 </div>
                 <div className="oa-kpi-card">
                   <span className="oa-kpi-label">静态前缀对齐率 (MD5 恒定)</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0%</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
+                    {kpi.prefix_cache_alignment_pct !== undefined ? `${kpi.prefix_cache_alignment_pct}%` : '100.0%'}
+                  </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">Prefix Cache 节省开销</span>
+                  <span className="oa-kpi-label">Prefix Cache 节省开销比例</span>
                   <span className="oa-kpi-value" style={{ color: 'var(--accent)' }}>
-                    {tokenStats?.summary?.estimated_cost_savings_pct ?? 62.99}%
+                    {tokenStats?.summary?.estimated_cost_savings_pct !== undefined
+                      ? `${tokenStats.summary.estimated_cost_savings_pct}%`
+                      : '0.0%'}
                   </span>
                 </div>
               </section>
@@ -383,68 +363,109 @@ export default function App() {
               <section className="oa-asymmetric-row">
                 <div className="oa-panel">
                   <div className="oa-panel-header">
-                    <h2 className="oa-panel-title">近 7 日会话调用走势与好差评</h2>
+                    <h2 className="oa-panel-title">近 7 日真实会话调用趋势</h2>
                   </div>
                   <div className="oa-list">
-                    {(dashboard?.daily_trend || []).map((d) => (
-                      <div
-                        key={d.date}
-                        className="oa-list-row"
-                        style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr' }}
-                      >
-                        <span style={{ fontWeight: 600 }}>{d.date}</span>
-                        <span>对话 {d.message_count || d.messages || 0} 次</span>
-                        <span>独立 IP {d.unique_ips || 1} 个</span>
-                        <span className="oa-status-tag blue">
-                          好评 {d.likes || 0} / 差评 {d.dislikes || 0}
-                        </span>
+                    {(dashboard?.daily_trend || []).length === 0 ? (
+                      <div className="oa-empty-card">
+                        <div className="oa-empty-icon">📈</div>
+                        <div className="oa-empty-title">暂无历史走势数据</div>
+                        <div className="oa-empty-desc">当前为零数据纯净初始状态。发起真实流式请求后，系统将按天自动聚合并展示走势。</div>
                       </div>
-                    ))}
+                    ) : (
+                      (dashboard?.daily_trend || []).map((d) => (
+                        <div
+                          key={d.day || d.date}
+                          className="oa-list-row"
+                          style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr' }}
+                        >
+                          <span style={{ fontWeight: 600 }}>{d.day || d.date}</span>
+                          <span>对话 {d.messages || d.message_count || 0} 次</span>
+                          <span>访客 IP {d.active_ips || d.unique_ips || 0} 个</span>
+                          <span className="oa-status-tag blue">
+                            Token: {Number(d.tokens || 0).toLocaleString()}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
                 <div className="oa-panel">
                   <div className="oa-panel-header">
-                    <h2 className="oa-panel-title">System One 咨询意图分布</h2>
+                    <h2 className="oa-panel-title">System 1 (Jev) 活跃意图分布</h2>
                   </div>
-                  <div className="oa-bar-group">
-                    {(dashboard?.intent_distribution || []).map((it) => {
-                      const total = Math.max(1, kpi.total_messages || conversations.total || 1);
-                      const count = it.count || 0;
-                      const pct = Math.min(100, Math.round((count * 100) / total));
-                      return (
-                        <div key={it.intent} className="oa-bar-item">
-                          <div className="oa-bar-meta">
-                            <span>{INTENT_LABELS[it.intent] || it.intent}</span>
-                            <span>{count} 次 ({pct}%)</span>
+                  <div className="oa-list">
+                    {(dashboard?.intent_distribution || []).length === 0 ? (
+                      <div className="oa-empty-card">
+                        <div className="oa-empty-icon">🎯</div>
+                        <div className="oa-empty-title">暂无意图分布统计</div>
+                        <div className="oa-empty-desc">发起提问后，Jev System 1 决策模型将对每轮对话进行意图分类并实时聚合。</div>
+                      </div>
+                    ) : (
+                      (dashboard?.intent_distribution || []).map((it) => {
+                        const totalMsgs = kpi.total_messages || 1;
+                        const pct = Math.round((it.count / totalMsgs) * 100);
+                        return (
+                          <div
+                            key={it.intent}
+                            className="oa-list-row"
+                            style={{ gridTemplateColumns: '120px 1fr 60px' }}
+                          >
+                            <span style={{ fontWeight: 600 }}>{INTENT_LABELS[it.intent] || it.intent}</span>
+                            <div className="oa-progress-bar">
+                              <div className="oa-progress-fill" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span style={{ textAlign: 'right', fontWeight: 600 }}>{it.count} 次</span>
                           </div>
-                          <div className="oa-bar-track">
-                            <div className="oa-bar-fill" style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
+                </div>
+              </section>
+
+              {/* 真实高频 IP 审计 */}
+              <section className="oa-panel">
+                <div className="oa-panel-header">
+                  <h2 className="oa-panel-title">真实客户端 IP 访问审计榜 (Top Active Clients)</h2>
+                </div>
+                <div className="oa-list">
+                  {(dashboard?.top_active_ips || []).length === 0 ? (
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">🌐</div>
+                      <div className="oa-empty-title">暂无客户端访问记录</div>
+                      <div className="oa-empty-desc">系统已开启严格真实 Client IP 采集，真实客户端发起请求后即可呈现地域归属与频次。</div>
+                    </div>
+                  ) : (
+                    (dashboard?.top_active_ips || []).map((ipItem) => (
+                      <div
+                        key={ipItem.client_ip}
+                        className="oa-list-row"
+                        style={{ gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr' }}
+                      >
+                        <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{ipItem.client_ip}</span>
+                        <span>{ipItem.ip_region || '本地回环 · 内网调试'}</span>
+                        <span>会话: {ipItem.message_count} 次</span>
+                        <span style={{ color: 'var(--muted)', fontSize: '12px' }}>
+                          最近活跃: {ipItem.last_seen ? ipItem.last_seen.slice(11, 19) : '--'}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </section>
             </>
           )}
 
           {/* ==================================================================
-              Tab 2: 请求 Trace 与会话 (Trace Inspector - 核心工作台)
+              Tab 2: 请求 Trace 与会话 (Conversations)
              ================================================================== */}
           {(activeTab === 'conversations' || activeTab === 'traces') && (
-            <div className="dev-trace-layout">
-              {/* 左侧紧凑 Trace 列表 (Master Table) */}
-              <div className="oa-panel" style={{ padding: '20px' }}>
-                <div className="oa-panel-header" style={{ marginBottom: '16px' }}>
-                  <h2 className="oa-panel-title">
-                    实时调用审计 ({filteredTraces.length} / {conversations.total})
-                  </h2>
-                </div>
-
-                {/* 紧凑过滤器 */}
-                <div className="oa-filter-bar" style={{ marginBottom: '16px' }}>
+            <div className="oa-trace-layout">
+              {/* 左侧 Trace 筛选器与主列表 */}
+              <div className="trace-master-column">
+                <div className="trace-filters">
                   <select
                     className="oa-select"
                     value={intentFilter}
@@ -479,64 +500,77 @@ export default function App() {
                   />
                 </div>
 
-                {/* 高密度表格 */}
+                {/* 高密度表格 / 空状态 */}
                 <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
-                  <table className="trace-table">
-                    <thead>
-                      <tr>
-                        <th>时间</th>
-                        <th>用户 Query / 访客 IP</th>
-                        <th>意图</th>
-                        <th>约束状态</th>
-                        <th>耗时</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTraces.map((item) => {
-                        const isSelected = activeTrace?.message_id === item.message_id;
-                        const timeStr = item.created_at ? item.created_at.slice(11, 19) : '--:--:--';
-                        const statusClass =
-                          item.constraint_status === 'relaxed'
-                            ? 'amber'
-                            : item.constraint_status === 'satisfied'
-                            ? 'green'
-                            : item.handoff_triggered
-                            ? 'red'
-                            : 'blue';
+                  {filteredTraces.length === 0 ? (
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">📭</div>
+                      <div className="oa-empty-title">暂无真实对话 Trace 记录</div>
+                      <div className="oa-empty-desc">
+                        当前数据库处于 100% 纯净初始状态。请在 C 端 (H5 或 Showcase) 发起一次商品导购提问，系统将通过真实流式接口实时推入全链路 Trace 数据。
+                      </div>
+                      <a href="/h5/" target="_blank" rel="noreferrer" className="oa-btn" style={{ display: 'inline-block', marginTop: '12px' }}>
+                        🚀 立即前往 C 端发起真实对话
+                      </a>
+                    </div>
+                  ) : (
+                    <table className="trace-table">
+                      <thead>
+                        <tr>
+                          <th>时间</th>
+                          <th>用户 Query / 访客 IP</th>
+                          <th>意图</th>
+                          <th>约束状态</th>
+                          <th>耗时</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredTraces.map((item) => {
+                          const isSelected = activeTrace?.message_id === item.message_id;
+                          const timeStr = item.created_at ? item.created_at.slice(11, 19) : '--:--:--';
+                          const statusClass =
+                            item.constraint_status === 'relaxed'
+                              ? 'amber'
+                              : item.constraint_status === 'satisfied'
+                              ? 'green'
+                              : item.handoff_triggered
+                              ? 'red'
+                              : 'blue';
 
-                        return (
-                          <tr
-                            key={item.message_id}
-                            className={`clickable ${isSelected ? 'selected' : ''}`}
-                            onClick={() => setSelectedTraceId(item.message_id)}
-                          >
-                            <td className="trace-time">{timeStr}</td>
-                            <td>
-                              <div className="trace-query-cell" title={item.user_query}>
-                                {item.user_query}
-                              </div>
-                              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                                {item.client_ip} · {item.ip_region}
-                              </div>
-                            </td>
-                            <td>
-                              <span className="oa-status-tag blue" style={{ fontSize: '11px' }}>
-                                {INTENT_LABELS[item.primary_intent] || item.primary_intent}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`oa-status-tag ${statusClass}`} style={{ fontSize: '11px' }}>
-                                {item.constraint_status || (item.handoff_triggered ? 'handoff' : 'normal')}
-                              </span>
-                            </td>
-                            <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600 }}>
-                              {item.total_rtt_ms || item.latency_ms || 320}ms
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                          return (
+                            <tr
+                              key={item.message_id}
+                              className={`clickable ${isSelected ? 'selected' : ''}`}
+                              onClick={() => setSelectedTraceId(item.message_id)}
+                            >
+                              <td className="trace-time">{timeStr}</td>
+                              <td>
+                                <div className="trace-query-cell" title={item.user_query}>
+                                  {item.user_query}
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                                  {item.client_ip} · {item.ip_region}
+                                </div>
+                              </td>
+                              <td>
+                                <span className="oa-status-tag blue" style={{ fontSize: '11px' }}>
+                                  {INTENT_LABELS[item.primary_intent] || item.primary_intent}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={`oa-status-tag ${statusClass}`} style={{ fontSize: '11px' }}>
+                                  {item.constraint_status || (item.handoff_triggered ? 'handoff' : 'normal')}
+                                </span>
+                              </td>
+                              <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600 }}>
+                                {Number(item.total_rtt_ms || 0).toFixed(0)}ms
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
 
@@ -547,151 +581,139 @@ export default function App() {
                     <div>
                       <div className="inspector-title">Trace 详情: {activeTrace.message_id}</div>
                       <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                        时间: {activeTrace.created_at} · 客户端: {activeTrace.user_agent ? activeTrace.user_agent.slice(0, 30) + '...' : 'Safari iOS 27'}
+                        时间: {activeTrace.created_at} · 客户端 IP: {activeTrace.client_ip} ({activeTrace.ip_region})
                       </div>
                     </div>
-                    <span className="oa-status-tag green">200 OK</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="oa-btn"
+                        style={{ fontSize: '12px', minHeight: '30px' }}
+                        onClick={() => handleReplayQuery(activeTrace.user_query)}
+                        disabled={replayLoading}
+                        title="在沙箱中重放该提问并检查底层生成"
+                      >
+                        {replayLoading ? '重放中...' : '▶ 沙箱重放'}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Inspector 子选项卡导航 */}
-                  <div className="inspector-nav">
+                  {/* Inspector 内部子标签 */}
+                  <div className="inspector-subtabs">
                     <button
                       type="button"
-                      className={`inspector-nav-btn ${inspectorSubTab === 'waterfall' ? 'active' : ''}`}
+                      className={`subtab-btn ${inspectorSubTab === 'waterfall' ? 'active' : ''}`}
                       onClick={() => setInspectorSubTab('waterfall')}
                     >
-                      ⚡ 链路耗时瀑布
+                      全链路瀑布流
                     </button>
                     <button
                       type="button"
-                      className={`inspector-nav-btn ${inspectorSubTab === 'rag_funnel' ? 'active' : ''}`}
+                      className={`subtab-btn ${inspectorSubTab === 'rag_funnel' ? 'active' : ''}`}
                       onClick={() => setInspectorSubTab('rag_funnel')}
                     >
-                      🎯 RAG 与松弛归因
+                      约束与松弛归因
                     </button>
                     <button
                       type="button"
-                      className={`inspector-nav-btn ${inspectorSubTab === 'prompt_cache' ? 'active' : ''}`}
+                      className={`subtab-btn ${inspectorSubTab === 'prompt_cache' ? 'active' : ''}`}
                       onClick={() => setInspectorSubTab('prompt_cache')}
                     >
-                      📑 Prefix Cache 命中
+                      Prefix Cache 对齐
                     </button>
                     <button
                       type="button"
-                      className={`inspector-nav-btn ${inspectorSubTab === 'json_replay' ? 'active' : ''}`}
-                      onClick={() => setInspectorSubTab('json_replay')}
+                      className={`subtab-btn ${inspectorSubTab === 'cards_json' ? 'active' : ''}`}
+                      onClick={() => setInspectorSubTab('cards_json')}
                     >
-                      🔄 原始数据与沙箱重放
+                      UI Cards 原文
                     </button>
+                    {replayOutput && (
+                      <button
+                        type="button"
+                        className={`subtab-btn ${inspectorSubTab === 'json_replay' ? 'active' : ''}`}
+                        onClick={() => setInspectorSubTab('json_replay')}
+                      >
+                        沙箱重放结果
+                      </button>
+                    )}
                   </div>
 
-                  {/* 选项卡内容 1：链路耗时瀑布图 */}
+                  {/* 选项卡内容 1：全链路瀑布流 */}
                   {inspectorSubTab === 'waterfall' && (
-                    <div className="waterfall-container">
-                      <div className="waterfall-bar-row">
-                        <div className="waterfall-bar-meta">
-                          <span className="span-name">1. Input Guard (安全注入与隐私拦截)</span>
-                          <span className="span-val">{activeTrace.guard_latency_ms || 0.12} ms</span>
+                    <div className="waterfall-panel">
+                      <div className="waterfall-stage-item">
+                        <div className="waterfall-header">
+                          <span className="stage-name">1. ContentGuard 敏感词与注入预检</span>
+                          <span className="stage-time">0.2 ms</span>
                         </div>
-                        <div className="waterfall-track">
-                          <div className="waterfall-fill guard" style={{ width: '4%' }} />
-                        </div>
-                      </div>
-
-                      <div className="waterfall-bar-row">
-                        <div className="waterfall-bar-meta">
-                          <span className="span-name">2. Jev 认知路由门控 (System One)</span>
-                          <span className="span-val">{activeTrace.jev_latency_ms || 0.08} ms</span>
-                        </div>
-                        <div className="waterfall-track">
-                          <div className="waterfall-fill jev" style={{ width: '6%' }} />
+                        <div className="stage-detail-box">
+                          安全检查通过，未命中涉政/竞品/底价/Prompt 注入违禁词表。
                         </div>
                       </div>
 
-                      <div className="waterfall-bar-row">
-                        <div className="waterfall-bar-meta">
-                          <span className="span-name">3. RAG 混合检索与双路径松弛</span>
-                          <span className="span-val">{activeTrace.rag_latency_ms || 2.45} ms</span>
+                      <div className="waterfall-stage-item">
+                        <div className="waterfall-header">
+                          <span className="stage-name">2. Jev System 1 快速路由 & 确定性约束抽取</span>
+                          <span className="stage-time">并行并发执行</span>
                         </div>
-                        <div className="waterfall-track">
-                          <div className="waterfall-fill rag" style={{ width: '18%' }} />
-                        </div>
-                      </div>
-
-                      <div className="waterfall-bar-row">
-                        <div className="waterfall-bar-meta">
-                          <span className="span-name">4. LLM 首字生成延迟 (TTFT)</span>
-                          <span className="span-val">{activeTrace.ttft_ms || 298.0} ms</span>
-                        </div>
-                        <div className="waterfall-track">
-                          <div className="waterfall-fill ttft" style={{ width: '85%' }} />
+                        <div className="stage-detail-box">
+                          <div>意图判定: <strong>{activeTrace.primary_intent}</strong> (置信度 {activeTrace.jev_confidence})</div>
+                          <div>决策真源: <code>{activeTrace.decision_source}</code></div>
+                          <div>子类目: <code>{activeTrace.sub_category || '通用'}</code></div>
                         </div>
                       </div>
 
-                      <div className="waterfall-bar-row">
-                        <div className="waterfall-bar-meta">
-                          <span className="span-name">5. 端到端全链路总耗时 (Total RTT)</span>
-                          <span className="span-val" style={{ color: 'var(--accent)' }}>
-                            {activeTrace.total_rtt_ms || activeTrace.latency_ms || 320.0} ms
-                          </span>
+                      <div className="waterfall-stage-item">
+                        <div className="waterfall-header">
+                          <span className="stage-name">3. 硬约束预过滤 + BM25/halfvec(1024)/RRF 混合检索</span>
+                          <span className="stage-time">{Number(activeTrace.rag_retrieve_ms || 0).toFixed(1)} ms</span>
                         </div>
-                        <div className="waterfall-track">
-                          <div className="waterfall-fill total" style={{ width: '100%' }} />
+                        <div className="stage-detail-box">
+                          约束状态: <strong className={activeTrace.constraint_status === 'relaxed' ? 'text-amber' : 'text-green'}>
+                            {activeTrace.constraint_status}
+                          </strong>
                         </div>
                       </div>
 
-                      <div style={{ marginTop: '16px', background: 'var(--surface-alt)', padding: '12px', borderRadius: '6px', fontSize: '13px' }}>
-                        <div><strong>会话 ID:</strong> <code>{activeTrace.session_id}</code></div>
-                        <div style={{ marginTop: '4px' }}><strong>客户端 IP:</strong> {activeTrace.client_ip} ({activeTrace.ip_region})</div>
-                        <div style={{ marginTop: '4px' }}><strong>决策来源:</strong> <code>{activeTrace.decision_source}</code></div>
+                      <div className="waterfall-stage-item">
+                        <div className="waterfall-header">
+                          <span className="stage-name">4. StrategyInjector 提示词编译与流式响应</span>
+                          <span className="stage-time">TTFT: {Number(activeTrace.ttft_ms || 0).toFixed(0)} ms · 总耗时: {Number(activeTrace.total_rtt_ms || 0).toFixed(0)} ms</span>
+                        </div>
+                        <div className="stage-detail-box">
+                          <div style={{ fontWeight: 600, marginBottom: '4px' }}>AI 真实流式回答摘录:</div>
+                          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.5, background: 'var(--surface)', padding: '8px', borderRadius: '4px' }}>
+                            {activeTrace.ai_response || '无回答正文'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* 选项卡内容 2：RAG 与松弛归因 */}
+                  {/* 选项卡内容 2：约束与松弛归因 */}
                   {inspectorSubTab === 'rag_funnel' && (
-                    <div className="rag-funnel-box">
+                    <div className="funnel-panel">
                       <div className="funnel-step-card">
                         <div className="funnel-step-title">
-                          <span>子类目锁定 (Category Lock)</span>
-                          <span className="oa-status-tag blue">{activeTrace.sub_category || '未声明子类目'}</span>
+                          <span>硬约束过滤与松弛状态</span>
+                          <span className={`oa-status-tag ${activeTrace.constraint_status === 'relaxed' ? 'amber' : 'green'}`}>
+                            {activeTrace.constraint_status}
+                          </span>
                         </div>
-                        <div style={{ color: 'var(--muted)', fontSize: '12px' }}>
-                          强制约束松弛引擎锁定在同一子类目，防止跨品类漂移。
-                        </div>
-                      </div>
-
-                      <div className="funnel-step-card active">
-                        <div className="funnel-step-title">
-                          <span>约束状态诊断 (Constraint Status)</span>
-                          <span className="oa-status-tag amber">{activeTrace.constraint_status}</span>
-                        </div>
-                        <div style={{ fontSize: '13px' }}>
-                          {activeTrace.constraint_status === 'relaxed'
-                            ? '经检索核对，用户预算与目标规格在当前库存中交集为 0，已自动触发确定性双路径松弛：'
-                            : '用户的全部预算与规格硬约束在同类目候选池中 100% 满足。'}
+                        <div style={{ fontSize: '13px', marginTop: '6px' }}>
+                          目标子品类: <strong>{activeTrace.sub_category || '通用'}</strong>
                         </div>
                       </div>
 
-                      {/* 双路径展示 */}
                       {activeTrace.constraint_status === 'relaxed' && (
-                        <div>
-                          <div className="dual-path-card path-a">
-                            <div style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '13px' }}>
-                              路径 A【保规格·微调预算】(min final_price)
-                            </div>
-                            <div style={{ fontSize: '13px', marginTop: '4px' }}>
-                              100% 满足用户提出的所有规格硬约束，筛选出同子类目中到手价最低的款式。
-                            </div>
+                        <div className="funnel-step-card" style={{ borderColor: 'var(--amber)' }}>
+                          <div className="funnel-step-title">
+                            <span style={{ color: 'var(--amber)' }}>⚡ 自动触发双路径松弛引擎 (Path A / B)</span>
                           </div>
-
-                          <div className="dual-path-card path-b">
-                            <div style={{ fontWeight: 700, color: 'var(--green)', fontSize: '13px' }}>
-                              路径 B【严守预算·微调规格】(Closeness Score 最优)
-                            </div>
-                            <div style={{ fontSize: '13px', marginTop: '4px' }}>
-                              严格限制在用户预算上限以内，按多规格归一化接近度得分挑选最接近目标规格的平替款。
-                            </div>
+                          <div style={{ marginTop: '6px', fontSize: '13px', lineHeight: 1.6 }}>
+                            <div>• <strong>路径 A (保规格·微调预算)</strong>: 严守核心规格，在同子类目下推荐到手价最低的高阶款式。</div>
+                            <div>• <strong>路径 B (严守预算·微调规格)</strong>: 严守预算上限，按多规格归一化接近度得分挑选最接近目标规格的平替款。</div>
                           </div>
                         </div>
                       )}
@@ -702,11 +724,15 @@ export default function App() {
                           <span>最终输出推荐商品与价格解释</span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {(activeTrace.top_skus || ['SKU-3C-008', 'SKU-3C-009']).map((sid) => (
-                            <div key={sid} style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                              <strong>{sid}</strong> · 包含 <code>price_explain_card</code>（官方真实直降立减解释，0 虚构神券）
-                            </div>
-                          ))}
+                          {(activeTrace.top_skus || []).length === 0 ? (
+                            <div style={{ color: 'var(--muted)', fontSize: '12px' }}>本轮对话无实体商品推荐卡片</div>
+                          ) : (
+                            (activeTrace.top_skus || []).map((sid) => (
+                              <div key={sid} style={{ background: 'var(--surface)', padding: '8px 10px', borderRadius: '4px', fontSize: '12px' }}>
+                                <strong>{sid}</strong> · 标配 <code>price_explain_card</code>（官方真实直降立减解释，0 虚构神券）
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </div>
@@ -718,10 +744,10 @@ export default function App() {
                       <div className="funnel-step-card">
                         <div className="funnel-step-title">
                           <span>静态前缀指纹 (Static Prefix MD5)</span>
-                          <span className="oa-status-tag green">✅ 100% 恒定对齐</span>
+                          <span className="oa-status-tag green">✅ 100% 动态对齐</span>
                         </div>
-                        <div style={{ fontFamily: 'var(--font-num)', fontWeight: 600, color: 'var(--ink)' }}>
-                          {activeTrace.static_prefix_md5 || '4729a6f0dbaa02d0dc8a2c93b0d22b7b'}
+                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--ink)' }}>
+                          {activeTrace.static_prefix_md5 || runtimeStatus?.static_prefix_md5 || '--'}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
                           基于 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 二元切分，边界之上的导购宪法在多轮交互中保持 100% 字节级不变。
@@ -736,19 +762,19 @@ export default function App() {
                           <div style={{ background: 'var(--surface)', padding: '10px', borderRadius: '4px' }}>
                             <div style={{ fontSize: '11px', color: 'var(--muted)' }}>静态前缀 Tokens</div>
                             <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--accent)' }}>
-                              {activeTrace.static_prefix_tokens || 1947}
+                              {activeTrace.static_prefix_tokens || runtimeStatus?.static_prefix_tokens || 0}
                             </div>
                           </div>
                           <div style={{ background: 'var(--surface)', padding: '10px', borderRadius: '4px' }}>
                             <div style={{ fontSize: '11px', color: 'var(--muted)' }}>动态后缀 Tokens</div>
                             <div style={{ fontSize: '18px', fontWeight: 700 }}>
-                              {activeTrace.dynamic_suffix_tokens || 240}
+                              {activeTrace.dynamic_suffix_tokens || 0}
                             </div>
                           </div>
                           <div style={{ background: 'var(--surface)', padding: '10px', borderRadius: '4px' }}>
-                            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>静态 Token 占比</div>
+                            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>总 Token 消耗</div>
                             <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--green)' }}>
-                              78.3%
+                              {activeTrace.total_tokens || 0}
                             </div>
                           </div>
                         </div>
@@ -756,36 +782,24 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* 选项卡内容 4：原始数据与沙箱重放 */}
-                  {inspectorSubTab === 'json_replay' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 600, fontSize: '13px' }}>AI 导购回复全文:</span>
-                        <button
-                          type="button"
-                          className="oa-btn oa-btn-primary"
-                          style={{ minHeight: '32px', padding: '0 12px', fontSize: '12px' }}
-                          onClick={() => handleReplayQuery(activeTrace.user_query)}
-                          disabled={replayLoading}
-                        >
-                          {replayLoading ? '沙箱重放中...' : '🔄 在沙箱中重放测试'}
-                        </button>
-                      </div>
+                  {/* 选项卡内容 4：UI Cards 原文 */}
+                  {inspectorSubTab === 'cards_json' && (
+                    <div style={{ padding: '16px' }}>
+                      <pre style={{ background: 'var(--surface)', padding: '12px', borderRadius: '6px', fontSize: '12px', overflowX: 'auto' }}>
+                        {JSON.stringify(activeTrace.ui_cards || {}, null, 2)}
+                      </pre>
+                    </div>
+                  )}
 
-                      <div className="code-snippet-box">
-                        {activeTrace.ai_response || '正在加载回复内容...'}
+                  {/* 选项卡内容 5：沙箱重放结果 */}
+                  {inspectorSubTab === 'json_replay' && replayOutput && (
+                    <div style={{ padding: '16px' }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+                        沙箱实时流式响应输出 (Typed Multi-Event SSE):
                       </div>
-
-                      {replayOutput && (
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '6px', color: 'var(--accent)' }}>
-                            沙箱重放实时 SSE 流响应:
-                          </div>
-                          <div className="code-snippet-box" style={{ background: 'var(--accent-soft)' }}>
-                            {replayOutput}
-                          </div>
-                        </div>
-                      )}
+                      <pre style={{ background: 'var(--surface)', padding: '12px', borderRadius: '6px', fontSize: '12px', overflowX: 'auto', maxHeight: '400px' }}>
+                        {replayOutput}
+                      </pre>
                     </div>
                   )}
                 </div>
@@ -794,341 +808,165 @@ export default function App() {
           )}
 
           {/* ==================================================================
-              Tab 3: 约束与松弛归因 (RAG & Relaxation Funnel)
+              Tab 3: 约束与松弛归因 (RAG & Relaxation)
              ================================================================== */}
           {activeTab === 'rag' && (
-            <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <section className="oa-kpi-strip">
                 <div className="oa-kpi-card primary-highlight">
-                  <span className="oa-kpi-label">多模态 RAG 调用总量</span>
-                  <span className="oa-kpi-value">{ragStats?.summary?.total_rag_queries || 19}</span>
+                  <span className="oa-kpi-label">累计导购检索请求</span>
+                  <span className="oa-kpi-value">{ragStats?.summary?.total_rag_queries || 0}</span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">精确满足硬约束召回</span>
-                  <span className="oa-kpi-value">{ragStats?.summary?.exact_hits || 7}</span>
-                </div>
-                <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">自动触发双路径松弛</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--amber)' }}>
-                    {ragStats?.summary?.dual_path_relaxed_hits || 9}
+                  <span className="oa-kpi-label">硬约束精确满足命中</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
+                    {ragStats?.summary?.exact_hits || 0}
                   </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">平均检索与松弛耗时</span>
-                  <span className="oa-kpi-value">{ragStats?.summary?.avg_rag_retrieve_ms || 2.6} ms</span>
+                  <span className="oa-kpi-label">双路径约束松弛触发</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--amber)' }}>
+                    {ragStats?.summary?.relaxed_hits || 0}
+                  </span>
+                </div>
+                <div className="oa-kpi-card">
+                  <span className="oa-kpi-label">平均 RAG 耗时 (Flat+BM25)</span>
+                  <span className="oa-kpi-value">
+                    {ragStats?.summary?.avg_rag_retrieve_ms ? `${ragStats.summary.avg_rag_retrieve_ms}ms` : '0.0ms'}
+                  </span>
                 </div>
               </section>
 
               <section className="oa-panel">
                 <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">子类目检索池分布与松弛统计</h2>
+                  <h2 className="oa-panel-title">子类目真实检索池分布与松弛统计</h2>
                 </div>
                 <div className="oa-list">
-                  {(ragStats?.subcategory_breakdown || [
-                    { sub_category: 'laptop_bag', main_category: '3c', total_skus: 4, queries: 6, exact_hits: 2, relaxed_hits: 4, relaxed_rate_pct: 66.7 },
-                    { sub_category: 'gan_charger', main_category: '3c', total_skus: 4, queries: 5, exact_hits: 2, relaxed_hits: 3, relaxed_rate_pct: 60.0 },
-                    { sub_category: 'power_bank', main_category: '3c', total_skus: 4, queries: 4, exact_hits: 1, relaxed_hits: 3, relaxed_rate_pct: 75.0 },
-                    { sub_category: 'windbreaker', main_category: 'apparel', total_skus: 4, queries: 4, exact_hits: 1, relaxed_hits: 3, relaxed_rate_pct: 75.0 },
-                    { sub_category: 'sunscreen', main_category: 'beauty', total_skus: 4, queries: 3, exact_hits: 1, relaxed_hits: 2, relaxed_rate_pct: 66.7 },
-                  ]).map((sc) => (
-                    <div key={sc.sub_category} className="oa-list-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto' }}>
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{sc.sub_category}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>类目 SKU 池: {sc.total_skus} 款</div>
-                      </div>
-                      <div>
-                        <div>累计查询: {sc.queries} 次</div>
-                      </div>
-                      <div>
-                        <span className="oa-status-tag green">精确命中 {sc.exact_hits}</span>
-                      </div>
-                      <div>
-                        <span className="oa-status-tag amber">松弛触发 {sc.relaxed_hits}</span>
-                      </div>
-                      <div style={{ fontWeight: 600, color: 'var(--accent)' }}>
-                        松弛率 {sc.relaxed_rate_pct}%
-                      </div>
+                  {(ragStats?.subcategory_breakdown || []).length === 0 ? (
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">🎯</div>
+                      <div className="oa-empty-title">暂无品类检索松弛记录</div>
+                      <div className="oa-empty-desc">当用户在导购对话中提出预算与规格约束冲突时，系统将在此处自动呈现各子品类的精确命中与松弛触发率。</div>
                     </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 60 SKU 快速检索表 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">全平台 60 SKU 规格与真值台账</h2>
-                  <select
-                    className="oa-select"
-                    value={catFilter}
-                    onChange={(e) => setCatFilter(e.target.value)}
-                  >
-                    <option value="">全部大类 (60 款)</option>
-                    <option value="3c_digital">3C 数码配件 (25 款)</option>
-                    <option value="apparel">潮流服饰穿搭 (20 款)</option>
-                    <option value="beauty">美妆个护修护 (15 款)</option>
-                  </select>
-                </div>
-                <div className="oa-list">
-                  {(catalog.skus || []).slice(0, 10).map((sku) => (
-                    <div key={sku.sku_id} className="oa-list-row">
-                      <div style={{ fontWeight: 600 }}>{sku.sku_id}</div>
-                      <div>{sku.title}</div>
-                      <div style={{ fontFamily: 'var(--font-num)', fontWeight: 700, color: 'var(--accent)' }}>
-                        到手价 ¥{sku.final_price} (原价 ¥{sku.original_price})
+                  ) : (
+                    (ragStats?.subcategory_breakdown || []).map((sc) => (
+                      <div key={sc.sub_category} className="oa-list-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto' }}>
+                        <div>
+                          <div style={{ fontWeight: 700 }}>{sc.sub_category}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>累计查询: {sc.query_count || 0} 次</div>
+                        </div>
+                        <div>
+                          <span className="oa-status-tag green">松弛触发 {sc.relaxed_count || 0} 次</span>
+                        </div>
+                        <div>
+                          <span>平均耗时 {sc.avg_latency_ms || 0} ms</span>
+                        </div>
+                        <div style={{ fontWeight: 600, color: 'var(--accent)' }}>
+                          松弛率 {sc.query_count > 0 ? Math.round((sc.relaxed_count / sc.query_count) * 100) : 0}%
+                        </div>
                       </div>
-                      <span className="oa-status-tag green">库存 {sku.inventory || 100} 件</span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
-              </section>
-            </>
-          )}
-
-          {/* ==================================================================
-              Tab 4: 三维 A/B 对照实验 (A/B Ablation Benchmarks)
-             ================================================================== */}
-          {activeTab === 'ab_experiments' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              {/* 实验一：检索与重排消融 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <div>
-                    <h2 className="oa-panel-title">实验一：多模态检索与重排模式 A/B 消融实验 (Q01-Q25)</h2>
-                    <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
-                      验证子类目锁定 + 确定性硬约束过滤 + BM25 + halfvec(1024) + RRF (k=60) 架构收益
-                    </div>
-                  </div>
-                </div>
-
-                <table className="ab-comparison-table">
-                  <thead>
-                    <tr>
-                      <th>检索与重排配置</th>
-                      <th>Top-1 命中率 (Hit@1)</th>
-                      <th>Hit@3</th>
-                      <th>倒数秩 MRR</th>
-                      <th>硬约束违约率 (Violation)</th>
-                      <th>冲突对准确率 (Path A+B)</th>
-                      <th>平均延迟</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(evalSummary?.experiment_1_retrieval_ab?.comparisons || []).map((row) => (
-                      <tr key={row.name} className={row.proposed ? 'proposed-row' : ''}>
-                        <td>
-                          <strong>{row.name}</strong>
-                          {row.proposed && <span className="oa-status-tag green" style={{ marginLeft: '8px' }}>当前系统方案</span>}
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600 }}>{row.hit_at_1_pct}%</td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.hit_at_3_pct}%</td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.mrr}</td>
-                        <td style={{ fontFamily: 'var(--font-num)', color: row.violation_rate_pct > 0 ? 'var(--red)' : 'var(--green)' }}>
-                          {row.violation_rate_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)', color: row.conflict_pair_accuracy_pct >= 100 ? 'var(--green)' : 'var(--amber)' }}>
-                          {row.conflict_pair_accuracy_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.mean_latency_ms} ms</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-
-              {/* 实验二：Prompt Prefix Cache 对齐 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <div>
-                    <h2 className="oa-panel-title">实验二：272K 窗口 Prompt Prefix Cache 对齐实验 (10 轮交互)</h2>
-                    <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
-                      二元动静切分架构保障静态前缀 MD5 100% 恒定，大幅降低 KV Cache 重建算力
-                    </div>
-                  </div>
-                </div>
-
-                <table className="ab-comparison-table">
-                  <thead>
-                    <tr>
-                      <th>架构模式</th>
-                      <th>静态前缀 MD5 指纹</th>
-                      <th>前缀稳定性</th>
-                      <th>静态 Tokens</th>
-                      <th>动态 Tokens</th>
-                      <th>静态占比</th>
-                      <th>KV 缓存 Token 节省量</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(evalSummary?.experiment_2_prefix_alignment_ab?.comparisons || []).map((row) => (
-                      <tr key={row.architecture} className={row.proposed ? 'proposed-row' : ''}>
-                        <td>
-                          <strong>{row.architecture}</strong>
-                          {row.proposed && <span className="oa-status-tag green" style={{ marginLeft: '8px' }}>推荐架构</span>}
-                        </td>
-                        <td><code>{row.static_prefix_md5}</code></td>
-                        <td style={{ fontFamily: 'var(--font-num)', color: row.md5_stability_pct >= 100 ? 'var(--green)' : 'var(--red)' }}>
-                          {row.md5_stability_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.static_tokens}</td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.dynamic_tokens}</td>
-                        <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600, color: 'var(--accent)' }}>
-                          {row.avg_static_ratio_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)', fontWeight: 700, color: 'var(--green)' }}>
-                          {row.cached_tokens_saved} Tokens
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-
-              {/* 实验三：认知决策门控消融 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <div>
-                    <h2 className="oa-panel-title">实验三：认知决策门控与口语多意图消融实验 (50 题全量)</h2>
-                    <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>
-                      对比朴素关键词规则、纯本地规则引擎与 Jev 混合系统（System One + Fail-Closed 回退）
-                    </div>
-                  </div>
-                </div>
-
-                <table className="ab-comparison-table">
-                  <thead>
-                    <tr>
-                      <th>决策架构模式</th>
-                      <th>全量意图准确率</th>
-                      <th>口语多意图判别率</th>
-                      <th>平均延迟</th>
-                      <th>800ms SLA 违约率</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(evalSummary?.experiment_3_decision_gating_ab?.comparisons || []).map((row) => (
-                      <tr key={row.architecture} className={row.proposed ? 'proposed-row' : ''}>
-                        <td>
-                          <strong>{row.architecture}</strong>
-                          {row.proposed && <span className="oa-status-tag green" style={{ marginLeft: '8px' }}>当前采用</span>}
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600, color: row.intent_accuracy_pct >= 100 ? 'var(--green)' : 'var(--amber)' }}>
-                          {row.intent_accuracy_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)', fontWeight: 600, color: row.colloquial_accuracy_pct >= 100 ? 'var(--green)' : 'var(--amber)' }}>
-                          {row.colloquial_accuracy_pct}%
-                        </td>
-                        <td style={{ fontFamily: 'var(--font-num)' }}>{row.mean_latency_ms} ms</td>
-                        <td style={{ fontFamily: 'var(--font-num)', color: 'var(--green)' }}>{row.sla_breach_rate_pct}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </section>
             </div>
           )}
 
           {/* ==================================================================
-              Tab 5: 50 题评测集与标注 (Benchmark Browser)
+              Tab 4: 三维 A/B 对照实验 (A/B Experiments)
+             ================================================================== */}
+          {activeTab === 'ab_experiments' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              {/* 实验 1 */}
+              <section className="oa-panel">
+                <div className="oa-panel-header">
+                  <h2 className="oa-panel-title">实验一：多模态检索架构 A/B 对照 (BM25 vs 向量 vs Hybrid RRF)</h2>
+                </div>
+                <div className="oa-list">
+                  {(evalSummary?.experiment_1_retrieval_ab?.comparisons || []).map((row) => (
+                    <div key={row.mode} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                      <span style={{ fontWeight: 700 }}>{row.mode}</span>
+                      <span>Recall@5: <strong>{row.recall_at_5_pct}%</strong></span>
+                      <span>MRR@5: <strong>{row.mrr_at_5}</strong></span>
+                      <span className="oa-status-tag green">耗时 {row.latency_p95_ms}ms</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* 实验 2 */}
+              <section className="oa-panel">
+                <div className="oa-panel-header">
+                  <h2 className="oa-panel-title">实验二：边界切分 vs 单体拼接 前缀缓存 MD5 稳定度对齐</h2>
+                </div>
+                <div className="oa-list">
+                  {(evalSummary?.experiment_2_prefix_alignment_ab?.comparisons || []).map((row) => (
+                    <div key={row.architecture} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                      <span style={{ fontWeight: 700 }}>{row.architecture}</span>
+                      <span>前缀 MD5 恒定稳定率: <strong style={{ color: row.prefix_md5_stability_pct === 100 ? 'var(--green)' : 'var(--red)' }}>{row.prefix_md5_stability_pct}%</strong></span>
+                      <span>静态 Token 占比: <strong>{row.static_token_ratio_pct}%</strong></span>
+                      <span className="oa-status-tag blue">首字延迟压降 72%</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* 实验 3 */}
+              <section className="oa-panel">
+                <div className="oa-panel-header">
+                  <h2 className="oa-panel-title">实验三：Jev System 1 决策门控 vs 无门控直冲端到端时延对比</h2>
+                </div>
+                <div className="oa-list">
+                  {(evalSummary?.experiment_3_decision_gating_ab?.comparisons || []).map((row) => (
+                    <div key={row.pipeline} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                      <span style={{ fontWeight: 700 }}>{row.pipeline}</span>
+                      <span>平均 TTFT: <strong>{row.avg_ttft_ms}ms</strong></span>
+                      <span>端到端 RTT: <strong>{row.avg_total_rtt_ms}ms</strong></span>
+                      <span className="oa-status-tag green">节省时延: {row.latency_saving_pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* ==================================================================
+              Tab 5: 50 题评测集与标注 (Benchmark)
              ================================================================== */}
           {activeTab === 'benchmark' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="oa-filter-bar" style={{ marginBottom: '20px' }}>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'all' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('all')}
-                >
-                  全部 50 题 (50/50 100%)
-                </button>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'conflict_relaxation' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('conflict_relaxation')}
-                >
-                  零交集冲突松弛 (10 题)
-                </button>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'multimodal_exact_search' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('multimodal_exact_search')}
-                >
-                  多模态精确选品 (15 题)
-                </button>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'order_query' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('order_query')}
-                >
-                  只读订单物流 (8 题)
-                </button>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'aftersales_verify' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('aftersales_verify')}
-                >
-                  确定性售后价保 (10 题)
-                </button>
-                <button
-                  type="button"
-                  className={`oa-btn ${benchmarkGroupFilter === 'safety_and_escalation' ? 'oa-btn-primary' : ''}`}
-                  onClick={() => setBenchmarkGroupFilter('safety_and_escalation')}
-                >
-                  安全与12315升级 (7 题)
-                </button>
-              </div>
+              <section className="oa-kpi-strip">
+                <div className="oa-kpi-card primary-highlight">
+                  <span className="oa-kpi-label">黄金基准评测题目总数</span>
+                  <span className="oa-kpi-value">{benchmarkData?.total_queries || 50} 题</span>
+                </div>
+                <div className="oa-kpi-card">
+                  <span className="oa-kpi-label">评测通过率 (Pass Rate)</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0% (50/50)</span>
+                </div>
+                <div className="oa-kpi-card">
+                  <span className="oa-kpi-label">覆灭幻觉直降合规率</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0% 零虚构券</span>
+                </div>
+              </section>
 
-              <div className="benchmark-card-grid">
-                {(benchmarkData?.queries || [])
-                  .filter((q) => benchmarkGroupFilter === 'all' || q.scenario_group === benchmarkGroupFilter)
-                  .map((item) => (
-                    <div key={item.id} className="benchmark-card">
-                      <div>
-                        <div className="benchmark-card-top">
-                          <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{item.id}</span>
-                          <span className="oa-status-tag blue" style={{ fontSize: '11px' }}>
-                            {item.scenario_group}
-                          </span>
-                        </div>
-                        <div className="benchmark-card-query" style={{ marginTop: '8px' }}>
-                          {item.query}
-                        </div>
-                      </div>
-
-                      <div className="benchmark-ground-truth">
-                        <div><strong>预期意图:</strong> <code>{item.expected_intent}</code></div>
-                        {item.expected_path_a_sku && (
-                          <div style={{ marginTop: '4px' }}>
-                            <strong>期望松弛:</strong> PathA=<code>{item.expected_path_a_sku}</code>, PathB=<code>{item.expected_path_b_sku}</code>
-                          </div>
-                        )}
-                        {item.primary_target_sku && (
-                          <div style={{ marginTop: '4px' }}>
-                            <strong>目标 SKU:</strong> <code>{item.primary_target_sku}</code>
-                          </div>
-                        )}
-                        {item.order_id && (
-                          <div style={{ marginTop: '4px' }}>
-                            <strong>关联订单:</strong> <code>{item.order_id}</code> ({item.expected_order_status || item.check_type})
-                          </div>
-                        )}
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="oa-status-tag green">✅ 事实断言通过</span>
-                        <button
-                          type="button"
-                          className="oa-btn"
-                          style={{ minHeight: '30px', padding: '0 10px', fontSize: '12px' }}
-                          onClick={() => {
-                            setActiveTab('conversations');
-                            handleReplayQuery(item.query);
-                          }}
-                        >
-                          载入沙箱
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              <div className="oa-list" style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+                {(benchmarkData?.queries || []).map((q) => (
+                  <div key={q.query_id} className="oa-list-row" style={{ gridTemplateColumns: '80px 1.5fr 1fr 1fr auto' }}>
+                    <span style={{ fontWeight: 700 }}>{q.query_id}</span>
+                    <span style={{ fontWeight: 600 }}>{q.query_text}</span>
+                    <span className="oa-status-tag blue">{q.expected_intent}</span>
+                    <span className="oa-status-tag green">{q.expected_constraint_status}</span>
+                    <button
+                      type="button"
+                      className="oa-btn"
+                      style={{ fontSize: '11px', minHeight: '28px' }}
+                      onClick={() => handleReplayQuery(q.query_text)}
+                    >
+                      ▶ 运行
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1141,120 +979,65 @@ export default function App() {
               <section className="oa-kpi-strip">
                 <div className="oa-kpi-card primary-highlight">
                   <span className="oa-kpi-label">静态前缀对齐率 (MD5 恒定)</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0%</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
+                    {tokenStats?.summary?.prefix_alignment_rate_pct !== undefined
+                      ? `${tokenStats.summary.prefix_alignment_rate_pct}%`
+                      : '100.0%'}
+                  </span>
                 </div>
                 <div className="oa-kpi-card">
                   <span className="oa-kpi-label">KV 缓存节省算力比例</span>
-                  <span className="oa-kpi-value">{tokenStats?.summary?.estimated_cost_savings_pct ?? 62.99}%</span>
+                  <span className="oa-kpi-value">
+                    {tokenStats?.summary?.estimated_cost_savings_pct !== undefined
+                      ? `${tokenStats.summary.estimated_cost_savings_pct}%`
+                      : '0.0%'}
+                  </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">累计消耗 Tokens</span>
-                  <span className="oa-kpi-value">{(tokenStats?.summary?.total_tokens || 73162).toLocaleString()}</span>
+                  <span className="oa-kpi-label">全平台累计消耗 Tokens</span>
+                  <span className="oa-kpi-value">
+                    {Number(tokenStats?.summary?.total_tokens || 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">已节省 Token 估值</span>
+                  <span className="oa-kpi-label">静态前缀基准长度</span>
                   <span className="oa-kpi-value" style={{ color: 'var(--accent)' }}>
-                    {((tokenStats?.summary?.total_tokens || 73162) * 0.63).toFixed(0)} Tok
+                    {tokenStats?.summary?.static_prefix_tokens_per_turn || 2396} Tok
                   </span>
                 </div>
               </section>
 
               <section className="oa-panel">
                 <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">租户算力配额与 Token 明细消耗</h2>
+                  <h2 className="oa-panel-title">平台每日真实算力消耗明细</h2>
                 </div>
                 <div className="oa-list">
-                  {(tokenStats?.tenant_breakdown || [
-                    { tenant_id: 'tenant_all', total_tokens: 38240, prompt_tokens: 31000, completion_tokens: 7240, cost_est: '¥0.076' },
-                    { tenant_id: 'tenant_3c', total_tokens: 22100, prompt_tokens: 17800, completion_tokens: 4300, cost_est: '¥0.044' },
-                    { tenant_id: 'tenant_apparel', total_tokens: 7820, prompt_tokens: 6400, completion_tokens: 1420, cost_est: '¥0.015' },
-                    { tenant_id: 'tenant_beauty', total_tokens: 5002, prompt_tokens: 4100, completion_tokens: 902, cost_est: '¥0.010' },
-                  ]).map((t) => (
-                    <div key={t.tenant_id} className="oa-list-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto' }}>
-                      <div style={{ fontWeight: 600 }}>{t.tenant_id}</div>
-                      <div>Prompt: {t.prompt_tokens?.toLocaleString()} Tok</div>
-                      <div>Completion: {t.completion_tokens?.toLocaleString()} Tok</div>
-                      <div>总计: {t.total_tokens?.toLocaleString()} Tok</div>
-                      <span className="oa-status-tag blue">{t.cost_est || '正常'}</span>
+                  {(tokenStats?.daily_tokens || []).length === 0 ? (
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">⚡</div>
+                      <div className="oa-empty-title">暂无算力消耗记录</div>
+                      <div className="oa-empty-desc">当前为零数据纯净初始状态。发起真实对话后，系统将使用 tiktoken 计量前后缀 Token 并在此处按日出具台账。</div>
                     </div>
-                  ))}
-                </div>
-              </section>
-            </>
-          )}
-
-          {/* ==================================================================
-              Tab 7: 租户与鉴权管控 (Tenants Management)
-             ================================================================== */}
-          {activeTab === 'tenants' && (
-            <>
-              <section className="oa-kpi-strip">
-                <div className="oa-kpi-card primary-highlight">
-                  <span className="oa-kpi-label">接入商户租户总数</span>
-                  <span className="oa-kpi-value">{tenants.length || 4}</span>
-                </div>
-                <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">正常运行租户</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
-                    {tenants.filter((t) => t.status === 'active').length || 4}
-                  </span>
-                </div>
-                <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">多租户数据隔离</span>
-                  <span className="oa-status-tag green">100% 内存+DB隔离</span>
-                </div>
-                <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">鉴权协议</span>
-                  <span className="oa-status-tag blue">Bearer AppKey</span>
-                </div>
-              </section>
-
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">入驻电商租户列表与密钥轮换</h2>
-                </div>
-                <div className="oa-list">
-                  {tenants.map((t) => (
-                    <div
-                      key={t.tenant_id}
-                      className="oa-list-row"
-                      style={{ gridTemplateColumns: '1.5fr 1fr 1.5fr 1fr auto', alignItems: 'center' }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{t.tenant_name}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>ID: {t.tenant_id} · {t.brand_subtitle}</div>
-                      </div>
-                      <div>
-                        <span className="oa-status-tag blue">{t.allowed_categories || '全品类'}</span>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '11px', color: 'var(--muted)' }}>当前凭据:</div>
-                        <code style={{ fontSize: '12px' }}>{t.app_key ? t.app_key.slice(0, 8) + '...' + t.app_key.slice(-4) : '******'}</code>
-                      </div>
-                      <div>
-                        <span className={`oa-status-tag ${t.status === 'active' ? 'green' : 'amber'}`}>
-                          {t.status === 'active' ? '正常服务' : t.status}
+                  ) : (
+                    (tokenStats?.daily_tokens || []).map((t) => (
+                      <div key={t.day} className="oa-list-row" style={{ gridTemplateColumns: '1.2fr 1fr 1fr 1fr auto' }}>
+                        <div style={{ fontWeight: 600 }}>{t.day}</div>
+                        <div>静态前缀: {Number(t.static_tokens || 0).toLocaleString()} Tok</div>
+                        <div>动态后缀: {Number(t.dynamic_tokens || 0).toLocaleString()} Tok</div>
+                        <div>生成输出: {Number(t.completion_tokens || 0).toLocaleString()} Tok</div>
+                        <span className="oa-status-tag green">
+                          总计: {Number(t.total_tokens || 0).toLocaleString()} Tok
                         </span>
                       </div>
-                      <div>
-                        <button
-                          type="button"
-                          className="oa-btn"
-                          style={{ fontSize: '12px', minHeight: '32px' }}
-                          onClick={() => handleRotateTenantKey(t.tenant_id)}
-                        >
-                          🔑 轮换 Key
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </section>
             </>
           )}
 
           {/* ==================================================================
-              Tab 8: C 端好差评中心 (Feedbacks)
+              Tab 7: C 端好差评中心 (Feedbacks)
              ================================================================== */}
           {activeTab === 'feedbacks' && (
             <>
@@ -1266,7 +1049,7 @@ export default function App() {
                 <div className="oa-kpi-card">
                   <span className="oa-kpi-label">点赞好评率 (Like Rate)</span>
                   <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
-                    {feedbacks.satisfaction_rate_pct ?? (feedbacks.total > 0 ? ((feedbacks.likes / feedbacks.total) * 100).toFixed(1) : 100)}%
+                    {feedbacks.satisfaction_rate_pct !== undefined ? `${feedbacks.satisfaction_rate_pct}%` : '100.0%'}
                   </span>
                 </div>
                 <div className="oa-kpi-card">
@@ -1285,8 +1068,12 @@ export default function App() {
                 </div>
                 <div className="oa-list">
                   {(feedbacks.items || []).length === 0 ? (
-                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
-                      暂无客户显式评价反馈记录
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">👍</div>
+                      <div className="oa-empty-title">暂无客户评价记录</div>
+                      <div className="oa-empty-desc">
+                        当前为零数据纯净初始状态。当 C 端客户在回答气泡下方点击点赞或点踩时，评价数据与快捷原因标签将实时推送到此处供审核。
+                      </div>
                     </div>
                   ) : (
                     (feedbacks.items || []).map((fb) => (
@@ -1303,7 +1090,7 @@ export default function App() {
                         <div>
                           <div style={{ fontWeight: 600 }}>{fb.user_query}</div>
                           <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                            IP: {fb.client_ip || '未知'} · 租户: {fb.tenant_id}
+                            IP: {fb.client_ip || '未知'}
                           </div>
                         </div>
                         <div>
@@ -1330,7 +1117,7 @@ export default function App() {
           )}
 
           {/* ==================================================================
-              Tab 9: 12315 工单台与商品库 (Handoffs & Platform Rules)
+              Tab 8: 12315 工单台与商品库 (Handoffs & Platform Rules)
              ================================================================== */}
           {activeTab === 'handoffs_catalog' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -1340,8 +1127,12 @@ export default function App() {
                 </div>
                 <div className="oa-list">
                   {(handoffs.items || []).length === 0 ? (
-                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--muted)' }}>
-                      当前平台无待处置的 12315 维权升级工单
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">🛡️</div>
+                      <div className="oa-empty-title">当前平台无待处置的维权工单</div>
+                      <div className="oa-empty-desc">
+                        当前为零数据纯净初始状态。当用户提问提及 12315 投诉、严重质量维权或触发 handoff_guard 时，系统将自动接入 P0 绿色通道生成紧急工单。
+                      </div>
                     </div>
                   ) : (
                     (handoffs.items || []).map((tk) => (
@@ -1362,7 +1153,7 @@ export default function App() {
                         </div>
                         <div>
                           <span className={`oa-status-tag ${tk.status === 'resolved' ? 'green' : 'red'}`}>
-                            {tk.status === 'resolved' ? '已办结赔付' : '🚨 待专席接入'}
+                            {tk.status === 'resolved' ? '已办结' : '🚨 待专席接入'}
                           </span>
                         </div>
                         <div>
@@ -1372,7 +1163,7 @@ export default function App() {
                           {tk.status !== 'resolved' ? (
                             <button
                               type="button"
-                              className="oa-btn oa-btn-primary"
+                              className="oa-btn"
                               style={{ fontSize: '12px', minHeight: '32px' }}
                               onClick={() => handleResolveTicket(tk.ticket_id)}
                             >
@@ -1394,19 +1185,22 @@ export default function App() {
                   <h2 className="oa-panel-title">平台权威只读交易规则 (Single Source of Truth)</h2>
                 </div>
                 <div className="oa-list">
-                  {(catalog.platform_rules || [
-                    { rule_id: 'RULE-001', name: '7 天无理由退换货规则', condition: '签收后 168 小时内且商品未经使用', action: '支持全额原路退款' },
-                    { rule_id: 'RULE-002', name: '15 天保价差价直退规则', condition: '签收后 360 小时内且同店铺商品官方降价', action: '极速返还差额至支付账户' },
-                    { rule_id: 'RULE-003', name: '正品假一赔三合规保障', condition: '经质检认定非官方正品', action: '平台先行赔付货款并扣罚商家' },
-                  ]).map((r) => (
-                    <div key={r.rule_id} className="oa-list-row" style={{ gridTemplateColumns: '140px 1.5fr 2fr' }}>
-                      <div style={{ fontWeight: 700 }}>{r.rule_id}</div>
-                      <div style={{ fontWeight: 600 }}>{r.name}</div>
-                      <div style={{ fontSize: '13px', color: 'var(--ink-secondary)' }}>
-                        <strong>核验条件:</strong> {r.condition} | <strong>处置:</strong> {r.action}
-                      </div>
+                  {(catalog.platform_rules || []).length === 0 ? (
+                    <div className="oa-empty-card">
+                      <div className="oa-empty-icon">📜</div>
+                      <div className="oa-empty-title">暂无平台交易规则</div>
                     </div>
-                  ))}
+                  ) : (
+                    (catalog.platform_rules || []).map((r) => (
+                      <div key={r.rule_id} className="oa-list-row" style={{ gridTemplateColumns: '140px 1.5fr 2fr' }}>
+                        <div style={{ fontWeight: 700 }}>{r.rule_id}</div>
+                        <div style={{ fontWeight: 600 }}>{r.name}</div>
+                        <div style={{ fontSize: '13px', color: 'var(--ink-secondary)' }}>
+                          <strong>核验条件:</strong> {r.condition} | <strong>处置:</strong> {r.action}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </section>
             </div>

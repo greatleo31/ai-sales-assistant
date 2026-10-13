@@ -1090,7 +1090,7 @@ class ShoppingAgentOrchestrator:
         rag_result: Optional[Dict[str, Any]] = None
         order_result: Optional[Dict[str, Any]] = None
         aftersales_result: Optional[Dict[str, Any]] = None
-        tenant_rejection_msg: Optional[str] = None
+        missing_stock_reply_msg: Optional[str] = None
         wishlist_card: Optional[Dict[str, Any]] = None
 
         has_product_constraints = bool(
@@ -1173,7 +1173,7 @@ class ShoppingAgentOrchestrator:
             rag_result = None
             # 纯文字缺货查询保持极速确定性提示；带图缺货查询交由 V4.1 多模态或确定性三步应对法输出看图细节+心愿单+跨品类搭配
             if not vision_info:
-                tenant_rejection_msg = (
+                missing_stock_reply_msg = (
                     f"抱歉，惠购目前暂无「{detected_missing_item}」相关商品，我们会尽快安排补货上架。"
                     f"您可以点击上方卡片一键登记心愿单，上架后第一时间通知您。"
                 )
@@ -1182,20 +1182,7 @@ class ShoppingAgentOrchestrator:
             or (jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat"))
             or has_product_constraints
         ):
-            candidate_sub_cat = (
-                pre_rag_result.get("sub_category")
-                if pre_rag_result
-                else extracted.get("sub_category")
-            )
-            allowed, reject_msg, _ = analytics_service.check_tenant_category_access(
-                tenant_id=tenant_id,
-                sub_category=candidate_sub_cat,
-            )
-            if not allowed:
-                rag_result = None
-                tenant_rejection_msg = reject_msg
-            else:
-                rag_result = pre_rag_result
+            rag_result = pre_rag_result
 
         # ====================================================================
         # Step 4: 发送 SSE 事件 1 —— `event: decision_meta`
@@ -1371,11 +1358,11 @@ class ShoppingAgentOrchestrator:
         emitted_full_text_parts: List[str] = []
 
         remote_succeeded = False
-        if tenant_rejection_msg:
-            gateway_node_used = "tenant-isolation-guard"
+        if missing_stock_reply_msg:
+            gateway_node_used = "missing-stock-wishlist"
             chunk_size = 28
-            for i in range(0, len(tenant_rejection_msg), chunk_size):
-                piece = tenant_rejection_msg[i : i + chunk_size]
+            for i in range(0, len(missing_stock_reply_msg), chunk_size):
+                piece = missing_stock_reply_msg[i : i + chunk_size]
                 safe_piece = stream_filter.filter_delta(piece)
                 if safe_piece:
                     if ttft_ms is None:

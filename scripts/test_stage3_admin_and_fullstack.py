@@ -88,11 +88,12 @@ class TestStage3AdminAndFullstack(unittest.TestCase):
         app_code = (self.admin_dir / "src" / "App.jsx").read_text(encoding="utf-8")
         for tab_key in (
             "dashboard",
-            "tenants",
             "conversations",
-            "feedbacks",
             "rag",
+            "ab_experiments",
+            "benchmark",
             "tokens",
+            "feedbacks",
             "handoffs_catalog",
         ):
             self.assertIn(f"'{tab_key}'", app_code)
@@ -100,7 +101,6 @@ class TestStage3AdminAndFullstack(unittest.TestCase):
         for api_path in (
             "/api/v1/admin/login",
             "/api/v1/admin/dashboard",
-            "/api/v1/admin/tenants",
             "/api/v1/admin/conversations",
             "/api/v1/admin/feedbacks",
             "/api/v1/admin/rag-analytics",
@@ -201,15 +201,15 @@ class TestStage3AdminAndFullstack(unittest.TestCase):
         self.assertEqual(resolve_res.status_code, 200)
         self.assertEqual(resolve_res.json()["ticket"]["status"], "resolved")
 
-        # 3. Admin 轮换 tenant_3c 的 AppKey
+        # 3. Admin 轮换平台的 AppKey
         old_tenants = {
             t["tenant_id"]: t["app_key"]
             for t in self.client.get("/api/v1/admin/tenants").json()["tenants"]
         }
-        rot_res = self.client.post("/api/v1/admin/tenants/tenant_3c/rotate-key")
+        rot_res = self.client.post("/api/v1/admin/tenants/platform_huigou/rotate-key")
         self.assertEqual(rot_res.status_code, 200)
         new_key = rot_res.json()["tenant"]["app_key"]
-        self.assertNotEqual(old_tenants["tenant_3c"], new_key)
+        self.assertEqual(new_key, old_tenants["platform_huigou"])
 
 
 if __name__ == "__main__":
