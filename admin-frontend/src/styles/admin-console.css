@@ -65,6 +65,70 @@ html, body {
   transition: background-color 200ms ease, color 200ms ease;
 }
 
+
+@keyframes oaToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes oaToastSlideOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.oa-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  animation: oaToastSlideIn 0.3s ease forwards;
+  pointer-events: none;
+  max-width: 90vw;
+}
+
+.oa-toast.success {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+
+.oa-toast.error {
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid var(--red);
+}
+
+.oa-toast.info {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.oa-toast.leaving {
+  animation: oaToastSlideOut 0.3s ease forwards;
+}
+
 /* ==========================================================================
    1. 整体 OA 布局骨架（左侧简洁导航 + 右侧梯度留白工作区）
    ========================================================================== */
@@ -817,7 +881,7 @@ html, body {
 
 /* 1. 整体页面布局 */
 .oa-layout {
-  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-columns: 260px minmax(0, 1fr);
   width: 100%;
   min-height: 100vh;
 }
@@ -864,7 +928,7 @@ html, body {
 
 .oa-nav-btn > span:first-child {
   min-width: 0;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .oa-nav-count {
@@ -1322,7 +1386,7 @@ html, body {
 
 @media (min-width: 961px) {
   .oa-layout > .oa-sidebar {
-    margin-right: 20px;
+    margin-right: 0;
   }
 }
 
