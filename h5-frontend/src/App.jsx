@@ -21,6 +21,57 @@ function safeCalcDiscount(orig, final) {
   return (diff / 100).toFixed(1).replace(/\.0$/, '');
 }
 
+/**
+ * 浏览器端 Canvas 自适应图片压缩：
+ *   - 小于 350KB 的 JPEG/PNG 保留原始字节（保障 60-SKU 官方商品图 SHA-256 0ms 精确指纹匹配）；
+ *   - 手机拍照/高清相册大图自动等比缩放至 <= 1024px 并以 0.82 质量编码为 JPEG Base64，实现秒级上传。
+ */
+function compressImageToDataUrl(file, maxEdge = 1024, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('读取图片失败'));
+    reader.onload = () => {
+      const rawDataUrl = reader.result;
+      if (
+        typeof rawDataUrl === 'string' &&
+        file.size <= 350 * 1024 &&
+        /^data:image\/(jpeg|jpg|png|webp);base64,/i.test(rawDataUrl)
+      ) {
+        resolve(rawDataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onerror = () => {
+        if (typeof rawDataUrl === 'string') resolve(rawDataUrl);
+        else reject(new Error('解码图片失败'));
+      };
+      img.onload = () => {
+        let w = img.naturalWidth || img.width || 800;
+        let h = img.naturalHeight || img.height || 800;
+        if (w > maxEdge || h > maxEdge) {
+          const ratio = Math.min(maxEdge / w, maxEdge / h);
+          w = Math.max(1, Math.round(w * ratio));
+          h = Math.max(1, Math.round(h * ratio));
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(rawDataUrl);
+          return;
+        }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = rawDataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ==========================================================================
    1. 精简矢量图标库（严格克制，仅用于顶栏、卡片底部拇指/重答、输入框与订单弹窗）
    ========================================================================== */
@@ -105,6 +156,21 @@ const IconBagPlus = ({ size = 22 }) => (
     <path d="M3 6h18" />
     <path d="M16 10a4 4 0 0 1-8 0" />
     <path d="M19 15v6M16 18h6" />
+  </svg>
+);
+
+const IconCamera = ({ size = 26 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#23262B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </svg>
+);
+
+const IconPhoto = ({ size = 26 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#23262B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2.5" ry="2.5" />
+    <circle cx="8.5" cy="8.5" r="1.6" />
+    <path d="m21 15-5-5L5 21" />
   </svg>
 );
 
@@ -762,6 +828,10 @@ export default function App() {
   const [inputText, setInputText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
 
+  // 多模态图片上传与相机预览状态
+  const [pendingImage, setPendingImage] = useState(null); // { dataUrl, name } | null
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+
   // 页面导航与弹窗状态
   const [subPage, setSubPage] = useState(null); // null | 'settings' | 'disclaimer'
   const [showPlusTray, setShowPlusTray] = useState(false);
@@ -774,6 +844,17 @@ export default function App() {
   const mainScrollRef = useRef(null);
   const activePacerRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const albumInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+
+  const stopCameraStream = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+  };
 
   const stopCurrentStream = () => {
     if (activePacerRef.current) {
@@ -790,6 +871,7 @@ export default function App() {
   useEffect(() => {
     return () => {
       stopCurrentStream();
+      stopCameraStream();
     };
   }, []);
 
@@ -798,6 +880,101 @@ export default function App() {
     setTimeout(() => {
       setToastMsg('');
     }, 1800);
+  };
+
+  /**
+   * 选图/拍照文件回调：通过 Canvas 压缩至 <= 1024px 后挂载到输入框上方待发送预览条
+   */
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      triggerToast('请选择图片格式文件');
+      return;
+    }
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      setPendingImage({
+        dataUrl,
+        name: file.name || 'photo.jpg',
+      });
+      setShowPlusTray(false);
+    } catch {
+      triggerToast('图片处理失败，请重试');
+    }
+  };
+
+  /**
+   * 点击「照片」：唤醒手机系统相册（iOS 照片图库 / Android 相册）或桌面文件选择器
+   */
+  const handlePickAlbum = () => {
+    setShowPlusTray(false);
+    if (albumInputRef.current) {
+      albumInputRef.current.click();
+    }
+  };
+
+  /**
+   * 点击「拍照」：
+   *   - 移动端直接通过 capture="environment" 唤醒手机后置摄像头；
+   *   - 桌面端优先拉起 WebRTC 实时取景框，若无摄像头权限则平滑回退至文件选择。
+   */
+  const handleTakePhoto = async () => {
+    setShowPlusTray(false);
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
+      navigator.userAgent || ''
+    );
+    if (isMobile || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      }
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+      mediaStreamRef.current = stream;
+      setCameraModalOpen(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 60);
+    } catch {
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      }
+    }
+  };
+
+  const closeCameraModal = () => {
+    stopCameraStream();
+    setCameraModalOpen(false);
+  };
+
+  const captureWebRTCFrame = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const rawW = video.videoWidth || 640;
+    const rawH = video.videoHeight || 480;
+    const maxEdge = 1024;
+    const ratio = Math.min(1, maxEdge / Math.max(rawW, rawH));
+    const w = Math.max(1, Math.round(rawW * ratio));
+    const h = Math.max(1, Math.round(rawH * ratio));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setPendingImage({ dataUrl, name: `camera-${Date.now()}.jpg` });
+    }
+    closeCameraModal();
   };
 
   const scrollToBottom = () => {
@@ -873,24 +1050,24 @@ export default function App() {
 
     const configs = {
       buy: {
-        userText: 'Hi，购物助手！',
+        userText: 'Hi，惠购选品顾问！',
         aiText:
-          'Hi，购物助手来啦！我可以帮你做这些哦：\n- 帮你精准选：帮你快速找出最靠谱的品！\n- 帮你做规划：为你找好哪些该买，哪些别踩坑\n- 滑一滑就懂你：动动手指，就能理解你的审美\n- 智能搭配：一次买全最搭的配件和周边\n看看这些方向有没有戳中你的，和我聊聊看吧！',
+          '您好！我是惠购官方首席选品顾问，专注为您提供无套路的硬核选品决策：\n- 参数级严选：按功率、容量、克重、成分硬指标精准锁定靠谱好物\n- 双路径折中：遇到预算与高配规格冲突，自动生成「保规格 vs 保预算」对比方案\n- 滑块微调预算：动动手指拖动预算上限，秒级重算最优平替\n- 跨品类搭齐：3C数码、换季服饰、美妆个护一站式严选对比\n点选下方推荐方向，或直接告诉我您的预算和具体参数要求吧！',
         presetType: 'buy_assistant',
       },
       order: {
-        userText: '嗨，订单服务助手',
-        aiText: '嘿，订单服务小助手来啦～点我试试！',
+        userText: '嗨，订单与售后顾问',
+        aiText: '您好！我是惠购订单与售后专员，支持实时物流轨迹查询、7天无理由退货（168h）及15天自动价保（360h）秒级核验，点下方快捷项立即体验：',
         presetType: 'order_assistant',
       },
       save: {
-        userText: '帮我查找更多优惠',
-        aiText: 'Hi~请选择你想买的宝贝，我帮你生成更省钱的购买方案，多个商品也可以一键搞定！',
+        userText: '帮我核算直降好价',
+        aiText: '您好！惠购坚持「官方直营·无套路真直降」，废除复杂满减凑单。勾选您心仪的商品，我立即为您核算日常原价与当前直降到手差额：',
         presetType: 'save_assistant',
       },
       msg: {
-        userText: '嗨，消息助手',
-        aiText: '嗨，消息小助手来啦~点我试试！',
+        userText: '嗨，消息与权益助手',
+        aiText: '您好！我是惠购消息与权益助手，可为您一键汇总当前对话的选品结论、订单物流进展及15天价保可退差额提醒：',
         presetType: 'msg_assistant',
       },
     };
@@ -958,27 +1135,34 @@ export default function App() {
   };
 
   /**
-   * 发送普通消息并按人眼可读速度动态流式渲染 SSE
+   * 发送普通或带图消息并按人眼可读速度动态流式渲染 SSE
    * 支持 AbortController 中断、30s 响应超时、事件状态复位与原地重答机制
    */
   const sendMessage = async (
     rawQuery,
     attachedProducts = null,
     targetMsgId = null,
-    overrideHistory = null
+    overrideHistory = null,
+    explicitImage = null
   ) => {
-    const query = (rawQuery ?? inputText).trim();
-    if (!query) return;
+    const rawTrimmed = (rawQuery ?? inputText).trim();
+    const imageToSend = explicitImage ?? pendingImage?.dataUrl ?? null;
+    if (!rawTrimmed && !imageToSend) return;
     if (isStreaming && !targetMsgId) return;
+
+    const query =
+      rawTrimmed || '请帮我识别这张图片中的商品并推荐合适的款式';
 
     // 终止前序流与旧定时器，防止状态冲突
     stopCurrentStream();
     setInputText('');
+    setPendingImage(null);
     setShowPlusTray(false);
 
     if (
-      query === '总结当前对话与订单需要注意的地方' ||
-      query === '总结物流、售后等消息'
+      !imageToSend &&
+      (query === '总结当前对话与订单需要注意的地方' ||
+        query === '总结物流、售后等消息')
     ) {
       runLongConversationSummary(query);
       return;
@@ -1020,12 +1204,14 @@ export default function App() {
         role: 'user',
         text: query,
         sentProducts: attachedProducts,
+        sentImage: imageToSend,
       };
       const placeholderAssistant = {
         id: assistantMsgId,
         serverMessageId: assistantMsgId,
         role: 'assistant',
         userPrompt: query,
+        userImage: imageToSend,
         text: '',
         decisionMeta: null,
         uiCards: {},
@@ -1072,15 +1258,20 @@ export default function App() {
     activePacerRef.current = pacer;
 
     try {
+      const reqBody = {
+        query,
+        session_id: sessionId,
+        tenant_id: 'tenant_all',
+        history: historyPayload,
+      };
+      if (imageToSend) {
+        reqBody.image_base64 = imageToSend;
+      }
+
       const response = await fetch('/api/v1/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query,
-          session_id: sessionId,
-          tenant_id: 'tenant_all',
-          history: historyPayload,
-        }),
+        body: JSON.stringify(reqBody),
         signal: controller.signal,
       });
 
@@ -1189,7 +1380,7 @@ export default function App() {
       triggerAssistantTab(msg.assistantPreset);
       return;
     }
-    if (!msg.userPrompt) return;
+    if (!msg.userPrompt && !msg.userImage) return;
 
     const msgIdx = messages.findIndex((m) => m.id === msg.id);
     const truncatedHistory = (msgIdx > 0 ? messages.slice(0, msgIdx) : messages)
@@ -1197,7 +1388,7 @@ export default function App() {
       .slice(-6)
       .map((m) => ({ role: m.role, content: m.text }));
 
-    sendMessage(msg.userPrompt, null, msg.id, truncatedHistory);
+    sendMessage(msg.userPrompt, null, msg.id, truncatedHistory, msg.userImage || null);
   };
 
   const handleFeedback = async (msg, rating) => {
@@ -1309,6 +1500,7 @@ export default function App() {
   const handleStartNewChat = () => {
     stopCurrentStream();
     setMessages([]);
+    setPendingImage(null);
     setSessionId(`hg-${Date.now().toString(36)}`);
     setShowPlusTray(false);
     setShowScrollFab(false);
@@ -1319,6 +1511,23 @@ export default function App() {
 
   return (
     <div className="huigou-shell">
+      {/* 隐藏的系统相册与相机文件选择器（兼容 iOS Safari / Android Chrome / 微信 WebView / PC 浏览器） */}
+      <input
+        ref={albumInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleImageFileChange}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleImageFileChange}
+      />
+
       {/* ====================================================================
           1. 顶部导航栏：去掉左箭头，居中「惠购」，右侧「新对话」+「•••」
          ==================================================================== */}
@@ -1456,6 +1665,16 @@ export default function App() {
               if (msg.role === 'user') {
                 return (
                   <div key={msg.id} className="hg-msg-row user">
+                    {msg.sentImage && (
+                      <div className="hg-user-sent-image-wrap">
+                        <img
+                          className="hg-user-sent-image"
+                          src={msg.sentImage}
+                          alt="用户上传图片"
+                        />
+                        <span className="hg-user-vision-badge">V4.1 视觉识图</span>
+                      </div>
+                    )}
                     <div className="hg-bubble-user">{msg.text}</div>
                     {msg.sentProducts && msg.sentProducts.length > 0 && (
                       <div className="hg-user-sent-skus">
@@ -1615,10 +1834,10 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          4. 底部快捷胶囊条 + 输入框 + 右侧加号展开面板 (点 5、8、9)
+          4. 底部快捷胶囊条 + 待发送图片预览条 + 输入框 + 右侧加号展开面板
          ==================================================================== */}
       <footer className="hg-footer">
-        {!showPlusTray && (
+        {!showPlusTray && !pendingImage && (
           <div className="hg-quick-pills">
             <button
               type="button"
@@ -1653,6 +1872,61 @@ export default function App() {
           </div>
         )}
 
+        {/* 待发送图片缩略图预览与快捷识图提问标签条 */}
+        {pendingImage && (
+          <div className="hg-image-preview-bar">
+            <div className="hg-image-preview-thumb-wrap">
+              <img
+                src={pendingImage.dataUrl}
+                alt="待发送图片预览"
+                className="hg-image-preview-thumb"
+              />
+              <button
+                type="button"
+                className="hg-image-preview-remove"
+                aria-label="移除图片"
+                onClick={() => setPendingImage(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="hg-image-preview-meta">
+              <div className="hg-image-preview-hint">
+                已就绪 · 点击右侧「发送」或点选快捷指令识图：
+              </div>
+              <div className="hg-image-preview-tags">
+                <button
+                  type="button"
+                  className="hg-image-tag-chip"
+                  onClick={() =>
+                    sendMessage('帮我识别图片中的商品，推荐同款或高性价比平替')
+                  }
+                >
+                  找同款/平替
+                </button>
+                <button
+                  type="button"
+                  className="hg-image-tag-chip"
+                  onClick={() =>
+                    sendMessage('帮我识别图中商品并拆解核心规格参数与选购要点')
+                  }
+                >
+                  看核心参数
+                </button>
+                <button
+                  type="button"
+                  className="hg-image-tag-chip"
+                  onClick={() =>
+                    sendMessage('这是我的订单商品实拍凭证，请帮我核验7天无理由退货与15天价保资格')
+                  }
+                >
+                  上传售后凭证
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form
           className="hg-input-box"
           onSubmit={(e) => {
@@ -1673,7 +1947,11 @@ export default function App() {
           <input
             type="text"
             className="hg-text-input"
-            placeholder="发消息或按住说话..."
+            placeholder={
+              pendingImage
+                ? '补充图片问题（如：预算150以内有同款吗）或直接点发送...'
+                : '发消息或点右侧 + 号拍照/传图识物...'
+            }
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             disabled={isStreaming}
@@ -1689,7 +1967,7 @@ export default function App() {
             <IconBagPlus />
           </button>
 
-          {inputText.trim() ? (
+          {inputText.trim() || pendingImage ? (
             <button type="submit" className="hg-send-btn" disabled={isStreaming}>
               发送
             </button>
@@ -1705,9 +1983,31 @@ export default function App() {
           )}
         </form>
 
-        {/* 点 9：点击加号展开的面板（暂时只展示订单/商品 icon） */}
+        {/* 点击加号展开的多模态扩展面板：拍照 + 照片（手机相册） + 订单服务 */}
         {showPlusTray && (
           <div className="hg-plus-tray">
+            <button
+              type="button"
+              className="hg-plus-tray-item"
+              onClick={handleTakePhoto}
+            >
+              <div className="hg-plus-tray-icon">
+                <IconCamera size={26} />
+              </div>
+              <span className="hg-plus-tray-label">拍照</span>
+            </button>
+
+            <button
+              type="button"
+              className="hg-plus-tray-item"
+              onClick={handlePickAlbum}
+            >
+              <div className="hg-plus-tray-icon">
+                <IconPhoto size={26} />
+              </div>
+              <span className="hg-plus-tray-label">照片</span>
+            </button>
+
             <button
               type="button"
               className="hg-plus-tray-item"
@@ -1723,6 +2023,55 @@ export default function App() {
 
         <div className="hg-ai-footnote">内容由 AI 生成</div>
       </footer>
+
+      {/* 桌面端 WebRTC 实时摄像头拍照弹窗（移动端直接调起系统相机） */}
+      {cameraModalOpen && (
+        <div className="hg-sheet-backdrop" onClick={closeCameraModal}>
+          <div
+            className="hg-camera-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="hg-sheet-header">
+              <div className="hg-sheet-title">拍照识商品</div>
+              <button
+                type="button"
+                className="hg-sheet-close"
+                aria-label="关闭相机"
+                onClick={closeCameraModal}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="hg-camera-Stage">
+              <video
+                ref={videoRef}
+                className="hg-camera-video"
+                playsInline
+                muted
+              />
+            </div>
+            <div className="hg-camera-actions">
+              <button
+                type="button"
+                className="hg-secondary-btn"
+                onClick={() => {
+                  closeCameraModal();
+                  handlePickAlbum();
+                }}
+              >
+                从相册选图
+              </button>
+              <button
+                type="button"
+                className="hg-primary-btn"
+                onClick={captureWebRTCFrame}
+              >
+                立即拍照
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ====================================================================
           5. 非全覆盖半屏弹窗：「订单服务 / 选择商品」（只保留「已购买」和「购物车」）

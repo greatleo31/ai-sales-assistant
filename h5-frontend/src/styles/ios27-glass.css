@@ -1,5 +1,5 @@
 /* ==========================================================================
-   惠购 (Huigou) — 1:1 复刻千问购物助手移动端 H5 样式表
+   惠购 (Huigou) — 原生 AI 购物助手移动端 H5 样式表
    ========================================================================== */
 
 :root {
@@ -7,7 +7,7 @@
   --surface: oklch(1 0 0);               /* #FFFFFF 纯白卡片 */
   --gray-tab: oklch(0.964 0.004 260);    /* #F3F4F6 卡片内嵌浅灰 Tab 底色 */
   --gray-tab-hover: oklch(0.94 0.005 260);
-  --user-bubble: #FFEAE0;                /* 千问同款用户浅杏橙气泡 */
+  --user-bubble: #FFEAE0;                /* 惠购品牌用户浅杏橙气泡 */
   --ink: oklch(0.20 0.01 260);           /* #17181A 主文字深黑 */
   --ink-secondary: oklch(0.42 0.01 260); /* #4E535C 次级正文 */
   --muted: oklch(0.60 0.01 260);         /* #828792 辅助灰 */
@@ -1434,4 +1434,152 @@ html, body {
   border-radius: 50%;
   background: var(--accent);
   opacity: 0.6;
+}
+
+/* ==========================================================================
+   9. V4.1 原生多模态识图：待发送图片预览条、气泡缩略图与拍照弹窗
+   ========================================================================== */
+.hg-image-preview-bar {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 115, 21, 0.22);
+  animation: hgFadeIn 150ms ease-out;
+}
+
+.hg-image-preview-thumb-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.hg-image-preview-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #EAECEF;
+  background: #F7F8FA;
+}
+
+.hg-image-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(24, 25, 28, 0.82);
+  color: #FFFFFF;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hg-image-preview-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hg-image-preview-hint {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hg-image-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hg-image-tag-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 115, 21, 0.28);
+  background: #FFF7F2;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 150ms ease;
+}
+
+.hg-image-tag-chip:active {
+  transform: scale(0.96);
+  background: #FFEBE0;
+}
+
+.hg-user-sent-image-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.hg-user-sent-image {
+  max-width: 168px;
+  max-height: 168px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #FFFFFF;
+}
+
+.hg-user-vision-badge {
+  font-size: 11px;
+  color: var(--accent);
+  background: #FFF5EE;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.hg-camera-modal {
+  width: 100%;
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  padding-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hg-camera-Stage {
+  width: 100%;
+  height: 300px;
+  background: #141518;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hg-camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hg-camera-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 14px 16px 0;
 }

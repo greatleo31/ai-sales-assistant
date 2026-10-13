@@ -301,7 +301,7 @@ class TestStage1BackendAndSanitizer(unittest.TestCase):
         tok_stat = self.client.get("/api/v1/admin/token-analytics").json()
         self.assertEqual(
             tok_stat["summary"]["locked_static_prefix_md5"],
-            "4729a6f0dbaa02d0dc8a2c93b0d22b7b",
+            "d313736e0462445e200a1b25c2310987",
         )
         self.assertEqual(tok_stat["summary"]["prefix_alignment_rate_pct"], 100.0)
         self.assertGreater(tok_stat["summary"]["total_tokens"], 25000)

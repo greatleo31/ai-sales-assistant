@@ -5,7 +5,7 @@ FastAPI 应用主入口 (app/main.py)
   1. 挂载本地静态商品图服务 `/static/images/{sku_id}.jpg` (`data/images`)，100% 返回 HTTP 200 与 `image/jpeg`；
   2. 挂载单页静态演示看板 `/static/showcase.html` (`static/showcase.html`) 及根路径 `/`（向后兼容全部评测套件）；
   3. 当 `h5-frontend/dist` 与 `admin-frontend/dist` 存在时，自动挂载 `/h5` 与 `/admin` 独立前端构建产物；
-  4. 暴露淘宝「千问」级 Typed Multi-Event SSE 流式接口 `POST /api/v1/chat/stream`（含真实 Client IP 采集与多租户隔离）；
+  4. 暴露惠购 (Huigou) 原生 Typed Multi-Event SSE 流式接口 `POST /api/v1/chat/stream`（含真实 Client IP 采集与多租户隔离）；
   5. 暴露 C 端店铺列表 `/api/v1/tenants/public` 与回答好坏评价接口 `POST /api/v1/feedback`；
   6. 暴露 Admin 管理后台全套统计与治理接口 `/api/v1/admin/*`（全景看板、多租户 CRUD、会话与 IP 审计、回答好坏反馈中心、RAG 松弛分析、Token 账单、12315 人工工单台、60 SKU 目录只读洞察）。
 """
@@ -37,7 +37,7 @@ H5_DIST_DIR: Path = ROOT_DIR / "h5-frontend" / "dist"
 ADMIN_DIST_DIR: Path = ROOT_DIR / "admin-frontend" / "dist"
 
 app = FastAPI(
-    title="AI Sales Assistant (淘宝「千问」级多模态电商导购 Agent + 多租户管理后台)",
+    title="Huigou AI Sales Assistant (惠购原生多模态电商导购 Agent + 多租户管理后台)",
     description="System One (Jev) 门控 + 确定性硬约束预过滤 + BM25/halfvec(1024)/RRF 混合检索 + 双路径约束松弛 + 272K 状态机 + 多租户/IP审计/反馈分析",
     version="2026.10.m6",
 )
@@ -104,6 +104,10 @@ class ChatStreamRequest(BaseModel):
         default="hybrid_rrf",
         description="检索模式：hybrid_rrf / bm25_only / dense_only",
     )
+    image_base64: Optional[str] = Field(
+        default=None,
+        description="可选：用户拍照或手机相册上传的图片 DataURL (data:image/jpeg;base64,...) 或纯 Base64 字符串",
+    )
     # 预留 RTC 语音可选字段 (HANDOFF.md §2：预留语音入口字段，默认关闭)
     voice_input_enabled: bool = Field(default=False, description="可选 RTC 语音输入开关（默认关闭）")
     rtc_room_id: Optional[str] = Field(default=None, description="可选火山 RTC 房间号预留字段")
@@ -135,7 +139,7 @@ class AdminLoginRequest(BaseModel):
 class TenantUpsertRequest(BaseModel):
     tenant_id: Optional[str] = Field(default=None, description="租户 ID（新建可不填自动生成）")
     tenant_name: str = Field(..., description="租户/店铺名称")
-    brand_subtitle: str = Field(default="淘宝「千问」官方智能导购", description="C端顶部副标题")
+    brand_subtitle: str = Field(default="惠购官方首席选品顾问", description="C端顶部副标题")
     allowed_categories: List[str] = Field(
         default_factory=lambda: ["3c", "apparel", "beauty"],
         description="允许检索的大类列表：3c / apparel / beauty",
@@ -144,7 +148,7 @@ class TenantUpsertRequest(BaseModel):
     daily_token_quota: int = Field(default=2000000, ge=1000, description="每日 Token 配额上限")
     status: str = Field(default="active", description="状态：active / suspended")
     welcome_message: str = Field(
-        default="您好！我是您的智能导购助手，随时为您推荐好物或核验售后。",
+        default="您好！我是惠购官方首席选品顾问，随时为您推荐严选好物或核验订单售后。",
         description="C端自定义欢迎语",
     )
     theme_accent: str = Field(default="#38bdf8", description="C端主题高亮色")
@@ -304,10 +308,13 @@ async def evaluate_aftersales_endpoint(req: AftersalesEvalRequest) -> Dict[str, 
 @app.post("/api/v1/chat/stream")
 async def chat_stream_endpoint(req: ChatStreamRequest, request: Request) -> StreamingResponse:
     """
-    淘宝「千问」级 Typed Multi-Event SSE 流式对话接口：
+    惠购 (Huigou) 原生 Typed Multi-Event SSE 流式对话接口：
     依次推送：`decision_meta` -> `ui_cards` -> `text_delta` -> `followup_pills` -> `telemetry` -> `done`。
     """
     user_query = (req.query or req.message or "").strip()
+    has_image = bool(req.image_base64 and req.image_base64.strip())
+    if not user_query and has_image:
+        user_query = "请帮我识别这张图片中的商品并推荐合适的款式"
     if not user_query:
         raise HTTPException(status_code=422, detail="Field 'query' (or 'message') must not be empty.")
 
@@ -325,6 +332,7 @@ async def chat_stream_endpoint(req: ChatStreamRequest, request: Request) -> Stre
         tenant_id=req.tenant_id or "tenant_all",
         client_ip=real_client_ip,
         user_agent=user_agent,
+        image_base64=req.image_base64,
     )
     return StreamingResponse(
         sse_generator,
@@ -560,8 +568,8 @@ async def admin_runtime_status_endpoint() -> Dict[str, Any]:
         "circuit_breaker_failures": primary_node.breaker.failure_count,
         "ewma_latency_ms": primary_node.ewma_latency_ms,
         "effective_context_window": settings.effective_context_window,
-        "static_prefix_md5": "4729a6f0dbaa02d0dc8a2c93b0d22b7b",
-        "static_prefix_tokens": 1947,
+        "static_prefix_md5": "d313736e0462445e200a1b25c2310987",
+        "static_prefix_tokens": 2396,
         "jev_model": settings.jev_model,
         "jev_cache_entries": len(jev_cache.get("entries", {})),
         "embedding_model": settings.embedding_model,

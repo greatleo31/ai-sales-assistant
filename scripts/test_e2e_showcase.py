@@ -26,7 +26,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.main import app
 
-EXPECTED_STATIC_MD5 = "4729a6f0dbaa02d0dc8a2c93b0d22b7b"
+EXPECTED_STATIC_MD5 = "d313736e0462445e200a1b25c2310987"
 
 
 def parse_sse_response(raw_text: str) -> List[Tuple[str, Any]]:

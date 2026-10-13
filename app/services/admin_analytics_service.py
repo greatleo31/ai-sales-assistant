@@ -34,7 +34,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.config import DATA_DIR
 
-EXPECTED_STATIC_PREFIX_MD5: str = "4729a6f0dbaa02d0dc8a2c93b0d22b7b"
+EXPECTED_STATIC_PREFIX_MD5: str = "d313736e0462445e200a1b25c2310987"
 ANALYTICS_DB_PATH: Path = DATA_DIR / "admin_analytics.db"
 ADMIN_TOKEN_SECRET: str = "ai-sales-assistant-admin-hmac-secret-2026"
 
@@ -155,10 +155,10 @@ class AdminAnalyticsService:
                     ui_cards_json TEXT NOT NULL,
                     static_prefix_md5 TEXT NOT NULL,
                     prefix_cache_aligned INTEGER NOT NULL DEFAULT 1,
-                    static_prefix_tokens INTEGER NOT NULL DEFAULT 1947,
+                    static_prefix_tokens INTEGER NOT NULL DEFAULT 2396,
                     dynamic_suffix_tokens INTEGER NOT NULL DEFAULT 320,
                     completion_tokens INTEGER NOT NULL DEFAULT 110,
-                    total_tokens INTEGER NOT NULL DEFAULT 2377,
+                    total_tokens INTEGER NOT NULL DEFAULT 2826,
                     ttft_ms REAL NOT NULL DEFAULT 42.0,
                     total_rtt_ms REAL NOT NULL DEFAULT 165.0,
                     rag_retrieve_ms REAL NOT NULL DEFAULT 2.6,
@@ -243,13 +243,13 @@ class AdminAnalyticsService:
         default_tenants = [
             (
                 "tenant_all",
-                "千问全品类官方旗舰店",
+                "惠购官方自营严选旗舰店",
                 "官方全品类自营",
-                "ak_live_qw_all_9f8e7d6c5b4a3210",
+                "ak_live_hg_all_9f8e7d6c5b4a3210",
                 json.dumps(["3c", "apparel", "beauty"], ensure_ascii=False),
                 120,
                 2000000,
-                "您好！欢迎光临千问全品类官方旗舰店✨ 我是您的 AI 导购与售后顾问，支持 3C 数码、穿搭服饰、美妆个护精准选品，以及订单物流查询与 15 天自动价保核验。",
+                "您好！欢迎光临惠购官方自营严选旗舰店✨ 我是惠购官方首席选品顾问，支持 3C 数码、穿搭服饰、美妆个护精准选品，以及订单物流查询与 15 天自动价保核验。",
                 "#6366f1",
                 "active",
                 (now - timedelta(days=14)).isoformat(),
@@ -420,7 +420,7 @@ class AdminAnalyticsService:
             ) = row
             ts = (now - timedelta(days=days_ago, hours=hours_ago)).isoformat()
             msg_id = f"msg-seed-{idx:03d}"
-            static_tok = 1947
+            static_tok = 2396
             total_tok = static_tok + dyn_tok + comp_tok
             region = resolve_ip_region(ip)
 
@@ -692,7 +692,7 @@ class AdminAnalyticsService:
             return {
                 "token": f"{payload}:{sig}",
                 "username": "admin",
-                "nickname": "千问超级管理员",
+                "nickname": "惠购超级管理员",
                 "role": "super_admin",
                 "expires_at": exp,
             }
@@ -920,7 +920,7 @@ class AdminAnalyticsService:
             requested_name = MAIN_CATEGORY_LABELS.get(main_cat, main_cat)
             msg = (
                 f"温馨提示：您当前所在店铺为 **{tenant['name']}**（专营品类：**{allowed_names}**），"
-                f"暂未上架【{requested_name}】类商品。您可以切换顶部店铺至 **千问全品类官方旗舰店**，或直接咨询本店主营好物~"
+                f"暂未上架【{requested_name}】类商品。您可以切换顶部店铺至 **惠购官方自营严选旗舰店**，或直接咨询本店主营好物~"
             )
             return False, msg, tenant
         return True, None, tenant
@@ -953,7 +953,7 @@ class AdminAnalyticsService:
 
         prod_cards = ui_cards.get("product_cards") or []
         top_skus = [c.get("sku_id") for c in prod_cards if c.get("sku_id")]
-        static_tok = int(telemetry.get("static_prefix_tokens") or 1947)
+        static_tok = int(telemetry.get("static_prefix_tokens") or 2396)
         dyn_tok = int(telemetry.get("dynamic_suffix_tokens") or 320)
         comp_tok = int(telemetry.get("llm_output_tokens") or 100)
         total_tok = static_tok + dyn_tok + comp_tok
@@ -1644,7 +1644,7 @@ class AdminAnalyticsService:
                     "locked_static_prefix_md5": EXPECTED_STATIC_PREFIX_MD5,
                     "md5_alignment_rate_pct": align_rate,
                     "prefix_alignment_rate_pct": align_rate,
-                    "static_prefix_tokens_per_turn": 1947,
+                    "static_prefix_tokens_per_turn": 2396,
                     "total_static_tokens": static_tok,
                     "total_dynamic_tokens": dyn_tok,
                     "total_completion_tokens": comp_tok,
@@ -1840,7 +1840,7 @@ class AdminAnalyticsService:
             "context_stitching": {
                 "heuristic_2_scope": "B端 OA 管理后台与全栈配置自省层",
                 "static_prefix_md5": EXPECTED_STATIC_PREFIX_MD5,
-                "static_prefix_tokens": 1947,
+                "static_prefix_tokens": 2396,
                 "total_skus": len(skus),
                 "total_subcategories": len(subcat_counts),
                 "category_distribution": cat_counts,

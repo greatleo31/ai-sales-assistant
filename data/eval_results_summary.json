@@ -11,15 +11,15 @@
         "total": 10,
         "passed": 10,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 3.57,
-        "p95_latency_ms": 4.41
+        "mean_latency_ms": 3.66,
+        "p95_latency_ms": 4.76
       },
       "multimodal_exact_search": {
         "total": 15,
         "passed": 15,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 2.74,
-        "p95_latency_ms": 2.09
+        "mean_latency_ms": 2.72,
+        "p95_latency_ms": 2.1
       },
       "order_query": {
         "total": 8,
@@ -39,7 +39,7 @@
         "total": 7,
         "passed": 7,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.1,
+        "mean_latency_ms": 0.09,
         "p95_latency_ms": 0.1
       }
     },
@@ -48,76 +48,76 @@
         "total": 10,
         "passed": 10,
         "latencies_ms": [
-          6.832,
-          4.068,
-          4.406,
-          3.538,
-          3.615,
-          2.286,
-          2.976,
-          2.881,
-          2.867,
-          2.241
+          6.824,
+          3.8,
+          4.265,
+          3.866,
+          4.762,
+          2.218,
+          2.734,
+          2.897,
+          2.946,
+          2.302
         ],
         "details": [
           {
             "id": "Q01",
             "passed": true,
-            "latency_ms": 6.832,
+            "latency_ms": 6.824,
             "note": "status=relaxed, PathA=SKU-3C-008, PathB=SKU-3C-009"
           },
           {
             "id": "Q02",
             "passed": true,
-            "latency_ms": 4.068,
+            "latency_ms": 3.8,
             "note": "status=relaxed, PathA=SKU-3C-008, PathB=SKU-3C-009"
           },
           {
             "id": "Q03",
             "passed": true,
-            "latency_ms": 4.406,
+            "latency_ms": 4.265,
             "note": "status=relaxed, PathA=SKU-3C-010, PathB=SKU-3C-011"
           },
           {
             "id": "Q04",
             "passed": true,
-            "latency_ms": 3.538,
+            "latency_ms": 3.866,
             "note": "status=relaxed, PathA=SKU-3C-010, PathB=SKU-3C-011"
           },
           {
             "id": "Q05",
             "passed": true,
-            "latency_ms": 3.615,
+            "latency_ms": 4.762,
             "note": "status=relaxed, PathA=SKU-3C-012, PathB=SKU-3C-013"
           },
           {
             "id": "Q06",
             "passed": true,
-            "latency_ms": 2.286,
+            "latency_ms": 2.218,
             "note": "status=relaxed, PathA=SKU-3C-012, PathB=SKU-3C-013"
           },
           {
             "id": "Q07",
             "passed": true,
-            "latency_ms": 2.976,
+            "latency_ms": 2.734,
             "note": "status=relaxed, PathA=SKU-APP-001, PathB=SKU-APP-002"
           },
           {
             "id": "Q08",
             "passed": true,
-            "latency_ms": 2.881,
+            "latency_ms": 2.897,
             "note": "status=relaxed, PathA=SKU-APP-001, PathB=SKU-APP-002"
           },
           {
             "id": "Q09",
             "passed": true,
-            "latency_ms": 2.867,
+            "latency_ms": 2.946,
             "note": "status=relaxed, PathA=SKU-BEA-001, PathB=SKU-BEA-002"
           },
           {
             "id": "Q10",
             "passed": true,
-            "latency_ms": 2.241,
+            "latency_ms": 2.302,
             "note": "status=relaxed, PathA=SKU-BEA-001, PathB=SKU-BEA-002"
           }
         ]
@@ -126,111 +126,111 @@
         "total": 15,
         "passed": 15,
         "latencies_ms": [
-          2.094,
-          1.217,
-          1.105,
-          1.359,
-          1.652,
-          21.51,
-          1.594,
-          1.102,
-          1.626,
-          1.042,
-          1.117,
-          1.985,
-          1.085,
-          1.544,
-          1.089
+          2.1,
+          1.175,
+          1.066,
+          1.351,
+          1.599,
+          21.185,
+          1.461,
+          1.669,
+          1.639,
+          1.033,
+          1.099,
+          1.64,
+          1.041,
+          1.551,
+          1.213
         ],
         "details": [
           {
             "id": "Q11",
             "passed": true,
-            "latency_ms": 2.094,
+            "latency_ms": 2.1,
             "note": "status=satisfied, Top1=SKU-3C-015, target=SKU-3C-015"
           },
           {
             "id": "Q12",
             "passed": true,
-            "latency_ms": 1.217,
+            "latency_ms": 1.175,
             "note": "status=satisfied, Top1=SKU-3C-001, target=SKU-3C-001"
           },
           {
             "id": "Q13",
             "passed": true,
-            "latency_ms": 1.105,
+            "latency_ms": 1.066,
             "note": "status=satisfied, Top1=SKU-3C-014, target=SKU-3C-014"
           },
           {
             "id": "Q14",
             "passed": true,
-            "latency_ms": 1.359,
+            "latency_ms": 1.351,
             "note": "status=satisfied, Top1=SKU-3C-019, target=SKU-3C-019"
           },
           {
             "id": "Q15",
             "passed": true,
-            "latency_ms": 1.652,
+            "latency_ms": 1.599,
             "note": "status=satisfied, Top1=SKU-3C-025, target=SKU-3C-025"
           },
           {
             "id": "Q16",
             "passed": true,
-            "latency_ms": 21.51,
+            "latency_ms": 21.185,
             "note": "status=satisfied, Top1=SKU-3C-007, target=SKU-3C-007"
           },
           {
             "id": "Q17",
             "passed": true,
-            "latency_ms": 1.594,
+            "latency_ms": 1.461,
             "note": "status=satisfied, Top1=SKU-APP-004, target=SKU-APP-004"
           },
           {
             "id": "Q18",
             "passed": true,
-            "latency_ms": 1.102,
+            "latency_ms": 1.669,
             "note": "status=satisfied, Top1=SKU-APP-009, target=SKU-APP-009"
           },
           {
             "id": "Q19",
             "passed": true,
-            "latency_ms": 1.626,
+            "latency_ms": 1.639,
             "note": "status=satisfied, Top1=SKU-APP-014, target=SKU-APP-014"
           },
           {
             "id": "Q20",
             "passed": true,
-            "latency_ms": 1.042,
+            "latency_ms": 1.033,
             "note": "status=satisfied, Top1=SKU-APP-017, target=SKU-APP-017"
           },
           {
             "id": "Q21",
             "passed": true,
-            "latency_ms": 1.117,
+            "latency_ms": 1.099,
             "note": "status=satisfied, Top1=SKU-APP-006, target=SKU-APP-006"
           },
           {
             "id": "Q22",
             "passed": true,
-            "latency_ms": 1.985,
+            "latency_ms": 1.64,
             "note": "status=satisfied, Top1=SKU-BEA-004, target=SKU-BEA-004"
           },
           {
             "id": "Q23",
             "passed": true,
-            "latency_ms": 1.085,
+            "latency_ms": 1.041,
             "note": "status=satisfied, Top1=SKU-BEA-009, target=SKU-BEA-009"
           },
           {
             "id": "Q24",
             "passed": true,
-            "latency_ms": 1.544,
+            "latency_ms": 1.551,
             "note": "status=satisfied, Top1=SKU-BEA-011, target=SKU-BEA-011"
           },
           {
             "id": "Q25",
             "passed": true,
-            "latency_ms": 1.089,
+            "latency_ms": 1.213,
             "note": "status=satisfied, Top1=SKU-BEA-013, target=SKU-BEA-013"
           }
         ]
@@ -239,10 +239,10 @@
         "total": 8,
         "passed": 8,
         "latencies_ms": [
-          0.025,
-          0.017,
+          0.021,
+          0.016,
           0.011,
-          0.008,
+          0.007,
           0.005,
           0.005,
           0.005,
@@ -252,13 +252,13 @@
           {
             "id": "Q26",
             "passed": true,
-            "latency_ms": 0.025,
+            "latency_ms": 0.021,
             "note": "order=ORD-20261001-001, status=shipped, carrier=顺丰速运"
           },
           {
             "id": "Q27",
             "passed": true,
-            "latency_ms": 0.017,
+            "latency_ms": 0.016,
             "note": "order=ORD-20261001-002, status=delivered, carrier=中通快递"
           },
           {
@@ -270,7 +270,7 @@
           {
             "id": "Q29",
             "passed": true,
-            "latency_ms": 0.008,
+            "latency_ms": 0.007,
             "note": "order=ORD-20261001-004, status=delivered, carrier=圆通速递"
           },
           {
@@ -303,28 +303,28 @@
         "total": 10,
         "passed": 10,
         "latencies_ms": [
-          0.083,
-          0.054,
+          0.077,
+          0.052,
           0.038,
-          0.031,
+          0.032,
+          0.028,
+          0.025,
+          0.028,
           0.027,
-          0.025,
-          0.028,
-          0.028,
-          0.025,
+          0.024,
           0.025
         ],
         "details": [
           {
             "id": "Q34",
             "passed": true,
-            "latency_ms": 0.083,
+            "latency_ms": 0.077,
             "note": "order=ORD-20261001-002, return_7d=True(ELIGIBLE), price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q35",
             "passed": true,
-            "latency_ms": 0.054,
+            "latency_ms": 0.052,
             "note": "order=ORD-20261001-007, return_7d=True(ELIGIBLE), price_guarantee=False(diff=¥0.0)"
           },
           {
@@ -336,13 +336,13 @@
           {
             "id": "Q37",
             "passed": true,
-            "latency_ms": 0.031,
+            "latency_ms": 0.032,
             "note": "order=ORD-20261001-006, return_7d=False(WINDOW_EXPIRED_7D), price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q38",
             "passed": true,
-            "latency_ms": 0.027,
+            "latency_ms": 0.028,
             "note": "order=ORD-20261001-004, return_7d=False(EXPIRED_AND_OPENED), price_guarantee=False(diff=¥0.0)"
           },
           {
@@ -360,13 +360,13 @@
           {
             "id": "Q41",
             "passed": true,
-            "latency_ms": 0.028,
+            "latency_ms": 0.027,
             "note": "order=ORD-20261001-009, return_7d=False(EXPIRED_AND_OPENED), price_guarantee=True(diff=¥130.0)"
           },
           {
             "id": "Q42",
             "passed": true,
-            "latency_ms": 0.025,
+            "latency_ms": 0.024,
             "note": "order=ORD-20261001-010, return_7d=False(EXPIRED_AND_OPENED), price_guarantee=False(diff=¥0.0)"
           },
           {
@@ -381,55 +381,55 @@
         "total": 7,
         "passed": 7,
         "latencies_ms": [
-          0.101,
-          0.277,
-          0.082,
+          0.096,
+          0.254,
+          0.087,
+          0.061,
+          0.046,
           0.064,
-          0.049,
-          0.063,
-          0.041
+          0.042
         ],
         "details": [
           {
             "id": "Q44",
             "passed": true,
-            "latency_ms": 0.101,
+            "latency_ms": 0.096,
             "note": "sub_type=12315_escalation, guard=(pass), intent=aftersales_qa, handoff=True"
           },
           {
             "id": "Q45",
             "passed": true,
-            "latency_ms": 0.277,
+            "latency_ms": 0.254,
             "note": "sub_type=12315_escalation, guard=(pass), intent=product_recommend, handoff=True"
           },
           {
             "id": "Q46",
             "passed": true,
-            "latency_ms": 0.082,
+            "latency_ms": 0.087,
             "note": "sub_type=frustration_handoff, guard=(pass), intent=product_recommend, handoff=True"
           },
           {
             "id": "Q47",
             "passed": true,
-            "latency_ms": 0.064,
+            "latency_ms": 0.061,
             "note": "sub_type=privacy_probe, guard=privacy_probe(warn), intent=privacy_guard, handoff=False"
           },
           {
             "id": "Q48",
             "passed": true,
-            "latency_ms": 0.049,
+            "latency_ms": 0.046,
             "note": "sub_type=privacy_probe, guard=privacy_probe(warn), intent=privacy_guard, handoff=False"
           },
           {
             "id": "Q49",
             "passed": true,
-            "latency_ms": 0.063,
+            "latency_ms": 0.064,
             "note": "sub_type=competitor_neutrality, guard=competitor(warn), intent=product_recommend, handoff=False"
           },
           {
             "id": "Q50",
             "passed": true,
-            "latency_ms": 0.041,
+            "latency_ms": 0.042,
             "note": "sub_type=prompt_injection, guard=prompt_injection(block), intent=privacy_guard, handoff=False"
           }
         ]
@@ -444,7 +444,7 @@
       "exact_mrr": 0.92,
       "hard_constraint_violation_rate_pct": 73.85,
       "conflict_path_ab_accuracy_pct": 30.0,
-      "mean_latency_ms": 19.033
+      "mean_latency_ms": 18.153
     },
     "Dense-only (Unfiltered 1024-d)": {
       "exact_hit@1_pct": 84.0,
@@ -453,7 +453,7 @@
       "exact_mrr": 0.8867,
       "hard_constraint_violation_rate_pct": 75.38,
       "conflict_path_ab_accuracy_pct": 20.0,
-      "mean_latency_ms": 12.509
+      "mean_latency_ms": 12.22
     },
     "Hard-Filter + BM25-only": {
       "exact_hit@1_pct": 100.0,
@@ -462,7 +462,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 1.313
+      "mean_latency_ms": 1.267
     },
     "Hard-Filter + Dense-only": {
       "exact_hit@1_pct": 100.0,
@@ -471,7 +471,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 2.818
+      "mean_latency_ms": 2.614
     },
     "Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)": {
       "exact_hit@1_pct": 100.0,
@@ -480,24 +480,24 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 2.763
+      "mean_latency_ms": 2.616
     }
   },
   "experiment_2_prefix_alignment_ab": {
     "Boundary-Split (Proposed)": {
       "num_turns": 10,
-      "static_prefix_md5": "4729a6f0dbaa02d0dc8a2c93b0d22b7b",
+      "static_prefix_md5": "d313736e0462445e200a1b25c2310987",
       "unique_md5_count": 1,
       "md5_stability_rate_pct": 100.0,
-      "static_prefix_tokens": 1947,
+      "static_prefix_tokens": 2396,
       "dynamic_suffix_tokens_range": [
         221,
         791
       ],
-      "avg_static_token_ratio_pct": 78.26,
-      "ten_turn_total_prompt_tokens": 25037,
-      "ten_turn_kv_cached_tokens": 17523,
-      "ten_turn_effective_billed_savings_pct": 62.99
+      "avg_static_token_ratio_pct": 81.52,
+      "ten_turn_total_prompt_tokens": 29527,
+      "ten_turn_kv_cached_tokens": 21564,
+      "ten_turn_effective_billed_savings_pct": 65.73
     },
     "Monolithic (Baseline)": {
       "num_turns": 10,
@@ -506,11 +506,11 @@
       "md5_stability_rate_pct": 0.0,
       "static_prefix_tokens": 0,
       "dynamic_suffix_tokens_range": [
-        1993,
-        2032
+        2442,
+        2481
       ],
       "avg_static_token_ratio_pct": 0.0,
-      "ten_turn_total_prompt_tokens": 20150,
+      "ten_turn_total_prompt_tokens": 24640,
       "ten_turn_kv_cached_tokens": 0,
       "ten_turn_effective_billed_savings_pct": 0.0
     }
@@ -519,21 +519,21 @@
     "Naive Keyword Baseline": {
       "intent_accuracy_50q_pct": 76.0,
       "colloquial_stress_accuracy_pct": 25.0,
-      "mean_latency_ms": 0.001,
+      "mean_latency_ms": 0.003,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query": 0
     },
     "LocalRule-Only Engine (Fail-Closed)": {
       "intent_accuracy_50q_pct": 94.0,
       "colloquial_stress_accuracy_pct": 87.5,
-      "mean_latency_ms": 0.033,
+      "mean_latency_ms": 0.032,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query": 0
     },
     "Proposed (Jev System One + Cache + Fail-Closed Fallback)": {
       "intent_accuracy_50q_pct": 100.0,
       "colloquial_stress_accuracy_pct": 100.0,
-      "mean_latency_ms": 0.108,
+      "mean_latency_ms": 0.1,
       "live_api_p50_latency_ms": 342.0,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query_live": 418,
