@@ -56,15 +56,15 @@ export default function App() {
   // 沙箱重放状态
   const [replayLoading, setReplayLoading] = useState(false);
   const [replayOutput, setReplayOutput] = useState(null);
-  const [actionNotice, setActionNotice] = useState('');
+  const [actionNotice, setActionNotice] = useState(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  const showToast = (msg) => {
-    setActionNotice(msg);
-    setTimeout(() => setActionNotice(''), 3000);
+  const showToast = (msg, type = 'success') => {
+    setActionNotice({ msg, type });
+    setTimeout(() => setActionNotice(null), 3000);
   };
 
   // 全量拉取后端真实观测与分析数据
@@ -138,12 +138,12 @@ export default function App() {
       });
       const data = await resp.json();
       if (resp.ok) {
-        showToast(`已验证管理员身份: ${data.admin?.username || 'admin'} (权限 100%)`);
+        showToast(`已验证管理员身份: ${data.admin?.username || 'admin'} (权限 100%)`, 'success');
       } else {
-        showToast(`验证失败: ${data.detail || '未授权'}`);
+        showToast(`验证失败: ${data.detail || '未授权'}`, 'error');
       }
     } catch (err) {
-      showToast(`请求异常: ${err.message}`);
+      showToast(`请求异常: ${err.message}`, 'error');
     }
   };
 
@@ -241,13 +241,18 @@ export default function App() {
 
   return (
     <div className="oa-layout">
+      {actionNotice && (
+        <div className={`oa-toast ${actionNotice.type}`}>
+          {actionNotice.msg}
+        </div>
+      )}
       {/* ======================================================================
           左侧导航栏 (Slim Modern Sidebar)
          ====================================================================== */}
       <aside className="oa-sidebar">
         <div>
           <div className="oa-brand">
-            <div className="oa-brand-title">千问 · 研发观测中台</div>
+            <div className="oa-brand-title">惠购 · 研发观测中台</div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
               Agent Observability & Evaluation
             </div>
@@ -292,8 +297,8 @@ export default function App() {
           >
             🔐 验证管理员身份 (admin)
           </button>
-          <a href="/" target="_blank" rel="noreferrer" className="oa-link-h5">
-            打开千问 C 端演示看板 ↗
+          <a href="/h5/" target="_blank" rel="noreferrer" className="oa-link-h5">
+            打开惠购
           </a>
         </div>
       </aside>
@@ -305,18 +310,12 @@ export default function App() {
         {/* 常驻全局顶部状态栏 */}
         <header className="oa-topbar">
           <div className="oa-breadcrumb">
-            <span>千问导购管理中台</span>
+            <span>惠购导购管理中台</span>
             <span style={{ color: 'var(--line)' }}>/</span>
             <span className="current">{currentNav.label}</span>
           </div>
 
           <div className="oa-topbar-controls">
-            {actionNotice && (
-              <span className="oa-status-tag green" style={{ animation: 'fadeIn 0.2s' }}>
-                {actionNotice}
-              </span>
-            )}
-
             {/* 核心研发运行状态指示灯 */}
             <div className="runtime-badge">
               <span className="status-dot green" />
