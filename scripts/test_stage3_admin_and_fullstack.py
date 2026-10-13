@@ -81,7 +81,7 @@ class TestStage3AdminAndFullstack(unittest.TestCase):
 
         dist_html = (self.dist_dir / "index.html").read_text(encoding="utf-8")
         self.assertIn("/admin/assets/", dist_html)
-        self.assertIn("千问导购管理中台", dist_html)
+        self.assertIn("官方运营管理中台", dist_html)
 
     def test_02_admin_7_modules_ui_coverage_in_app_jsx(self) -> None:
         """验证 admin-frontend/src/App.jsx 完整实现 7 大核心管理模块与 API 对接。"""
