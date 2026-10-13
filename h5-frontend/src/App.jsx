@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CustomerRichText } from './utils/streamSanitizer';
+import ProductImagePreview from './components/ProductImagePreview.jsx';
 
 /* ==========================================================================
    0. 全局唯一 ID 生成器与生产级数值精度防漂移工具函数
@@ -457,11 +458,13 @@ function ProductGenUICard({ products, priceCards }) {
 
         return (
           <div key={skuId} className="hg-prod-item">
-            <img
-              className="hg-prod-thumb"
-              src={item.image_path || item.image_url || getSkuImage(item.sku_id || 'SKU-3C-001')}
-              alt={item.title}
-              loading="lazy"
+            <ProductImagePreview
+              src={
+                item.image_path ||
+                item.image_url ||
+                getSkuImage(item.sku_id || 'SKU-3C-001')
+              }
+              alt={item.title || '商品图片'}
             />
             <div className="hg-prod-info">
               <div className="hg-prod-name">{item.title}</div>
@@ -575,10 +578,13 @@ function RelaxationGenUICard({ products, maxBudget, subCategory, onSendPrompt })
       </div>
 
       <div className="hg-prod-item">
-        <img
-          className="hg-prod-thumb"
-          src={current.image_url || current.image_path || getSkuImage(current.sku_id || 'SKU-3C-015')}
-          alt={current.title}
+        <ProductImagePreview
+          src={
+            current.image_url ||
+            current.image_path ||
+            getSkuImage(current.sku_id || 'SKU-3C-015')
+          }
+          alt={current.title || '商品图片'}
         />
         <div className="hg-prod-info">
           <div className="hg-prod-name">{current.title}</div>
@@ -753,6 +759,135 @@ function OrderAftersalesGenUICard({ orderCards, aftersalesCard }) {
   );
 }
 
+function MenuActionIcon({ type }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {type === 'new' && (
+        <>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M12 8v8M8 12h8" />
+        </>
+      )}
+      {type === 'info' && (
+        <>
+          <path d="M6 3h9l4 4v14H6z" />
+          <path d="M15 3v5h4M9 12h7M9 16h7" />
+        </>
+      )}
+      {type === 'clear' && (
+        <>
+          <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+          <path d="M10 11v5M14 11v5" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function MoreActionsMenu({
+  onNewChat,
+  onDisclaimer,
+  onClearHistory
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleOutside = (event) => {
+      if (!rootRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open]);
+
+  const execute = (callback) => {
+    setOpen(false);
+    callback();
+  };
+
+  return (
+    <div className="hg-more-anchor" ref={rootRef}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="hg-icon-btn hg-more-trigger"
+        aria-label="更多操作"
+        aria-expanded={open}
+        aria-controls="hg-more-menu"
+        onClick={() => setOpen(value => !value)}
+      >
+        <IconMore />
+      </button>
+
+      {open && (
+        <div
+          id="hg-more-menu"
+          className="hg-more-menu"
+          role="group"
+          aria-label="更多操作"
+        >
+          <button
+            type="button"
+            className="hg-more-menu-item"
+            onClick={() => execute(onNewChat)}
+          >
+            <MenuActionIcon type="new" />
+            <span>新对话</span>
+          </button>
+
+          <button
+            type="button"
+            className="hg-more-menu-item"
+            onClick={() => execute(onDisclaimer)}
+          >
+            <MenuActionIcon type="info" />
+            <span>免责声明</span>
+          </button>
+
+          <div className="hg-more-menu-divider" />
+
+          <button
+            type="button"
+            className="hg-more-menu-item hg-more-menu-danger"
+            onClick={() => execute(onClearHistory)}
+          >
+            <MenuActionIcon type="clear" />
+            <span>清空聊天记录</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ==========================================================================
    4. 惠购 (Huigou) 主应用组件
    ========================================================================== */
@@ -763,7 +898,7 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
 
   // 页面导航与弹窗状态
-  const [subPage, setSubPage] = useState(null); // null | 'settings' | 'disclaimer'
+  const [subPage, setSubPage] = useState(null); // null | 'disclaimer'
   const [showPlusTray, setShowPlusTray] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetTab, setSheetTab] = useState('cart'); // 'cart' | 'purchased'
@@ -1333,14 +1468,18 @@ export default function App() {
           >
             新对话
           </button>
-          <button
-            type="button"
-            className="hg-icon-btn"
-            aria-label="打开设置界面"
-            onClick={() => setSubPage('settings')}
-          >
-            <IconMore />
-          </button>
+          <MoreActionsMenu
+            onNewChat={handleStartNewChat}
+            onDisclaimer={() => setSubPage('disclaimer')}
+            onClearHistory={() => {
+              if (!window.confirm('确定清空当前会话吗？')) {
+                return;
+              }
+
+              handleStartNewChat();
+              triggerToast('当前会话已清空');
+            }}
+          />
         </div>
       </header>
 
@@ -1814,53 +1953,15 @@ export default function App() {
       )}
 
       {/* ====================================================================
-          6. 右上角「•••」设置界面与「关于：免责声明」独立页面 (点 6)
+          6. 「关于：免责声明」独立页面 (点 6)
          ==================================================================== */}
-      {subPage === 'settings' && (
-        <div className="hg-subpage">
-          <div className="hg-subpage-header">
-            <button
-              type="button"
-              className="hg-icon-btn"
-              onClick={() => setSubPage(null)}
-            >
-              <IconBack />
-            </button>
-            <span className="hg-subpage-title">惠购</span>
-          </div>
-
-          <div className="hg-settings-group-label">功能</div>
-          <button
-            type="button"
-            className="hg-settings-cell"
-            onClick={() => {
-              setMessages([]);
-              setSubPage(null);
-              triggerToast('已清空聊天记录');
-            }}
-          >
-            <span>清空聊天记录</span>
-          </button>
-
-          <div className="hg-settings-group-label">关于</div>
-          <button
-            type="button"
-            className="hg-settings-cell"
-            onClick={() => setSubPage('disclaimer')}
-          >
-            <span>免责声明</span>
-            <span style={{ color: 'var(--muted)' }}>&gt;</span>
-          </button>
-        </div>
-      )}
-
       {subPage === 'disclaimer' && (
         <div className="hg-subpage">
           <div className="hg-subpage-header">
             <button
               type="button"
               className="hg-icon-btn"
-              onClick={() => setSubPage('settings')}
+              onClick={() => setSubPage(null)}
             >
               <IconBack />
             </button>
