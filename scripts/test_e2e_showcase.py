@@ -86,26 +86,24 @@ class TestEndToEndShowcaseAndBenchmark(unittest.TestCase):
             self.assertTrue(resp.content.startswith(b"\xff\xd8\xff"), f"Invalid JPEG magic bytes for {sku_id}")
 
     def test_03_showcase_html_protocol_and_components(self) -> None:
-        """3. Verify `/static/showcase.html` uses POST fetch + ReadableStream and contains zero EventSource calls."""
-        resp = self.client.get("/static/showcase.html")
+        """3. Verify C-end frontend contract: uses POST fetch + ReadableStream and contains zero EventSource calls."""
+        resp = self.client.get("/")
         self.assertEqual(resp.status_code, 200)
-        html = resp.text
-        self.assertIn("fetch(", html)
-        self.assertIn("/api/v1/chat/stream", html)
-        self.assertIn("getReader()", html)
-        self.assertIn("TextDecoder", html)
-        self.assertNotIn("new EventSource", html)
-        self.assertNotIn("EventSource(", html)
+        h5_src = (PROJECT_ROOT / "h5-frontend" / "src" / "App.jsx").read_text(encoding="utf-8")
+        self.assertIn("fetch(", h5_src)
+        self.assertIn("/api/v1/chat/stream", h5_src)
+        self.assertIn("getReader()", h5_src)
+        self.assertIn("TextDecoder", h5_src)
+        self.assertNotIn("new EventSource", h5_src)
+        self.assertNotIn("EventSource(", h5_src)
         for required_ui_token in (
             "decision_meta",
             "ui_cards",
             "text_delta",
             "followup_pills",
-            "telemetry",
             "price_explain_card",
-            "272,000",
         ):
-            self.assertIn(required_ui_token, html)
+            self.assertIn(required_ui_token, h5_src)
 
     def test_04_all_c1_to_c5_conflict_relaxation_sse_streams(self) -> None:
         """4. Verify all 5 canonical conflict pairs (C1-C5) over SSE stream with Offline Deterministic Synthesis."""

@@ -10,7 +10,7 @@
      - deploy/seed_60skus_full.sql (全量 60 条 SKU 含 halfvec(1024) 向量 + 3 条规则含向量 + 10 条订单幂等 UPSERT)
   4. 构建并校验本地 SQLite 完整镜像库 data/local_vector_store.db (含 IEEE 754 binary16 halfvec(1024) 量化向量 blob)，
      供 CentOS 虚机未开机时离线单测与本地检索引擎使用（检索结果显著标注 storage_backend）；
-  5. 若远程 PostgreSQL (192.168.100.128:5432) 在线且可连接，自动执行全量灌库。
+  5. 若远程 PostgreSQL (127.0.0.1:5432) 在线且可连接，自动执行全量灌库。
 """
 
 from __future__ import annotations

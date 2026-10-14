@@ -267,16 +267,15 @@ class TestModule4Pipeline(unittest.TestCase):
             self.assertIn("image/jpeg", img_resp.headers.get("content-type", ""))
             self.assertTrue(img_resp.content.startswith(b"\xff\xd8\xff"))
 
-        # 验证 /static/showcase.html 与根路径 /
-        for path in ("/", "/static/showcase.html"):
-            page_resp = self.client.get(path)
-            self.assertEqual(page_resp.status_code, 200)
-            html_text = page_resp.text
-            self.assertIn("fetch('/api/v1/chat/stream'", html_text)
-            self.assertIn("response.body.getReader()", html_text)
-            self.assertIn("new TextDecoder", html_text)
-            self.assertIn("price_explain_card", html_text)
-            self.assertNotIn("EventSource", html_text, "showcase.html 严禁使用原生 EventSource")
+        # 验证根路径 / 与 C 端移动导购助手流式契约
+        page_resp = self.client.get("/")
+        self.assertEqual(page_resp.status_code, 200)
+        h5_src = (ROOT_DIR / "h5-frontend" / "src" / "App.jsx").read_text(encoding="utf-8")
+        self.assertIn("/api/v1/chat/stream", h5_src)
+        self.assertIn("getReader()", h5_src)
+        self.assertIn("TextDecoder", h5_src)
+        self.assertIn("price_explain_card", h5_src)
+        self.assertNotIn("EventSource", h5_src, "C端前端严禁使用原生 EventSource")
 
     def test_05_sse_stream_c1_to_c5_and_all_intents_contract(self) -> None:
         """验证 POST /api/v1/chat/stream 在 C1~C5 及订单/售后/转人工/隐私/注入拦截下完整输出 6 类 SSE 事件。"""

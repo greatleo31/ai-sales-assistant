@@ -89,7 +89,7 @@ ALLOWED_VISUAL_DESCRIPTION_SOURCES = {
     "calibrated_from_retained_image",
 }
 COS_URL_PATTERN = re.compile(
-    r"^https://[a-z0-9-]+-\d+\.cos\.[a-z0-9-]+\.myqcloud\.com/.+\.(?:jpg|jpeg|png)$",
+    r"^(?:https://[a-z0-9-]+-\d+\.cos\.[a-z0-9-]+\.myqcloud\.com/.+\.(?:jpg|jpeg|png)|/static/images/.+\.(?:jpg|jpeg|png))$",
     re.IGNORECASE,
 )
 SHA256_HEX_PATTERN = re.compile(r"^[0-9a-fA-F]{64}$")

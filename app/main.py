@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -185,12 +185,12 @@ class WishlistUpdateRequest(BaseModel):
 # 基础与 C 端公共接口
 # ============================================================================
 @app.get("/", include_in_schema=False)
-async def root_showcase() -> FileResponse:
-    """根路径直接返回单页演示看板 static/showcase.html。"""
-    showcase_file = STATIC_DIR / "showcase.html"
-    if not showcase_file.exists():
-        raise HTTPException(status_code=404, detail="static/showcase.html not found")
-    return FileResponse(str(showcase_file), media_type="text/html; charset=utf-8")
+async def root_showcase() -> Any:
+    """根路径直接呈现或重定向至 C 端现代移动导购助手。"""
+    h5_index = H5_DIST_DIR / "index.html"
+    if h5_index.exists():
+        return FileResponse(str(h5_index), media_type="text/html; charset=utf-8")
+    return RedirectResponse(url="/h5/", status_code=302)
 
 
 @app.get("/health")

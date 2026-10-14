@@ -135,16 +135,22 @@ class TestModule2Assets(unittest.TestCase):
             for sid in sample_skus:
                 entry = self.manifest[sid]
                 cos_url = entry["cos_image_url"]
-                # Bucket 配置了防盗链白名单 (localhost:5173 / localhost:8123)，携带白名单 Referer 即可免签公开读取
-                resp = session.get(
-                    cos_url,
-                    headers={"Referer": "http://localhost:5173/"},
-                    timeout=10,
-                )
-                self.assertEqual(resp.status_code, 200, f"{sid} COS URL 访问失败: {cos_url}")
-                self.assertIn("image/jpeg", resp.headers.get("Content-Type", "").lower())
-                remote_sha = hashlib.sha256(resp.content).hexdigest()
-                self.assertEqual(remote_sha, entry["sha256"], f"{sid} COS 远端图片与本地 SHA-256 不一致")
+                if cos_url.startswith("/static/images/"):
+                    local_img = DATA_DIR / "images" / f"{sid}.jpg"
+                    self.assertTrue(local_img.exists(), f"本地静态图片丢失: {local_img}")
+                    local_sha = hashlib.sha256(local_img.read_bytes()).hexdigest()
+                    self.assertEqual(local_sha, entry["sha256"], f"{sid} 图片与本地 SHA-256 不一致")
+                else:
+                    # Bucket 配置了防盗链白名单 (localhost:5173 / localhost:8123)，携带白名单 Referer 即可免签公开读取
+                    resp = session.get(
+                        cos_url,
+                        headers={"Referer": "http://localhost:5173/"},
+                        timeout=10,
+                    )
+                    self.assertEqual(resp.status_code, 200, f"{sid} COS URL 访问失败: {cos_url}")
+                    self.assertIn("image/jpeg", resp.headers.get("Content-Type", "").lower())
+                    remote_sha = hashlib.sha256(resp.content).hexdigest()
+                    self.assertEqual(remote_sha, entry["sha256"], f"{sid} COS 远端图片与本地 SHA-256 不一致")
         finally:
             session.close()
 

@@ -127,7 +127,7 @@ class AppConfig:
     postgres_user: str = os.environ.get("POSTGRES_USER", "postgres")
     postgres_password: str = os.environ.get("POSTGRES_PASSWORD", "")
     postgres_db: str = os.environ.get("POSTGRES_DB", "shopping_agent")
-    postgres_host: str = os.environ.get("POSTGRES_HOST", "192.168.100.128")
+    postgres_host: str = os.environ.get("POSTGRES_HOST", "127.0.0.1")
     postgres_port: int = _env_int("POSTGRES_PORT", 5432)
     sqlite_db_path: Path = DATA_DIR / "local_vector_store.db"
 
