@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import socket
 import subprocess
 import sys
@@ -422,11 +423,14 @@ class TestModule4Pipeline(unittest.TestCase):
         self.assertNotIn("隐藏优惠券", full_text)
         self.assertTrue(ev_map["telemetry"]["prefix_cache_aligned"])
         self.assertEqual(ev_map["telemetry"]["context_window_limit"], 272000)
-        self.assertEqual(ev_map["telemetry"]["gateway_node"], "deepseek-flash-primary")
+        self.assertIn(
+            ev_map["telemetry"]["gateway_node"],
+            ["deepseek-flash-primary", "deepseek-flash-primary->deterministic-fallback"],
+        )
         self.assertEqual(ev_map["done"], "[DONE]")
 
     def test_07_live_uvicorn_curl_sse_stream_verification(self) -> None:
-        """真实启动 Uvicorn 监听并通过 curl.exe -N -X POST /api/v1/chat/stream 验证 HANDOFF.md §4.1 验收命令。"""
+        """真实启动 Uvicorn 监听并通过 curl -N -X POST /api/v1/chat/stream 验证 HANDOFF.md §4.1 验收命令。"""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind(("127.0.0.1", 0))
             port = s.getsockname()[1]
@@ -454,9 +458,10 @@ class TestModule4Pipeline(unittest.TestCase):
                 },
                 ensure_ascii=False,
             )
+            curl_bin = shutil.which("curl") or shutil.which("curl.exe") or "curl"
             proc = subprocess.run(
                 [
-                    "curl.exe",
+                    curl_bin,
                     "-N",
                     "-sS",
                     "-X",

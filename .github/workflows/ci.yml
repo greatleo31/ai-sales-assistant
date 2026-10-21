@@ -1,0 +1,84 @@
+name: Industrial CI Quality Gate & Evaluation Benchmark
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  static-gate-and-unit-tests:
+    name: Catalog Gate & Unit Tests (101 Tests)
+    runs-on: ubuntu-latest
+    env:
+      LLM_PROTOCOL: chat
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Runtime Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Execute 27-Assertion Data Self-Consistency Gate
+        run: |
+          python -B scripts/validate_catalog.py
+
+      - name: Run Full Unit & Regression Test Suite (101 Tests)
+        run: |
+          python -B -m unittest discover -s scripts -p "test_*.py"
+
+  benchmark-and-ablation-eval:
+    name: Industrial Benchmark & 5-Dimension Ablations (691 Assertions)
+    needs: static-gate-and-unit-tests
+    runs-on: ubuntu-latest
+    env:
+      LLM_PROTOCOL: chat
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Runtime Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run 691 Assertions & 5-Dimension Ablations
+        id: run_eval
+        run: |
+          python -B scripts/run_eval.py
+
+      - name: Upload Evaluation Summary Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-summary
+          path: data/eval_results_summary.json
+          retention-days: 14
+
+      - name: Publish Markdown Evaluation Report to Step Summary
+        if: always()
+        run: |
+          python -B scripts/publish_ci_summary.py

@@ -223,6 +223,8 @@ def synthesize_deterministic_response(
         parts.append(
             "非常理解您的心情，让您有不好的购物体验我们深感抱歉！系统已为您优先开启**【高级售后专员绿色通道】**，人工客服专员已同步接入跟进。"
         )
+        if handoff_guard and not (aftersales_result or order_result or rag_result):
+            return "\n\n".join(parts)
 
     # 2. 隐私红线守卫回复
     if primary_intent == "privacy_guard" or guard_warning == "privacy_probe":
