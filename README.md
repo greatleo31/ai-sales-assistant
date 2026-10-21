@@ -259,7 +259,26 @@ main (发布主干)
 
 ---
 
-## 八、开源许可证 (License)
+## 八、下一代决策型导购演进路线图 (Next-Gen Roadmap)
+
+在已筑牢的 **691 项严苛断言** 与 **GitHub Actions 自动化 CI 质量门禁** 的保驾护航下，系统确立了以下 5 大核心演进支柱：
+
+1. 🎯 **上下文管理与多轮对话深度优化（重中之重 · Top Priority）**：
+   - 跨轮子类目锁（`sub_category`）与参数增量纠错状态机（`SlotTracker`）；
+   - 上下文物理净室隔离，杜绝跨轮旧卡片注意力散射；
+   - 10 会话 30 轮多轮会话状态树防漂移长期卡点。
+2. 🎯 **主动意图探测与槽位追问状态机 (Active Clarification)**：
+   - 核心决策维度饱和度计算，针对模糊需求主动抛出引导选项胶囊（Followup Pills），收敛决策漏斗。
+3. 🎯 **结构化多商品权衡对比引擎 (Trade-off Decision Matrix)**：
+   - 确定性数学 Diff 计算与优劣势提炼，杜绝大模型在对比维度的参数张冠李戴。
+4. 🎯 **用户长效画像与禁忌避坑记忆 (Persistent Persona & Anti-Preferences)**：
+   - 沉淀体征、肤质与避坑过敏成分黑名单，作为负向硬约束（`excluded_specs`）静默注入检索。
+5. 🎯 **海量 SKU 向量检索物理升级 (pgvector + HNSW)**：
+   - 平滑迁移至 PostgreSQL 16 + pgvector 分区集群，保障十万级 SKU 依然具备毫秒级响应与零违背率。
+
+---
+
+## 九、开源许可证 (License)
 
 本项目采用 [MIT License](./LICENSE) 开源许可证。
 数据源与评估基准仅供技术研究、电商系统原型验证与学术交流使用。
