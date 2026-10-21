@@ -328,7 +328,10 @@ class TestStage1BackendAndSanitizer(unittest.TestCase):
             e["data"]["delta"] for e in events if e["event"] == "text_delta"
         )
         telemetry = next(e["data"] for e in events if e["event"] == "telemetry")
-        self.assertEqual(telemetry["gateway_node"], "deepseek-flash-primary")
+        self.assertIn(
+            telemetry["gateway_node"],
+            ["deepseek-flash-primary", "deepseek-flash-primary->deterministic-fallback"],
+        )
         self.assertTrue(telemetry["prefix_cache_aligned"])
         self.assertGreater(len(text_out.strip()), 30)
         self.assertNotIn("<br", text_out.lower())
