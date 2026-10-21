@@ -89,8 +89,8 @@ class AppConfig:
     handoff_guard_threshold: float = _env_float("HANDOFF_GUARD_THRESHOLD", 0.80)
     jev_cache_path: Path = DATA_DIR / "jev_cache.json"
 
-    # 2. System Two (DeepSeek-V4.1-Flash via /v1/responses)
-    llm_protocol: str = os.environ.get("LLM_PROTOCOL", "responses")
+    # 2. System Two (DeepSeek-V4.1-Flash via /v1/chat/completions)
+    llm_protocol: str = os.environ.get("LLM_PROTOCOL", "chat")
     llm_primary_base_url: str = os.environ.get("LLM_PRIMARY_BASE_URL", "https://go.penguin.ooo/api/v1")
     llm_primary_responses_url: str = os.environ.get(
         "LLM_PRIMARY_RESPONSES_URL", "https://go.penguin.ooo/api/v1/responses"

@@ -17,6 +17,9 @@ jobs:
   static-gate-and-unit-tests:
     name: Catalog Gate & Unit Tests (101 Tests)
     runs-on: ubuntu-latest
+    env:
+      LLM_PROTOCOL: chat
+      PYTHONUNBUFFERED: "1"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,6 +47,9 @@ jobs:
     name: Industrial Benchmark & 5-Dimension Ablations (691 Assertions)
     needs: static-gate-and-unit-tests
     runs-on: ubuntu-latest
+    env:
+      LLM_PROTOCOL: chat
+      PYTHONUNBUFFERED: "1"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
