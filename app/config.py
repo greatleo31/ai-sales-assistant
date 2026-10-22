@@ -116,6 +116,16 @@ class AppConfig:
     embedding_dim: int = _env_int("EMBEDDING_DIM", 1024)
     embeddings_cache_path: Path = DATA_DIR / "embeddings_cache.json"
 
+    # 3.1 Rerank 精排模型 (SiliconFlow 硅基流动 Pro/BAAI/bge-reranker-v2-m3)
+    rerank_enabled: bool = _env_bool("RERANK_ENABLED", True)
+    rerank_provider: str = os.environ.get("RERANK_PROVIDER", "siliconflow")
+    rerank_api_url: str = os.environ.get("RERANK_API_URL", "https://api.siliconflow.cn/v1/rerank")
+    rerank_api_key: str = os.environ.get(
+        "RERANK_API_KEY", "sk-dkxvhitmipiogdtofgbaurcmquszwgktycjkmtqmpcqqzncu"
+    )
+    rerank_model: str = os.environ.get("RERANK_MODEL", "Pro/BAAI/bge-reranker-v2-m3")
+    rerank_timeout_sec: float = _env_float("RERANK_TIMEOUT_SEC", 3.0)
+
     # 4. 腾讯云 COS
     cos_host: str = os.environ.get("COS_HOST", "")
     cos_region: str = os.environ.get("COS_REGION", "ap-guangzhou")

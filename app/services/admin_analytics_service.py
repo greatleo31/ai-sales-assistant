@@ -182,6 +182,25 @@ class AdminAnalyticsService:
                     updated_at TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS eval_attribution_audit (
+                    audit_id TEXT PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    turn_id INTEGER NOT NULL DEFAULT 1,
+                    query TEXT NOT NULL,
+                    passed INTEGER NOT NULL,
+                    funnel_stage TEXT NOT NULL,
+                    attribution_layer TEXT,
+                    root_cause_code TEXT,
+                    issue_summary TEXT,
+                    fix_recommendation TEXT,
+                    evidence_json TEXT NOT NULL DEFAULT '{}',
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_eval_attr_layer ON eval_attribution_audit(attribution_layer);
+                CREATE INDEX IF NOT EXISTS idx_eval_attr_stage ON eval_attribution_audit(funnel_stage);
+                CREATE INDEX IF NOT EXISTS idx_eval_attr_created ON eval_attribution_audit(created_at DESC);
+
                 CREATE TABLE IF NOT EXISTS platform_config (
                     config_key TEXT PRIMARY KEY,
                     config_val TEXT NOT NULL,
@@ -203,6 +222,7 @@ class AdminAnalyticsService:
                 DELETE FROM message_feedbacks;
                 DELETE FROM handoff_tickets;
                 DELETE FROM wishlist_hooks;
+                DELETE FROM eval_attribution_audit;
                 """
             )
             conn.commit()
@@ -1245,6 +1265,149 @@ class AdminAnalyticsService:
             "wishlist_hooks_summary": wish_data["summary"],
             "top_missing_items": wish_data["items"][:8],
         }
+
+    # ==========================================================================
+    # 7. CNT 评测六层漏斗与四层根因归因审计持久化与统计
+    # ==========================================================================
+    def record_attribution_audit(
+        self,
+        session_id: str,
+        turn_id: int,
+        query: str,
+        passed: bool,
+        funnel_stage: str,
+        attribution_layer: Optional[str] = None,
+        root_cause_code: Optional[str] = None,
+        issue_summary: Optional[str] = None,
+        fix_recommendation: Optional[str] = None,
+        evidence: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        audit_id = f"aud_{uuid.uuid4().hex[:12]}"
+        created_at = datetime.now(timezone.utc).isoformat()
+        ev_json = json.dumps(evidence or {}, ensure_ascii=False)
+        conn = self._connect()
+        try:
+            conn.execute(
+                """
+                INSERT INTO eval_attribution_audit (
+                    audit_id, session_id, turn_id, query, passed, funnel_stage,
+                    attribution_layer, root_cause_code, issue_summary,
+                    fix_recommendation, evidence_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    audit_id,
+                    session_id,
+                    turn_id,
+                    query,
+                    1 if passed else 0,
+                    funnel_stage,
+                    attribution_layer,
+                    root_cause_code,
+                    issue_summary,
+                    fix_recommendation,
+                    ev_json,
+                    created_at,
+                ),
+            )
+            conn.commit()
+            return audit_id
+        finally:
+            conn.close()
+
+    def query_attribution_audits(
+        self,
+        attribution_layer: Optional[str] = None,
+        funnel_stage: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> List[Dict[str, Any]]:
+        conn = self._connect()
+        try:
+            sql = "SELECT * FROM eval_attribution_audit WHERE 1=1"
+            params: List[Any] = []
+            if attribution_layer:
+                sql += " AND attribution_layer = ?"
+                params.append(attribution_layer)
+            if funnel_stage:
+                sql += " AND funnel_stage = ?"
+                params.append(funnel_stage)
+            sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+
+            rows = conn.execute(sql, params).fetchall()
+            results = []
+            for r in rows:
+                item = dict(r)
+                try:
+                    item["evidence"] = json.loads(item.get("evidence_json") or "{}")
+                except Exception:
+                    item["evidence"] = {}
+                results.append(item)
+            return results
+        finally:
+            conn.close()
+
+    def get_attribution_summary_stats(self) -> Dict[str, Any]:
+        conn = self._connect()
+        try:
+            cur = conn.cursor()
+            total_audits = cur.execute("SELECT COUNT(*) FROM eval_attribution_audit").fetchone()[0]
+            passed_audits = cur.execute("SELECT COUNT(*) FROM eval_attribution_audit WHERE passed = 1").fetchone()[0]
+            failed_audits = cur.execute("SELECT COUNT(*) FROM eval_attribution_audit WHERE passed = 0").fetchone()[0]
+
+            layer_rows = cur.execute(
+                """
+                SELECT attribution_layer, COUNT(*) as cnt
+                FROM eval_attribution_audit
+                WHERE passed = 0 AND attribution_layer IS NOT NULL
+                GROUP BY attribution_layer
+                """
+            ).fetchall()
+            layer_distribution = {r["attribution_layer"]: r["cnt"] for r in layer_rows}
+
+            stage_rows = cur.execute(
+                """
+                SELECT funnel_stage, COUNT(*) as cnt
+                FROM eval_attribution_audit
+                WHERE passed = 0
+                GROUP BY funnel_stage
+                """
+            ).fetchall()
+            funnel_distribution = {r["funnel_stage"]: r["cnt"] for r in stage_rows}
+
+            top_causes = cur.execute(
+                """
+                SELECT root_cause_code, COUNT(*) as cnt, issue_summary, fix_recommendation
+                FROM eval_attribution_audit
+                WHERE passed = 0 AND root_cause_code IS NOT NULL
+                GROUP BY root_cause_code
+                ORDER BY cnt DESC LIMIT 5
+                """
+            ).fetchall()
+            top_cause_list = [
+                {
+                    "root_cause_code": r["root_cause_code"],
+                    "count": r["cnt"],
+                    "issue_summary": r["issue_summary"],
+                    "fix_recommendation": r["fix_recommendation"],
+                }
+                for r in top_causes
+            ]
+
+            pass_rate = round(passed_audits / total_audits, 4) if total_audits > 0 else 1.0
+
+            return {
+                "total_audits": total_audits,
+                "passed_audits": passed_audits,
+                "failed_audits": failed_audits,
+                "pass_rate": pass_rate,
+                "layer_distribution": layer_distribution,
+                "funnel_distribution": funnel_distribution,
+                "top_causes": top_cause_list,
+            }
+        finally:
+            conn.close()
 
 
 # 全局单例

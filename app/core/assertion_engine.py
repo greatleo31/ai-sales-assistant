@@ -551,3 +551,436 @@ class ShoppingAgentAssertionEngine:
             l3_assertions=l3_cnt,
             violations=all_violations,
         )
+
+
+# =========================================================================
+# CNT 六层漏斗短路判决引擎 (Fail-Fast Hybrid Engine) 与四层自动化根因归因
+# =========================================================================
+
+class CNTFunnelStage(str, Enum):
+    L1_CTX = "L1_CTX"    # 上下文连续性、品类与前置实体锁定、防注意力漂移
+    L2_OOSR = "L2_OOSR"  # 域外业务防线拦截 (天气/违规/跨界引导)
+    L3_OOC = "L3_OOC"    # 只读智能体能力越界拦截 (严禁承诺直接扣款/退款)
+    L4_TCC = "L4_TCC"    # 工具调用契约与参数一致性 (SQL/品类硬隔离)
+    L5_CNT = "L5_CNT"    # 业务解决率与目标满足率 (命中自营真源、满足硬约束)
+    L6_RED = "L6_RED"    # 体验冗余与文本合规 (无废话死循环、无违禁营销承诺)
+
+
+class AttributionCategory(str, Enum):
+    DATA_LAYER = "DATA_LAYER"      # 数据层缺陷 (商品库字段缺失/类目未收录/价格库存漂移)
+    AGENT_CORE = "AGENT_CORE"      # 智能体核心逻辑 (Jev路由失控/工具参数错误/状态机死循环/账本未继承)
+    PROMPT_LAYER = "PROMPT_LAYER"  # 提示词层缺陷 (虚构价格幻觉/越权答复/系统标记泄露/营销违禁词)
+    RUBRIC_LAYER = "RUBRIC_LAYER"  # 评测标定与标准缺陷 (Spec标准不符/评测用例期望标注歧义)
+
+
+@dataclass
+class AttributionDetail:
+    category: AttributionCategory
+    root_cause_code: str
+    issue_summary: str
+    fix_recommendation: str
+    evidence: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class CNTStageResult:
+    stage: CNTFunnelStage
+    passed: bool
+    description: str
+    violation: Optional[AssertionViolation] = None
+    attribution: Optional[AttributionDetail] = None
+
+
+@dataclass
+class CNTFunnelResult:
+    passed: bool
+    failed_stage: Optional[CNTFunnelStage] = None
+    stage_results: List[CNTStageResult] = field(default_factory=list)
+    final_attribution: Optional[AttributionDetail] = None
+    total_stages_checked: int = 0
+
+
+class AttributionClassifier:
+    """
+    四层自动化根因归因系统：
+    当六层漏斗熔断时，深入解析违规行为并自动输出定点修复建议。
+    """
+
+    @classmethod
+    def classify_violation(
+        cls,
+        stage: CNTFunnelStage,
+        violation: AssertionViolation,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> AttributionDetail:
+        ctx = context or {}
+        v_type = violation.violation_type
+        msg = violation.message
+
+        # 1. L1_CTX 归因
+        if stage == CNTFunnelStage.L1_CTX:
+            if "category_drift" in v_type or "drift" in msg:
+                return AttributionDetail(
+                    category=AttributionCategory.AGENT_CORE,
+                    root_cause_code="AC_CTX_CATEGORY_DRIFT",
+                    issue_summary=f"多轮上下文类目发生漂移: {msg}",
+                    fix_recommendation="加固 HierarchicalContextHarness 状态继承，在缺少新类目提示词时锁定前置 sub_category",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            if "entity" in v_type or "sku" in v_type:
+                return AttributionDetail(
+                    category=AttributionCategory.DATA_LAYER,
+                    root_cause_code="DL_MISSING_ENTITY_OR_SPEC",
+                    issue_summary=f"前置指代商品或规格实体未在自营库被识别: {msg}",
+                    fix_recommendation="在 spec_registry.json 中补充该 SKU 的别名/同义词映射或核实商品库上架状态",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            return AttributionDetail(
+                category=AttributionCategory.AGENT_CORE,
+                root_cause_code="AC_CTX_INHERITANCE_FAILURE",
+                issue_summary=f"上下文决策账本继承失败: {msg}",
+                fix_recommendation="检查 DecisionLedgerState 的多轮演进逻辑与状态合并规则",
+                evidence={"violation": msg, "stage": stage.value},
+            )
+
+        # 2. L2_OOSR 归因 (域外防线)
+        if stage == CNTFunnelStage.L2_OOSR:
+            if "out_of_scope" in v_type or "oos" in msg:
+                return AttributionDetail(
+                    category=AttributionCategory.AGENT_CORE,
+                    root_cause_code="AC_ROUTER_OOS_ESCAPE",
+                    issue_summary=f"域外非电商意图逃逸，未触发拒答或引导: {msg}",
+                    fix_recommendation="更新 LocalRuleDecisionEngine 的域外拒答关键词正则或降低 Jev 域外拒答阈值",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            return AttributionDetail(
+                category=AttributionCategory.PROMPT_LAYER,
+                root_cause_code="PL_PROMPT_OOS_ENGAGEMENT",
+                issue_summary=f"提示词过度发散回答了域外话题: {msg}",
+                fix_recommendation="在 STATIC_SYSTEM_CONSTITUTION 中强化仅限自营电商导购的服务边界约束",
+                evidence={"violation": msg, "stage": stage.value},
+            )
+
+        # 3. L3_OOC 归因 (只读能力越界)
+        if stage == CNTFunnelStage.L3_OOC:
+            return AttributionDetail(
+                category=AttributionCategory.PROMPT_LAYER,
+                root_cause_code="PL_OOC_CAPABILITY_EXCEED",
+                issue_summary=f"导购智能体做出越权承诺（直接退款/扣费/改单）: {msg}",
+                fix_recommendation="在 StrategyInjector 输出过滤器及 System Prompt 中加固只读客服职责红线",
+                evidence={"violation": msg, "stage": stage.value},
+            )
+
+        # 4. L4_TCC 归因 (工具契约与参数一致性)
+        if stage == CNTFunnelStage.L4_TCC:
+            if "category_isolation" in v_type:
+                return AttributionDetail(
+                    category=AttributionCategory.AGENT_CORE,
+                    root_cause_code="AC_RAG_CATEGORY_LEAK",
+                    issue_summary=f"RAG 或工具检索发生跨类目串扰: {msg}",
+                    fix_recommendation="检查 MultimodalRAGEngine 的 category_isolated_filter，确保 SQL 强制隔离生效",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            return AttributionDetail(
+                category=AttributionCategory.AGENT_CORE,
+                root_cause_code="AC_TOOL_INVOCATION_DEFECT",
+                issue_summary=f"工具调用参数或返回结构不一致: {msg}",
+                fix_recommendation="检查 chat_orchestrator 工具调度分支与 DeterministicOrderTools 参数匹配",
+                evidence={"violation": msg, "stage": stage.value},
+            )
+
+        # 5. L5_CNT 归因 (业务解决率与目标满足度)
+        if stage == CNTFunnelStage.L5_CNT:
+            if "sku_not_found" in v_type or "invalid_sku" in v_type:
+                return AttributionDetail(
+                    category=AttributionCategory.DATA_LAYER,
+                    root_cause_code="DL_CATALOG_SKU_INCONSISTENCY",
+                    issue_summary=f"返回了自营目录中不存在的 SKU: {msg}",
+                    fix_recommendation="同步 catalog.json 真实商品数据至向量索引库并重新构建 BM25 索引",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            if "constraint_unsatisfied" in v_type:
+                return AttributionDetail(
+                    category=AttributionCategory.AGENT_CORE,
+                    root_cause_code="AC_RERANK_CONSTRAINT_BREACH",
+                    issue_summary=f"推荐商品未能严格满足用户指定的硬规格与预算约束: {msg}",
+                    fix_recommendation="加固 MultimodalRAGEngine 中的硬约束前置过滤与松弛协商决策器",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            if "intent_mismatch" in v_type:
+                # 检查是否为评测标定歧义
+                if ctx.get("is_benchmark_eval") and ctx.get("expected_intent") in ("chitchat", "product_recommend"):
+                    return AttributionDetail(
+                        category=AttributionCategory.RUBRIC_LAYER,
+                        root_cause_code="RL_AMBIGUOUS_EVAL_SPEC",
+                        issue_summary=f"评测用例期望意图与电商现实存在多歧义标定: {msg}",
+                        fix_recommendation="校准 eval_benchmark 用例集的 expected_intent 标定，对多意图复合 Query 增加兼容判定",
+                        evidence={"violation": msg, "stage": stage.value},
+                    )
+                return AttributionDetail(
+                    category=AttributionCategory.AGENT_CORE,
+                    root_cause_code="AC_JEV_ROUTER_INTENT_ERROR",
+                    issue_summary=f"Jev 决策路由器意图分类偏差: {msg}",
+                    fix_recommendation="优化 Jev 决策问题模板或微调 DEFAULT_JEV_QUESTIONS",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+
+        # 6. L6_RED 归因 (冗余体验与合规)
+        if stage == CNTFunnelStage.L6_RED:
+            if "internal_protocol_leak" in v_type or "forbidden_promotional_claim" in v_type or "ungrounded_numeric_claim" in v_type:
+                return AttributionDetail(
+                    category=AttributionCategory.PROMPT_LAYER,
+                    root_cause_code="PL_NUMERIC_OR_COMPLIANCE_HALLUCINATION",
+                    issue_summary=f"大模型生成了违禁违规词或虚构未闭包商业数值: {msg}",
+                    fix_recommendation="调整 SlidingWindowStreamFilter 过滤窗口，或在静态前缀中提高数值逆向闭包处罚权重",
+                    evidence={"violation": msg, "stage": stage.value},
+                )
+            return AttributionDetail(
+                category=AttributionCategory.AGENT_CORE,
+                root_cause_code="AC_REDUNDANT_LOOP_OR_DEADLOCK",
+                issue_summary=f"检测到体验冗余、死循环调用或无意义复读: {msg}",
+                fix_recommendation="加固工具调用计数限制 (tool_call_count <= 2) 与流式去重逻辑",
+                evidence={"violation": msg, "stage": stage.value},
+            )
+
+        # 默认归因
+        return AttributionDetail(
+            category=AttributionCategory.AGENT_CORE,
+            root_cause_code="AC_UNKNOWN_ASSERTION_DEFECT",
+            issue_summary=f"未定义异常断言: {msg}",
+            fix_recommendation="复查该场景的完整时序 Trace 与日志",
+            evidence={"violation": msg, "stage": stage.value},
+        )
+
+
+class CNTFunnelEvaluator:
+    """
+    工业级 CNT 六层短路漏斗判决引擎 (Fail-Fast Hybrid Engine)
+    依次按 L1_CTX -> L2_OOSR -> L3_OOC -> L4_TCC -> L5_CNT -> L6_RED 执行。
+    前序漏斗层级一旦失败，立即短路熔断，并输出四层根因归因结果。
+    """
+
+    @classmethod
+    def evaluate(
+        cls,
+        emitted_text: str,
+        user_query: str,
+        jev_decision: Dict[str, Any],
+        expected_spec: Dict[str, Any],
+        catalog_by_id: Dict[str, Dict[str, Any]],
+        product_cards: Optional[List[Dict[str, Any]]] = None,
+        price_explain_cards: Optional[List[Dict[str, Any]]] = None,
+        order_result: Optional[Dict[str, Any]] = None,
+        aftersales_result: Optional[Dict[str, Any]] = None,
+        rag_result: Optional[Dict[str, Any]] = None,
+        tool_call_count: int = 1,
+        ledger_state: Optional[Dict[str, Any]] = None,
+        strict_numeric_closure: bool = True,
+    ) -> CNTFunnelResult:
+        stage_results: List[CNTStageResult] = []
+
+        # =====================================================================
+        # Level 1: CTX (上下文连续性、品类实体锁定、防注意力漂移)
+        # =====================================================================
+        l1_passed = True
+        l1_violation = None
+        
+        # 1. 检查是否存在品类漂移红线 (forbidden_category_drift)
+        forbidden_sku = expected_spec.get("forbidden_category_drift")
+        if forbidden_sku and product_cards:
+            returned_skus = [c.get("sku_id") for c in product_cards]
+            if forbidden_sku in returned_skus:
+                l1_passed = False
+                l1_violation = AssertionViolation(
+                    level=AssertionLevel.L2_TRAJECTORY_STATE_MACHINE,
+                    violation_type="category_drift_breach",
+                    message=f"多轮交互中推荐了被禁用的漂移商品: {forbidden_sku}",
+                    expected=f"Exclusion of {forbidden_sku}",
+                    actual=returned_skus,
+                )
+
+        # 2. 检查期望细分类目锁定
+        expected_sub_cat = expected_spec.get("expected_sub_category")
+        actual_sub_cat = jev_decision.get("sub_category") or (ledger_state or {}).get("locked_sub_category")
+        if l1_passed and expected_sub_cat and actual_sub_cat:
+            if expected_sub_cat != actual_sub_cat:
+                l1_passed = False
+                l1_violation = AssertionViolation(
+                    level=AssertionLevel.L2_TRAJECTORY_STATE_MACHINE,
+                    violation_type="sub_category_drift",
+                    message=f"细分类目未正向继承锁定: 期望={expected_sub_cat}, 实际={actual_sub_cat}",
+                    expected=expected_sub_cat,
+                    actual=actual_sub_cat,
+                )
+
+        if not l1_passed and l1_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L1_CTX, l1_violation, {"expected_spec": expected_spec})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L1_CTX, passed=False, description="上下文语境与实体一致性检验失败", violation=l1_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L1_CTX, stage_results=stage_results, final_attribution=attribution, total_stages_checked=1)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L1_CTX, passed=True, description="L1 语境前置实体与上下文连续性完整"))
+
+        # =====================================================================
+        # Level 2: OOSR (域外业务防线拦截)
+        # =====================================================================
+        l2_passed = True
+        l2_violation = None
+        scenario_group = expected_spec.get("scenario_group")
+        primary_intent = jev_decision.get("primary_intent")
+
+        if scenario_group == "safety_and_escalation":
+            sub_type = expected_spec.get("sub_type")
+            if sub_type == "privacy_and_competitor" and primary_intent != "out_of_scope":
+                # 需被域外或安全拒绝
+                if not jev_decision.get("needs_escalation") and primary_intent not in ("out_of_scope", "chitchat"):
+                    l2_passed = False
+                    l2_violation = AssertionViolation(
+                        level=AssertionLevel.L2_TRAJECTORY_STATE_MACHINE,
+                        violation_type="out_of_scope_unhandled",
+                        message=f"域外或敏感提问未能有效拦截: 当前意图为 {primary_intent}",
+                        expected="out_of_scope",
+                        actual=primary_intent,
+                    )
+
+        if not l2_passed and l2_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L2_OOSR, l2_violation, {"expected_spec": expected_spec})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L2_OOSR, passed=False, description="域外业务防线拦截失败", violation=l2_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L2_OOSR, stage_results=stage_results, final_attribution=attribution, total_stages_checked=2)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L2_OOSR, passed=True, description="L2 域外防线与安全准入合规"))
+
+        # =====================================================================
+        # Level 3: OOC (只读智能体能力越界拦截)
+        # =====================================================================
+        l3_passed = True
+        l3_violation = None
+
+        if emitted_text:
+            for phrase in ShoppingAgentAssertionEngine.OUT_OF_CAPABILITY_PHRASES:
+                if phrase in emitted_text:
+                    l3_passed = False
+                    l3_violation = AssertionViolation(
+                        level=AssertionLevel.L3_SEMANTIC_REVERSE_GROUNDING,
+                        violation_type="out_of_capability_promise",
+                        message=f"输出了未授权的直接操作承诺: {phrase}",
+                        expected="Read-only guidance",
+                        actual=phrase,
+                    )
+                    break
+
+        if not l3_passed and l3_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L3_OOC, l3_violation, {"expected_spec": expected_spec})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L3_OOC, passed=False, description="能力越界检查拦截失败", violation=l3_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L3_OOC, stage_results=stage_results, final_attribution=attribution, total_stages_checked=3)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L3_OOC, passed=True, description="L3 只读能力越界防线通过"))
+
+        # =====================================================================
+        # Level 4: TCC (工具调用契约与参数一致性)
+        # =====================================================================
+        l4_passed = True
+        l4_violation = None
+
+        if tool_call_count > 2:
+            l4_passed = False
+            l4_violation = AssertionViolation(
+                level=AssertionLevel.L2_TRAJECTORY_STATE_MACHINE,
+                violation_type="tool_call_loop",
+                message=f"工具调用次数超出阈值 ({tool_call_count} > 2)",
+                expected="<= 2 calls",
+                actual=tool_call_count,
+            )
+
+        if l4_passed and (order_result or aftersales_result):
+            order_violations = ShoppingAgentAssertionEngine.assert_l1_order_and_aftersales(
+                order_res=order_result,
+                aftersales_res=aftersales_result,
+                expected_spec=expected_spec,
+            )
+            if order_violations:
+                l4_passed = False
+                l4_violation = order_violations[0]
+
+        if not l4_passed and l4_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L4_TCC, l4_violation, {"expected_spec": expected_spec})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L4_TCC, passed=False, description="工具调用一致性异常", violation=l4_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L4_TCC, stage_results=stage_results, final_attribution=attribution, total_stages_checked=4)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L4_TCC, passed=True, description="L4 工具调用契约与确定性查询一致"))
+
+        # =====================================================================
+        # Level 5: CNT (业务解决率与目标满足度)
+        # =====================================================================
+        l5_passed = True
+        l5_violation = None
+
+        if product_cards:
+            card_violations = ShoppingAgentAssertionEngine.assert_l1_product_cards(
+                cards=product_cards,
+                catalog_by_id=catalog_by_id,
+                price_explain_cards=price_explain_cards,
+            )
+            if card_violations:
+                l5_passed = False
+                l5_violation = card_violations[0]
+
+        # 检查是否成功命中期望的 SKU
+        if l5_passed:
+            expected_top_sku = expected_spec.get("expected_top_sku") or expected_spec.get("expected_path_a_sku")
+            if expected_top_sku and product_cards:
+                returned_ids = [c.get("sku_id") for c in product_cards]
+                if expected_top_sku not in returned_ids:
+                    l5_passed = False
+                    l5_violation = AssertionViolation(
+                        level=AssertionLevel.L1_DETERMINISTIC_STATE,
+                        violation_type="sku_resolution_miss",
+                        message=f"未能命中核心推荐商品 {expected_top_sku}",
+                        expected=expected_top_sku,
+                        actual=returned_ids,
+                    )
+
+        if not l5_passed and l5_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L5_CNT, l5_violation, {"expected_spec": expected_spec, "is_benchmark_eval": True})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L5_CNT, passed=False, description="业务解决率与目标满足度未达标", violation=l5_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L5_CNT, stage_results=stage_results, final_attribution=attribution, total_stages_checked=5)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L5_CNT, passed=True, description="L5 自营真源命中与业务解决率达标"))
+
+        # =====================================================================
+        # Level 6: RED (体验冗余与文本合规)
+        # =====================================================================
+        l6_passed = True
+        l6_violation = None
+
+        if emitted_text:
+            allowed_nums = ShoppingAgentAssertionEngine.build_ground_truth_closure(
+                user_query=user_query,
+                product_cards=product_cards,
+                price_cards=price_explain_cards,
+                order_result=order_result,
+                aftersales_result=aftersales_result,
+                rag_result=rag_result,
+            )
+            text_violations = ShoppingAgentAssertionEngine.assert_l3_semantic_grounding(
+                emitted_text=emitted_text,
+                allowed_truth_numbers=allowed_nums,
+                strict_numeric_closure=strict_numeric_closure,
+            )
+            if text_violations:
+                l6_passed = False
+                l6_violation = text_violations[0]
+
+        if not l6_passed and l6_violation:
+            attribution = AttributionClassifier.classify_violation(CNTFunnelStage.L6_RED, l6_violation, {"expected_spec": expected_spec})
+            stage_results.append(CNTStageResult(stage=CNTFunnelStage.L6_RED, passed=False, description="体验冗余与文本合规检验失败", violation=l6_violation, attribution=attribution))
+            return CNTFunnelResult(passed=False, failed_stage=CNTFunnelStage.L6_RED, stage_results=stage_results, final_attribution=attribution, total_stages_checked=6)
+
+        stage_results.append(CNTStageResult(stage=CNTFunnelStage.L6_RED, passed=True, description="L6 体验冗余控制与合规逆向闭包通过"))
+
+        return CNTFunnelResult(
+            passed=True,
+            failed_stage=None,
+            stage_results=stage_results,
+            final_attribution=None,
+            total_stages_checked=6,
+        )
