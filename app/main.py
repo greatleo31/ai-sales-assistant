@@ -601,6 +601,30 @@ async def admin_benchmark_queries_endpoint() -> Dict[str, Any]:
     return json.loads(bench_path.read_text(encoding="utf-8"))
 
 
+@app.get("/api/v1/admin/eval/attribution-audit")
+async def admin_eval_attribution_audit_endpoint(
+    layer: Optional[str] = None,
+    stage: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    """管理后台研发中台：查询 CNT 六层漏斗短路判决与四层根因归因审计流水。"""
+    audits = analytics_service.query_attribution_audits(
+        attribution_layer=layer,
+        funnel_stage=stage,
+        limit=limit,
+        offset=offset,
+    )
+    return {"status": "ok", "total": len(audits), "audits": audits}
+
+
+@app.get("/api/v1/admin/eval/attribution-stats")
+async def admin_eval_attribution_stats_endpoint() -> Dict[str, Any]:
+    """管理后台研发中台：获取评测四层归因分布、六层漏斗通过率与高频根因建议统计。"""
+    stats = analytics_service.get_attribution_summary_stats()
+    return {"status": "ok", "stats": stats}
+
+
 
 # 若独立前端已完成构建，自动挂载 /h5 与 /admin 静态资源
 if H5_DIST_DIR.exists():

@@ -30,6 +30,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
 
 from app.config import settings
+from app.core.context_harness import DecisionLedgerState, HierarchicalContextHarness
 from app.core.telemetry import count_tokens_exact
 from app.services.admin_analytics_service import analytics_service
 from app.services.constraint_extractor import ConstraintExtractor
@@ -1201,6 +1202,17 @@ class ShoppingAgentOrchestrator:
             else extracted.get("sub_category")
         )
 
+        product_cards_list = rag_result["product_cards"] if rag_result else []
+        session_ledger = HierarchicalContextHarness.evolve_ledger(
+            current_ledger=None,
+            session_id=session_id,
+            current_query=clean_query,
+            detected_intent=primary_intent,
+            extracted_constraints=extracted,
+            recommended_cards=product_cards_list,
+            handoff_flag=handoff_guard,
+        )
+
         decision_meta_payload = {
             "message_id": message_id,
             "session_id": session_id,
@@ -1238,6 +1250,7 @@ class ShoppingAgentOrchestrator:
             "vision_scene_type": (
                 vision_info.get("scene_type") if vision_info else None
             ),
+            "decision_ledger": session_ledger.to_dict(),
         }
         yield format_sse_event("decision_meta", decision_meta_payload)
 
@@ -1298,12 +1311,11 @@ class ShoppingAgentOrchestrator:
             reserved_tokens=align_metrics["total_system_tokens"],
         )
 
-        history_block = ""
-        if trimmed_history:
-            h_lines = ["## 历史对话记录 (Recent Conversation History)"]
-            for m in trimmed_history[-6:]:
-                h_lines.append(f"- {m['role']}: {m['content']}")
-            history_block = "\n" + "\n".join(h_lines) + "\n"
+        history_block, active_msgs = HierarchicalContextHarness.assemble_hierarchical_context(
+            history=trimmed_history,
+            ledger=session_ledger,
+            active_turns_window=3,
+        )
 
         vision_context_block = ""
         if vision_info:
