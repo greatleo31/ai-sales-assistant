@@ -731,7 +731,7 @@ class EvaluationSuiteRunner:
             "Dense-only (Unfiltered 1024-d)",
             "Hard-Filter + BM25-only",
             "Hard-Filter + Dense-only",
-            "Baseline Hybrid (BM25 + halfvec + RRF)",
+            "Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)",
             "Proposed Cross-Encoder Rerank (SubCat + Hard-Filter + CrossEncoder)",
         ]
         results: Dict[str, Dict[str, Any]] = {}
@@ -765,7 +765,7 @@ class EvaluationSuiteRunner:
                     mode_map = {
                         "Hard-Filter + BM25-only": "bm25_only",
                         "Hard-Filter + Dense-only": "dense_only",
-                        "Baseline Hybrid (BM25 + halfvec + RRF)": "hybrid_rrf",
+                        "Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)": "hybrid_rrf",
                         "Proposed Cross-Encoder Rerank (SubCat + Hard-Filter + CrossEncoder)": "hybrid_rerank",
                     }
                     res = self.rag_engine.search(q, top_k=5, mode=mode_map[cfg], allow_remote_embedding=False)
@@ -810,7 +810,7 @@ class EvaluationSuiteRunner:
                     mode_map = {
                         "Hard-Filter + BM25-only": "bm25_only",
                         "Hard-Filter + Dense-only": "dense_only",
-                        "Baseline Hybrid (BM25 + halfvec + RRF)": "hybrid_rrf",
+                        "Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)": "hybrid_rrf",
                         "Proposed Cross-Encoder Rerank (SubCat + Hard-Filter + CrossEncoder)": "hybrid_rerank",
                     }
                     res = self.rag_engine.search(q, top_k=5, mode=mode_map[cfg], allow_remote_embedding=False)
