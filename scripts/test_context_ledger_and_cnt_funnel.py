@@ -243,6 +243,32 @@ class TestContextLedgerAndAttributionPipeline(unittest.TestCase):
         self.assertIn("top_causes", stats)
         self.assertGreaterEqual(stats["total_audits"], 1)
 
+    def test_07_siliconflow_remote_reranker_and_fallback(self):
+        """测试硅基流动 Pro/BAAI/bge-reranker-v2-m3 远端打分与本地平滑降级"""
+        query = "65W 氮化镓快充 三口"
+        candidates = [
+            {"sku_id": "SKU-3C-010", "title": "Anker 65W 氮化镓三口快充 充电器", "specs": {"power_w": 65, "port_count": 3}},
+            {"sku_id": "SKU-3C-012", "title": "倍思 30W 迷你单口苹果快充头", "specs": {"power_w": 30, "port_count": 1}},
+        ]
+
+        # 1. 测试真实远端 API (若有网络则返回真实分数)
+        remote_res = EcommerceCrossEncoderReranker.score_candidates_remote(query, candidates, timeout_sec=5.0)
+        if remote_res:
+            self.assertEqual(len(remote_res), 2)
+            self.assertEqual(remote_res[0][0], "SKU-3C-010")
+            self.assertGreater(remote_res[0][1], remote_res[1][1])
+            self.assertEqual(remote_res[0][2]["model"], "Pro/BAAI/bge-reranker-v2-m3")
+
+        # 2. 测试自适应回退 (allow_remote=False 时平滑走本地轻量打分)
+        adaptive_local = EcommerceCrossEncoderReranker.score_candidates_adaptive(
+            query=query,
+            candidates=candidates,
+            allow_remote=False,
+        )
+        self.assertEqual(len(adaptive_local), 2)
+        self.assertEqual(adaptive_local[0][0], "SKU-3C-010")
+        self.assertGreater(adaptive_local[0][1], adaptive_local[1][1])
+
 
 if __name__ == "__main__":
     unittest.main()

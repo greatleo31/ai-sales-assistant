@@ -698,6 +698,101 @@ class EcommerceCrossEncoderReranker:
         scored_list.sort(key=lambda x: (-x[1], -x[2]["dense_score"], x[0]))
         return scored_list
 
+    @classmethod
+    def score_candidates_remote(
+        cls,
+        query: str,
+        candidates: List[Dict[str, Any]],
+        timeout_sec: Optional[float] = None,
+    ) -> Optional[List[Tuple[str, float, Dict[str, Any]]]]:
+        """
+        调用远端硅基流动 Pro/BAAI/bge-reranker-v2-m3 模型 API 进行真实打分。
+        若网络超时、无 Key 或调用异常，返回 None 触发本地平滑降级。
+        """
+        api_key = settings.rerank_api_key
+        api_url = settings.rerank_api_url
+        model = settings.rerank_model
+        timeout = timeout_sec or settings.rerank_timeout_sec
+
+        if not (settings.rerank_enabled and api_key and api_url and model and candidates):
+            return None
+
+        documents: List[str] = []
+        for cand in candidates:
+            title = cand.get("title", "")
+            brand = cand.get("brand", "")
+            cat = cand.get("category_name", "")
+            highlights = " ".join(cand.get("highlights", []))
+            specs_dict = cand.get("specs", {})
+            specs_str = " ".join(f"{k}:{v}" for k, v in specs_dict.items())
+            doc_text = f"{title} | 品牌: {brand} | 类目: {cat} | 规格: {specs_str} | 卖点: {highlights}".strip()
+            documents.append(doc_text)
+
+        payload = {
+            "model": model,
+            "query": query,
+            "documents": documents,
+            "top_n": len(candidates),
+        }
+
+        try:
+            req = urllib.request.Request(
+                api_url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                results = data.get("results") or []
+                scored_map: Dict[int, float] = {
+                    r["index"]: float(r.get("relevance_score", 0.0)) for r in results if "index" in r
+                }
+                scored_list: List[Tuple[str, float, Dict[str, Any]]] = []
+                for idx, cand in enumerate(candidates):
+                    sid = cand.get("sku_id", "")
+                    score = scored_map.get(idx, 0.0)
+                    scored_list.append(
+                        (
+                            sid,
+                            round(score, 6),
+                            {"provider": settings.rerank_provider, "model": model, "raw_score": score},
+                        )
+                    )
+                scored_list.sort(key=lambda x: (-x[1], x[0]))
+                return scored_list
+        except Exception as exc:
+            logger.warning("[EcommerceCrossEncoderReranker] 远端 Rerank API 调用失败，自动平滑降级至本地 Cross-Encoder: %s", exc)
+            return None
+
+    @classmethod
+    def score_candidates_adaptive(
+        cls,
+        query: str,
+        candidates: List[Dict[str, Any]],
+        dense_scores: Optional[Dict[str, float]] = None,
+        soft_constraints: Optional[List[str]] = None,
+        allow_remote: bool = True,
+    ) -> List[Tuple[str, float, Dict[str, Any]]]:
+        """
+        双轨自适应重排入口：优先调用远端硅基流动 Pro/BAAI/bge-reranker-v2-m3 API，
+        超时或失败时无缝平滑回退至本地轻量 Cross-Encoder。
+        """
+        if allow_remote:
+            remote_scored = cls.score_candidates_remote(query, candidates)
+            if remote_scored:
+                return remote_scored
+
+        return cls.score_candidates(
+            query=query,
+            candidates=candidates,
+            dense_scores=dense_scores,
+            soft_constraints=soft_constraints,
+        )
+
 
 # ==============================================================================
 # 5. 多模态混合检索主引擎 (MultimodalRAGEngine)
@@ -967,12 +1062,13 @@ class MultimodalRAGEngine:
             rrf_list.append((sid, rrf_val, bm25_score_map.get(sid, 0.0), dense_score_map.get(sid, 0.0)))
         rrf_list.sort(key=lambda x: (-x[1], -x[2], -x[3], x[0]))
 
-        # 4. 计算 Cross-Encoder 精排模型得分
-        rerank_results = EcommerceCrossEncoderReranker.score_candidates(
+        # 4. 计算 Cross-Encoder 精排模型得分 (双轨自适应：优先硅基流动 Pro/BAAI/bge-reranker-v2-m3 远端打分，平滑回退本地)
+        rerank_results = EcommerceCrossEncoderReranker.score_candidates_adaptive(
             query=query,
             candidates=candidates,
             dense_scores=dense_score_map,
             soft_constraints=soft_constraints,
+            allow_remote=allow_remote_embedding,
         )
         rerank_scores: Dict[str, float] = {sid: sc for sid, sc, _ in rerank_results}
         rerank_meta_map: Dict[str, Dict[str, float]] = {sid: m for sid, _, m in rerank_results}
