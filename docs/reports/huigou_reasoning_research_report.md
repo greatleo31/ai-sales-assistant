@@ -110,60 +110,8 @@ Mamdani 模糊推理包含四个阶段：
 ### 3.1 业务架构与双轨状态机拓扑
 图 1 展示了系统业务全貌与双轨混合推理架构设计。
 
-```mermaid
-flowchart TD
-    subgraph UI ["表现层 (Generative UI)"]
-        H5["消费者端 H5 (仲裁卡片 / ProofTree / 关怀券)"]
-        Admin["运营管理端 OA (白盒审计抽屉 / 规则调试)"]
-    end
-
-    subgraph Orchestrator ["中枢编排层 (FastAPI Orchestrator)"]
-        SSE["SSE 流式分发通道"]
-        Prompt["提示词策略注入器 (StrategyInjector)"]
-        Tools["售后与订单工具 (OrderTools)"]
-    end
-
-    subgraph HybridEngine ["神经-符号双轨推理中枢 (HybridArbitrator)"]
-        direction TB
-        Input["订单事实与多源证据向量"]
-        
-        subgraph Track1 ["阶段一：确定性硬规则门禁"]
-            DetEngine["产生式推理机 (DeterministicEngine)"]
-            Rules["Horn 子句知识库 + 一票否决优先级"]
-            Proof["白盒证明树 (ProofTree)"]
-        end
-
-        subgraph Track2 ["阶段二：不确定性争议仲裁"]
-            DS["D-S 证据融合 (Murphy 修正)"]
-            Fuzzy["Mamdani 模糊推理 (重心法 COG)"]
-        end
-
-        Decide{"仲裁状态机"}
-    end
-
-    H5 <--> |SSE Events & User Query| SSE
-    Admin <--> |Session Audit & Inspection| SSE
-    SSE --> Prompt --> Tools --> Input
-    Input --> DetEngine
-    DetEngine --> Rules --> Proof
-    Proof --> Decide
-
-    Decide --> |"符合 168h 完好规则"| NormalPass["常规退换通过 (STANDARD_APPROVED)"]
-    Decide --> |"已拆封或虚假退货"| HardDeny["硬门禁驳回 (HARD_RULE_DENIED)"]
-    Decide --> |"微超期 (168h~216h) 完好未拆"| Track2
-    
-    Track2 --> DS --> |"责任判定 (买/卖/物流)"| StateEval
-    Track2 --> Fuzzy --> |"柔性关怀金额 COG"| StateEval
-    
-    StateEval --> Decide2{"责任分配判定"}
-    Decide2 --> |"买家责任 < 0.35 & 高信誉"| SpecialPass["微超期特批通过 (SPECIAL_APPROVED)"]
-    Decide2 --> |"买家责任 ≥ 0.35"| MediateCare["柔性关怀化解 (DISPUTE_MEDIATED_CARE)"]
-    
-    NormalPass --> Tools
-    HardDeny --> Tools
-    SpecialPass --> Tools
-    MediateCare --> Tools
-```
+![图1 惠购系统架构与神经-符号双轨推理系统架构  架构示意图](../eval_reports/fig1_architecture_neuro_symbolic.png)
+图1 惠购系统架构与神经-符号双轨推理系统架构  架构示意图
 
 ### 3.2 有限域一阶谓词逻辑知识库建模
 定义订单论域 $\mathcal{O}$，为支持可解释推理，构建以下核心谓词与产生式规则：
@@ -319,11 +267,11 @@ $$z^* = \frac{\sum_{k=0}^{N} (z_{\min} + k \cdot \Delta z) \cdot \mu_{\text{agg}
 | 75 | 150 | 11 | **92.7%** | 56.4 | 14.8 | 3.81x |
 | 100 | 200 | 11 | **94.5%** | 78.1 | 20.0 | **3.90x** |
 
-![图 1 确定性正向推理启发式剪枝基准对比](../eval_reports/fig1_deterministic_pruning_benchmark.png)
-*图 1 确定性正向推理启发式剪枝基准对比（左图：规则遍历次数；右图：运行时间消耗）*
+![图2 确定性正向推理启发式剪枝基准对比](../eval_reports/fig1_deterministic_pruning_benchmark.png)
+图2 确定性正向推理启发式剪枝基准对比  左图为遍历次数，右图为耗时
 
 **实验分析**：
-如图 1 所示，基线算法的遍历搜索步数随着规则规模呈线性阶跃增长（每轮必全表重复扫描），当 $N=100$ 时累积扫描达 200 次；而引入一票否决优先级与支持集谓词索引后，推理机仅精准激活具有因果关联的 11 条依赖边，搜索空间压缩率高达 **94.5%**，运行耗时下降至 $20.0\ \mu\text{s}$，获得 **3.90 倍性能加速**，且证明树闭包完全等价。
+如图 2 所示，基线算法的遍历搜索步数随着规则规模呈线性阶跃增长（每轮必全表重复扫描），当 $N=100$ 时累积扫描达 200 次；而引入一票否决优先级与支持集谓词索引后，推理机仅精准激活具有因果关联的 11 条依赖边，搜索空间压缩率高达 **94.5%**，运行耗时下降至 $20.0\ \mu\text{s}$，获得 **3.90 倍性能加速**，且证明树闭包完全等价。
 
 ### 5.3 实验二：极端证据冲突下 D-S 融合与 Murphy 修正破解 Zadeh 悖论
 构建 Zadeh 极端冲突实验：在识别框架 $\Theta = \{B(\text{买家}), S(\text{商家}), L(\text{物流})\}$ 下，传感器断言物流责任 $m_1(L) = 0.9999$，视觉质检断言商家责任 $m_2(S) = 0.9999$，两者对立冲突因子高达 $K = 0.9999$。对比经典 Dempster 正交和与 Murphy 加权平均修正融合结果。
@@ -336,11 +284,11 @@ $$z^* = \frac{\sum_{k=0}^{N} (z_{\min} + k \cdot \Delta z) \cdot \mu_{\text{agg}
 | **物流责任 $L$** | 0.99990 | 0.00000 | **0.00000 (彻底淹没)** | **0.49990 (49.99%)** |
 | **判定结论** | 物流全责 | 商家全责 | **荒谬判定买家全责（Zadeh 悖论）** | **商家与物流对等分担（合理公正）** |
 
-![图 2 极端冲突证据融合消融对比：破解 Zadeh 悖论](../eval_reports/fig2_ds_conflict_zadeh_paradox.png)
-*图 2 极端冲突证据融合消融对比：破解 Zadeh 悖论（左：Dempster 规则；右：Murphy 修正规则）*
+![图3 极端冲突证据融合消融对比：破解 Zadeh 悖论](../eval_reports/fig2_ds_conflict_zadeh_paradox.png)
+图3 极端冲突证据融合消融对比：破解 Zadeh 悖论  极端对立因子 K=0.9999
 
 **实验分析**：
-如图 2 与表 3 所示，经典 Dempster 规则由于非空交集极小（仅 $0.00005 \times 0.00005$），被归一化分母 $1-K = 0.0001$ 恶性放大，竟然以 **100% 置信度将责任判给完全无辜的买家**；而 Murphy 修正算法通过先验平均后迭代正交和，准确地将责任在商家与物流之间平摊为各占 49.99%，买家责任仅占 0.02%，在工程上彻底破解了 Zadeh 悖论。
+如图 3 与表 3 所示，经典 Dempster 规则由于非空交集极小（仅 $0.00005 \times 0.00005$），被归一化分母 $1-K = 0.0001$ 恶性放大，竟然以 **100% 置信度将责任判给完全无辜的买家**；而 Murphy 修正算法通过先验平均后迭代正交和，准确地将责任在商家与物流之间平摊为各占 49.99%，买家责任仅占 0.02%，在工程上彻底破解了 Zadeh 悖论。
 
 ### 5.4 实验三：双轨混合推理 vs 纯符号 vs 纯 LLM 综合对比
 在包含 100 组微超期、受损争议、拆封欺诈与正常合规样本构成的电商评测集上，对比三类技术架构的综合表现：
@@ -358,11 +306,11 @@ $$z^* = \frac{\sum_{k=0}^{N} (z_{\min} + k \cdot \Delta z) \cdot \mu_{\text{agg}
 | **可解释性 (Explainability)** | 强 (离散规则树) | 弱 (黑盒注意力热力图) | **极强 (白盒 ProofTree + D-S 比例条)** |
 | **抗提示词对抗攻击能力** | 免疫 | 脆弱 | **免疫 (决策权收归符号底座)** |
 
-![图 3 双轨混合推理 vs 传统模型多维性能对比](../eval_reports/fig3_hybrid_reasoning_metrics.png)
-*图 3 双轨混合推理 vs 传统模型多维性能对比（左图：三项核心业务率；右图：端到端推理耗时对数坐标）*
+![图4 双轨混合推理 vs 传统模型多维性能对比](../eval_reports/fig3_hybrid_reasoning_metrics.png)
+图4 双轨混合推理 vs 传统模型多维性能对比  业务指标与推理耗时双维度
 
 **实验分析**：
-如图 3 所示，纯规则引擎虽然延迟极低且绝对合规，但争议化解率为 0；纯大模型虽能委婉安抚，但合规率仅 82% 且平均延迟超过 1.4 秒；本文双轨混合系统将延迟压低至 **0.169 毫秒**，同时在合规拦截、争议化解与反欺诈三项核心指标上达成 **100% 全优**。
+如图 4 所示，纯规则引擎虽然延迟极低且绝对合规，但争议化解率为 0；纯大模型虽能委婉安抚，但合规率仅 82% 且平均延迟超过 1.4 秒；本文双轨混合系统将延迟压低至 **0.169 毫秒**，同时在合规拦截、争议化解与反欺诈三项核心指标上达成 **100% 全优**。
 
 ### 5.5 端到端流式验证与双端 Generative UI 实测
 运行 [`scripts/test_reasoning_e2e_stream.py`](file:///D:/projectCollection/dw/ai-sales-assistant/scripts/test_reasoning_e2e_stream.py)，模拟微超期 12 小时的真实用户自然语言请求：

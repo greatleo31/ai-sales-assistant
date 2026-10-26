@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "惠购智能导购与神经-符号双轨推理系统架构",
+    "subtitle": "Generative UI 双端协同 + 业务编排中枢 + 神经-符号双轨推理",
+    "output": "architecture-huigou.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "h5_client",
+      "type": "frontend",
+      "label": "C端 惠购 H5",
+      "sublabel": "智能仲裁卡片 / ProofTree",
+      "pos": [100, 60],
+      "size": [240, 64],
+      "tag": "移动端 Generative UI"
+    },
+    {
+      "id": "admin_client",
+      "type": "frontend",
+      "label": "B端 运营治理 OA",
+      "sublabel": "白盒审计抽屉 / 耗时监控",
+      "pos": [620, 60],
+      "size": [240, 64],
+      "tag": "管理治理面板"
+    },
+    {
+      "id": "llm_node",
+      "type": "cloud",
+      "label": "神经大模型 (LLM)",
+      "sublabel": "DeepSeek-V3 / 意图与润色",
+      "pos": [80, 200],
+      "size": [220, 64],
+      "tag": "系统 1 (感知与表达)"
+    },
+    {
+      "id": "fastapi_gateway",
+      "type": "backend",
+      "label": "FastAPI 编排中枢",
+      "sublabel": "SSE 异步流式通道 :8000",
+      "pos": [370, 200],
+      "size": [220, 64],
+      "tag": "全链路业务编排"
+    },
+    {
+      "id": "order_tools",
+      "type": "backend",
+      "label": "售后与订单工具",
+      "sublabel": "OrderTools 规则调用中继",
+      "pos": [660, 200],
+      "size": [220, 64],
+      "tag": "物理订单与时差核验"
+    },
+    {
+      "id": "det_engine",
+      "type": "backend",
+      "label": "阶段一：确定性硬门禁",
+      "sublabel": "产生式正反向链 / 启发式剪枝",
+      "pos": [190, 340],
+      "size": [260, 68],
+      "tag": "耗时 < 0.05ms (合规底线)"
+    },
+    {
+      "id": "uncertain_engine",
+      "type": "backend",
+      "label": "阶段二：不确定性仲裁",
+      "sublabel": "D-S Murphy修正 + Mamdani模糊",
+      "pos": [510, 340],
+      "size": [260, 68],
+      "tag": "破解 Zadeh 悖论 (柔性补偿)"
+    },
+    {
+      "id": "catalog_db",
+      "type": "database",
+      "label": "商品库与多模态检索",
+      "sublabel": "BM25 + 向量 RRF 倒排融合",
+      "pos": [80, 480],
+      "size": [220, 64],
+      "tag": "60 SKU 规格与图文"
+    },
+    {
+      "id": "order_db",
+      "type": "database",
+      "label": "订单与平台规则库",
+      "sublabel": "168h/360h 窗口与物理传感器",
+      "pos": [370, 480],
+      "size": [220, 64],
+      "tag": "时间戳与多源证据源"
+    },
+    {
+      "id": "admin_db",
+      "type": "database",
+      "label": "审计账本与心愿单",
+      "sublabel": "SQLite / 会话快照存储",
+      "pos": [660, 480],
+      "size": [220, 64],
+      "tag": "运营风控与用户反馈"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "表现层 (Generative UI 双端协同)",
+      "wraps": ["h5_client", "admin_client"]
+    },
+    {
+      "kind": "region",
+      "label": "业务编排与提示词注入层",
+      "wraps": ["llm_node", "fastapi_gateway", "order_tools"]
+    },
+    {
+      "kind": "security-group",
+      "label": "神经-符号双轨推理中枢 (HybridArbitrator)",
+      "wraps": ["det_engine", "uncertain_engine"]
+    },
+    {
+      "kind": "region",
+      "label": "基础数据与状态存储层",
+      "wraps": ["catalog_db", "order_db", "admin_db"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "h5-to-gateway",
+      "from": "h5_client",
+      "to": "fastapi_gateway",
+      "label": "用户诉求 / SSE流",
+      "variant": "emphasis"
+    },
+    {
+      "id": "admin-to-gateway",
+      "from": "admin_client",
+      "to": "fastapi_gateway",
+      "label": "审计下钻 / 追踪"
+    },
+    {
+      "id": "gateway-to-llm",
+      "from": "fastapi_gateway",
+      "to": "llm_node",
+      "label": "意图与文本生成"
+    },
+    {
+      "id": "gateway-to-tools",
+      "from": "fastapi_gateway",
+      "to": "order_tools",
+      "label": "售后请求分派"
+    },
+    {
+      "id": "tools-to-det",
+      "from": "order_tools",
+      "to": "det_engine",
+      "label": "阶段一硬规则门禁",
+      "variant": "emphasis"
+    },
+    {
+      "id": "det-to-uncertain",
+      "from": "det_engine",
+      "to": "uncertain_engine",
+      "label": "微超期争议升级",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gateway-to-catalog",
+      "from": "fastapi_gateway",
+      "to": "catalog_db",
+      "label": "约束检索",
+      "variant": "dashed"
+    },
+    {
+      "id": "tools-to-orderdb",
+      "from": "order_tools",
+      "to": "order_db",
+      "label": "取证与时差核验",
+      "variant": "dashed"
+    },
+    {
+      "id": "gateway-to-admindb",
+      "from": "fastapi_gateway",
+      "to": "admin_db",
+      "label": "审计归档",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "系统 1 (神经层)",
+      "items": [
+        "LLM 专注自然语言多意图识别与槽位抽取",
+        "以共情和专业语气向用户表达最终仲裁决议"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "系统 2 (符号底座)",
+      "items": [
+        "产生式推理机以 0.024ms 毫秒级锁定合规红线",
+        "D-S Murphy 修正破解 Zadeh 冲突悖论",
+        "Mamdani 离散重心法计算柔性关怀金额"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "双轨协同创新",
+      "items": [
+        "合规拦截率 100%，争议化解率 100%",
+        "单次推理仅需 0.169ms，比 LLM 提速 8400 倍",
+        "生成 ProofTree 直达前端 GenUI 展开审计"
+      ]
+    }
+  ]
+}
