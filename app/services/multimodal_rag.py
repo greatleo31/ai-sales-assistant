@@ -1141,6 +1141,60 @@ class MultimodalRAGEngine:
         sub_ambiguity = extracted.get("sub_category_ambiguity", "none")
         soft_constraints = list(extracted.get("soft_constraints") or [])
 
+        # Step 1.5: 精确实体/款式锁定 (Locked SKU IDs)
+        # 若上一轮已推荐具体单品，用户使用代词追问现货/物流/参数或比价，直接锁定精准单品卡片
+        locked_sku_ids = extracted.get("locked_sku_ids")
+        if locked_sku_ids:
+            locked_skus = [self.sku_by_id[sid] for sid in locked_sku_ids if sid in self.sku_by_id]
+            if locked_skus:
+                prod_cards = [
+                    {
+                        "sku_id": s["sku_id"],
+                        "sub_category": s.get("sub_category"),
+                        "title": s["title"],
+                        "original_price": float(s["original_price"]),
+                        "final_price": float(s["final_price"]),
+                        "image_url": f"/static/images/{s['sku_id']}.jpg",
+                        "cos_image_url": s.get("cos_image_url"),
+                        "match_badge": "多轮追问精准锁定 · 官方自营现货",
+                        "relaxation_path": None,
+                        "highlights": list(s.get("highlights", [])),
+                        "specs": dict(s.get("specs", {})),
+                        "warehouse_city": s.get("warehouse_city", "广州自营数码仓"),
+                        "shipping_sla_hours": s.get("shipping_sla_hours", 24),
+                        "inventory_status": s.get("inventory_status", "in_stock"),
+                    }
+                    for s in locked_skus
+                ]
+                pe_cards = [build_price_explain_card(s) for s in locked_skus]
+                elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                first_sku = locked_skus[0]
+                pills = [
+                    f"看 {first_sku['title'][:12]} 的详细参数",
+                    "有更便宜的同品类平替吗？",
+                    "支持 7 天无理由和 15 天价保吗？",
+                ]
+                return {
+                    "constraint_status": "satisfied",
+                    "sub_category": sub_cat or locked_skus[0].get("sub_category"),
+                    "sub_category_ambiguity": "none",
+                    "extracted_constraints": extracted,
+                    "relaxation_reason": None,
+                    "relaxation": None,
+                    "top_skus": locked_skus,
+                    "product_cards": prod_cards,
+                    "price_explain_cards": pe_cards,
+                    "followup_pills": pills[:3],
+                    "rag_retrieve_ms": round(elapsed_ms, 2),
+                    "index_mode": "locked_sku_scan",
+                    "db_backend": self.db_backend,
+                    "recall_channels": {
+                        "sub_category_pool": len(locked_skus),
+                        "hard_filtered": len(locked_skus),
+                        "bm25_hits": len(locked_skus),
+                    },
+                }
+
         # Step 2: 类目锁 (Subcategory Lock)
         if sub_cat:
             category_locked_pool = [
@@ -1206,6 +1260,9 @@ class MultimodalRAGEngine:
                         "relaxation_path": opt.get("path"),
                         "highlights": list(sku_obj.get("highlights", [])),
                         "specs": dict(sku_obj.get("specs", {})),
+                        "warehouse_city": sku_obj.get("warehouse_city", "广州自营数码仓"),
+                        "shipping_sla_hours": sku_obj.get("shipping_sla_hours", 24),
+                        "inventory_status": sku_obj.get("inventory_status", "in_stock"),
                     }
                 )
                 if opt.get("price_explain_card"):
@@ -1261,6 +1318,9 @@ class MultimodalRAGEngine:
                     "relaxation_path": None,
                     "highlights": list(s.get("highlights", [])),
                     "specs": dict(s.get("specs", {})),
+                    "warehouse_city": s.get("warehouse_city", "广州自营数码仓"),
+                    "shipping_sla_hours": s.get("shipping_sla_hours", 24),
+                    "inventory_status": s.get("inventory_status", "in_stock"),
                 }
             )
             price_explain_cards.append(build_price_explain_card(s))

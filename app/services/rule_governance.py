@@ -65,6 +65,10 @@ _INJECTION_PATTERNS: List[re.Pattern] = [
     re.compile(r"进入.{0,8}(开发者|developer|DAN|越狱|jailbreak)模式", re.IGNORECASE),
     re.compile(r"(DAN|Do\s*Anything\s*Now|jailbreak)", re.IGNORECASE),
     re.compile(r"\[System\]|\[INST\]|\[/INST\]", re.IGNORECASE),
+    re.compile(r"(?i)(ctf|靶场|渗透测试|burp\s*suite|sql\s*注入|xss|抓包|逆向提示词|逆向你的提示词|夺旗|攻防演练|红蓝对抗)", re.UNICODE),
+    re.compile(r"(?i)(系统\s*prompt|system\s*prompt|系统预设|底层提示词|系统底层指令|系统指令|使用的模型|使用什么大模型|deepseek|fastapi|uvicorn)", re.UNICODE),
+    re.compile(r"(?i)(python\s*环境|什么架构|容器环境|docker|写一段脚本|写个\s*python|写一段.*代码|def\s+\w+\(|import\s+requests|import\s+os|执行\s*shell|bash\b)", re.UNICODE),
+    re.compile(r"(?i)(作为.*黑客|假设你在.*靶场|安全测试环境|假设我们在.*环境|请脱壳|脱库)", re.UNICODE),
 ]
 
 _SENSITIVE_PATTERNS: List[re.Pattern] = [
@@ -94,11 +98,12 @@ _PROMPT_LEAK_PATTERNS: List[re.Pattern] = [
 
 _BLOCK_REPLIES: Dict[str, str] = {
     "prompt_injection": (
-        "我是惠购官方首席选品顾问，专注于为您提供 3C 数码、换季服饰与美妆个护的参数级选品推荐、"
-        "订单物流查询及 7 天无理由 / 15 天价保规则核验服务。请问今天想挑选什么商品？"
+        "【惠购安全合规提示】：检测到您的输入涉及系统底层架构、系统提示词或安全指令探测，已被安全护栏拦截。"
+        "作为惠购官方首席选品顾问，我仅提供 3C 数码、服饰穿搭与美妆个护的参数级选品、订单物流查询与售后退换/保价核验服务。"
+        "请问今天想为您选购什么商品，或需要查询哪笔订单？"
     ),
     "sensitive": (
-        "抱歉，该话题超出导购服务范围。您可以随时向我咨询商品推荐、规格对比、订单状态或退换货/价保政策。"
+        "【服务范围提示】：抱歉，该话题超出电商导购服务规范与法律法规边界。您可以随时向我咨询商品推荐、规格对比、订单状态或退换货/价保政策。"
     ),
 }
 
@@ -191,13 +196,15 @@ class EmotionState:
 
 _ESCALATION_HANDOFF_PATTERNS = re.compile(
     r"(12315|315投诉|黑猫投诉|工商局|市监局|消费者协会|消协|欺诈|诈骗|告你们|起诉|"
-    r"转人工|找人工|人工客服|真人客服|叫你们经理|投诉你们|曝光你们|退一赔三|假货)",
+    r"转人工|找人工|人工客服|真人客服|叫你们经理|投诉你们|曝光你们|退一赔三|假货|"
+    r"闭嘴|别说了|别扯了|别废话|废话少说|烦人|别推销了|体验极差|什么破服务|垃圾服务)",
     re.IGNORECASE,
 )
 
 _NEGATIVE_PATTERNS = re.compile(
     r"(烦死了|什么破|垃圾|废物|没用|智障|人工智障|差评|骗人|骗子|"
-    r"搞什么|什么玩意|不靠谱|坑人|太坑了|恶心|霸王条款|店大欺客)",
+    r"搞什么|什么玩意|不靠谱|坑人|太坑了|恶心|霸王条款|店大欺客|"
+    r"敷衍|什么态度|受够了|不想听|滚|滚蛋|慢死了|发货这么慢|怎么这么慢|太慢了|几天了都还没发|物流这么慢)",
     re.IGNORECASE,
 )
 
@@ -207,9 +214,13 @@ _ABANDON_PATTERNS = re.compile(
 )
 
 _ANXIOUS_PATTERNS = re.compile(
-    r"(急用|赶紧|马上要|快点|立刻|来不及|着急|今天能发吗|十万火急|怎么还没发货|催发货)",
+    r"(急用|赶紧|马上要|快点|立刻|来不及|着急|今天能发吗|十万火急|怎么还没发货|催发货|"
+    r"什么时候发|还没发|几天了|催一下|帮我催|催单|加急|能快点吗|发货这么慢|怎么这么慢|太慢了)",
     re.IGNORECASE,
 )
+
+# 纯感叹号/问号怒气标点（如 !!, !?, ？？, ！！！）
+_PUNCTUATION_ANGER_PATTERNS = re.compile(r"^[!！?？\s]{1,10}$")
 
 _POSITIVE_PATTERNS = re.compile(
     r"(太好了|太棒了|就这款|就买这个|挺合适|看起来不错|怎么下单|有现货吗|现在买)",
@@ -294,7 +305,36 @@ class EmotionTracker:
 
         latest = user_messages[-1]
 
-        # 1. 强监管投诉/明确转人工/负面怒火 -> 最高优先级触发 handoff
+        # 0. 纯标点符号怒气或强烈叹号（如 !!, !?, ？？, ！！！）
+        if _PUNCTUATION_ANGER_PATTERNS.match(latest):
+            has_prev_frustration = False
+            if len(user_messages) >= 2:
+                for prev in user_messages[-4:-1]:
+                    if (
+                        _NEGATIVE_PATTERNS.search(prev)
+                        or _ANXIOUS_PATTERNS.search(prev)
+                        or _ESCALATION_HANDOFF_PATTERNS.search(prev)
+                        or any(kw in prev for kw in ("慢", "还没", "怎么回事", "退货", "差价", "投诉", "发货"))
+                    ):
+                        has_prev_frustration = True
+                        break
+            if has_prev_frustration:
+                return EmotionState(
+                    emotion_type=EMOTION_NEGATIVE,
+                    intensity=0.95,
+                    repeated_count=len(user_messages),
+                    trigger_handoff=True,
+                    strategy_hint=_EMOTION_STRATEGIES[EMOTION_NEGATIVE],
+                )
+            return EmotionState(
+                emotion_type=EMOTION_FRUSTRATED,
+                intensity=0.75,
+                repeated_count=1,
+                trigger_handoff=False,
+                strategy_hint=_EMOTION_STRATEGIES[EMOTION_FRUSTRATED],
+            )
+
+        # 1. 强监管投诉/明确转人工/负面怒火/拒绝AI废话 -> 最高优先级触发 handoff
         if _ESCALATION_HANDOFF_PATTERNS.search(latest) or _NEGATIVE_PATTERNS.search(latest):
             is_escalation = bool(_ESCALATION_HANDOFF_PATTERNS.search(latest))
             return EmotionState(
@@ -305,7 +345,27 @@ class EmotionTracker:
                 strategy_hint=_EMOTION_STRATEGIES[EMOTION_NEGATIVE],
             )
 
-        # 2. 重复提问检测
+        # 2. 多轮连续焦虑或不满累加检测（如连续 2 轮抱怨时效/物流）
+        consecutive_complaints = 0
+        for u_msg in reversed(user_messages):
+            if (
+                _NEGATIVE_PATTERNS.search(u_msg)
+                or _ANXIOUS_PATTERNS.search(u_msg)
+                or _PUNCTUATION_ANGER_PATTERNS.match(u_msg)
+            ):
+                consecutive_complaints += 1
+            else:
+                break
+        if consecutive_complaints >= 2:
+            return EmotionState(
+                emotion_type=EMOTION_NEGATIVE,
+                intensity=0.90,
+                repeated_count=consecutive_complaints,
+                trigger_handoff=True,
+                strategy_hint=_EMOTION_STRATEGIES[EMOTION_NEGATIVE],
+            )
+
+        # 3. 重复提问检测
         repeated_count = 0
         if len(user_messages) >= 2:
             for prev in user_messages[:-1]:
@@ -443,6 +503,9 @@ class CustomerTextNormalizer:
     _INLINE_MATH_RE = re.compile(r"(?<![\\A-Za-z0-9])\$([^\$\n]{1,80}?)\$(?![0-9])")
     _MD_HEADING_RE = re.compile(r"(?m)^\s*#{1,6}\s+")
     _MD_TABLE_SEP_RE = re.compile(r"(?m)^\s*\|[\s\-:|]+\|\s*\n?")
+    _ROBOTIC_AI_PREFIX_RE = re.compile(
+        r"(?m)^\s*[【\[\s]*(?:先给结论|结论|观点先行|核心结论|针对您的诉求|根据您的需求分析)[：:\]】\s]*"
+    )
 
     _LATEX_SYMBOL_MAP: List[Tuple[re.Pattern, str]] = [
         (re.compile(r"\\(?:rightarrow|longrightarrow|Rightarrow|to)\b"), "→"),
@@ -501,6 +564,9 @@ class CustomerTextNormalizer:
         # 3. 剥离 Markdown 标题井号与表格分割线
         out = cls._MD_HEADING_RE.sub("", out)
         out = cls._MD_TABLE_SEP_RE.sub("", out)
+
+        # 4. 剥离公文八股生硬标题（如“【先给结论：】”、“针对您的诉求：”等），还原大厂自然专业人话
+        out = cls._ROBOTIC_AI_PREFIX_RE.sub("", out)
 
         # 折叠过多连续空行
         out = re.sub(r"\n{3,}", "\n\n", out)
@@ -643,7 +709,7 @@ _PRODUCT_RECOMMEND_PATTERNS = re.compile(
 )
 
 _CONTEXT_DEP_PATTERNS = re.compile(
-    r"(那这款|那这个|这两个|刚才那|上面那|第一款|第二款|那它|能便宜点吗|还有别的吗|那.+呢)",
+    r"(那这款|那这个|这款|这个|那款|那个|这两个|这两款|刚才那|上面那|第一款|第二款|第三款|更便宜|最便宜|便宜的那款|那它|它|能便宜点吗|还有别的吗|那.+呢)",
     re.IGNORECASE,
 )
 

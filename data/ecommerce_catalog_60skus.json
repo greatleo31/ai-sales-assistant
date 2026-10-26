@@ -25,7 +25,10 @@
     "image_path": "/static/images/SKU-3C-001.jpg",
     "cos_image_url": "/static/images/SKU-3C-001.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-002",
@@ -53,7 +56,10 @@
     "image_path": "/static/images/SKU-3C-002.jpg",
     "cos_image_url": "/static/images/SKU-3C-002.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-003",
@@ -81,7 +87,10 @@
     "image_path": "/static/images/SKU-3C-003.jpg",
     "cos_image_url": "/static/images/SKU-3C-003.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-004",
@@ -107,7 +116,10 @@
     "image_path": "/static/images/SKU-3C-004.jpg",
     "cos_image_url": "/static/images/SKU-3C-004.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-005",
@@ -134,7 +146,10 @@
     "image_path": "/static/images/SKU-3C-005.jpg",
     "cos_image_url": "/static/images/SKU-3C-005.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-006",
@@ -161,7 +176,10 @@
     "image_path": "/static/images/SKU-3C-006.jpg",
     "cos_image_url": "/static/images/SKU-3C-006.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-007",
@@ -188,7 +206,10 @@
     "image_path": "/static/images/SKU-3C-007.jpg",
     "cos_image_url": "/static/images/SKU-3C-007.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-008",
@@ -215,7 +236,10 @@
     "image_path": "/static/images/SKU-3C-008.jpg",
     "cos_image_url": "/static/images/SKU-3C-008.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-009",
@@ -242,7 +266,10 @@
     "image_path": "/static/images/SKU-3C-009.jpg",
     "cos_image_url": "/static/images/SKU-3C-009.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-010",
@@ -270,7 +297,10 @@
     "image_path": "/static/images/SKU-3C-010.jpg",
     "cos_image_url": "/static/images/SKU-3C-010.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-011",
@@ -298,7 +328,10 @@
     "image_path": "/static/images/SKU-3C-011.jpg",
     "cos_image_url": "/static/images/SKU-3C-011.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-012",
@@ -327,7 +360,10 @@
     "image_path": "/static/images/SKU-3C-012.jpg",
     "cos_image_url": "/static/images/SKU-3C-012.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-013",
@@ -356,7 +392,10 @@
     "image_path": "/static/images/SKU-3C-013.jpg",
     "cos_image_url": "/static/images/SKU-3C-013.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-014",
@@ -385,7 +424,10 @@
     "image_path": "/static/images/SKU-3C-014.jpg",
     "cos_image_url": "/static/images/SKU-3C-014.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-015",
@@ -414,7 +456,10 @@
     "image_path": "/static/images/SKU-3C-015.jpg",
     "cos_image_url": "/static/images/SKU-3C-015.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-016",
@@ -443,7 +488,10 @@
     "image_path": "/static/images/SKU-3C-016.jpg",
     "cos_image_url": "/static/images/SKU-3C-016.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-017",
@@ -471,7 +519,10 @@
     "image_path": "/static/images/SKU-3C-017.jpg",
     "cos_image_url": "/static/images/SKU-3C-017.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-018",
@@ -500,7 +551,10 @@
     "image_path": "/static/images/SKU-3C-018.jpg",
     "cos_image_url": "/static/images/SKU-3C-018.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-019",
@@ -529,7 +583,10 @@
     "image_path": "/static/images/SKU-3C-019.jpg",
     "cos_image_url": "/static/images/SKU-3C-019.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-020",
@@ -558,7 +615,10 @@
     "image_path": "/static/images/SKU-3C-020.jpg",
     "cos_image_url": "/static/images/SKU-3C-020.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-021",
@@ -587,7 +647,10 @@
     "image_path": "/static/images/SKU-3C-021.jpg",
     "cos_image_url": "/static/images/SKU-3C-021.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-022",
@@ -616,7 +679,10 @@
     "image_path": "/static/images/SKU-3C-022.jpg",
     "cos_image_url": "/static/images/SKU-3C-022.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-023",
@@ -644,7 +710,10 @@
     "image_path": "/static/images/SKU-3C-023.jpg",
     "cos_image_url": "/static/images/SKU-3C-023.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-024",
@@ -672,7 +741,10 @@
     "image_path": "/static/images/SKU-3C-024.jpg",
     "cos_image_url": "/static/images/SKU-3C-024.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-3C-025",
@@ -700,7 +772,10 @@
     "image_path": "/static/images/SKU-3C-025.jpg",
     "cos_image_url": "/static/images/SKU-3C-025.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营数码仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-001",
@@ -728,7 +803,10 @@
     "image_path": "/static/images/SKU-APP-001.jpg",
     "cos_image_url": "/static/images/SKU-APP-001.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-002",
@@ -756,7 +834,10 @@
     "image_path": "/static/images/SKU-APP-002.jpg",
     "cos_image_url": "/static/images/SKU-APP-002.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-003",
@@ -783,7 +864,10 @@
     "image_path": "/static/images/SKU-APP-003.jpg",
     "cos_image_url": "/static/images/SKU-APP-003.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-004",
@@ -810,7 +894,10 @@
     "image_path": "/static/images/SKU-APP-004.jpg",
     "cos_image_url": "/static/images/SKU-APP-004.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-005",
@@ -838,7 +925,10 @@
     "image_path": "/static/images/SKU-APP-005.jpg",
     "cos_image_url": "/static/images/SKU-APP-005.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-006",
@@ -866,7 +956,10 @@
     "image_path": "/static/images/SKU-APP-006.jpg",
     "cos_image_url": "/static/images/SKU-APP-006.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-007",
@@ -892,7 +985,10 @@
     "image_path": "/static/images/SKU-APP-007.jpg",
     "cos_image_url": "/static/images/SKU-APP-007.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-008",
@@ -919,7 +1015,10 @@
     "image_path": "/static/images/SKU-APP-008.jpg",
     "cos_image_url": "/static/images/SKU-APP-008.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-009",
@@ -946,7 +1045,10 @@
     "image_path": "/static/images/SKU-APP-009.jpg",
     "cos_image_url": "/static/images/SKU-APP-009.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-010",
@@ -972,7 +1074,10 @@
     "image_path": "/static/images/SKU-APP-010.jpg",
     "cos_image_url": "/static/images/SKU-APP-010.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-011",
@@ -999,7 +1104,10 @@
     "image_path": "/static/images/SKU-APP-011.jpg",
     "cos_image_url": "/static/images/SKU-APP-011.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-012",
@@ -1025,7 +1133,10 @@
     "image_path": "/static/images/SKU-APP-012.jpg",
     "cos_image_url": "/static/images/SKU-APP-012.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-013",
@@ -1053,7 +1164,10 @@
     "image_path": "/static/images/SKU-APP-013.jpg",
     "cos_image_url": "/static/images/SKU-APP-013.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-014",
@@ -1081,7 +1195,10 @@
     "image_path": "/static/images/SKU-APP-014.jpg",
     "cos_image_url": "/static/images/SKU-APP-014.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-015",
@@ -1109,7 +1226,10 @@
     "image_path": "/static/images/SKU-APP-015.jpg",
     "cos_image_url": "/static/images/SKU-APP-015.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-016",
@@ -1137,7 +1257,10 @@
     "image_path": "/static/images/SKU-APP-016.jpg",
     "cos_image_url": "/static/images/SKU-APP-016.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-017",
@@ -1163,7 +1286,10 @@
     "image_path": "/static/images/SKU-APP-017.jpg",
     "cos_image_url": "/static/images/SKU-APP-017.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-018",
@@ -1189,7 +1315,10 @@
     "image_path": "/static/images/SKU-APP-018.jpg",
     "cos_image_url": "/static/images/SKU-APP-018.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-019",
@@ -1215,7 +1344,10 @@
     "image_path": "/static/images/SKU-APP-019.jpg",
     "cos_image_url": "/static/images/SKU-APP-019.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-APP-020",
@@ -1241,7 +1373,10 @@
     "image_path": "/static/images/SKU-APP-020.jpg",
     "cos_image_url": "/static/images/SKU-APP-020.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "华东自营服饰仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-001",
@@ -1270,7 +1405,10 @@
     "image_path": "/static/images/SKU-BEA-001.jpg",
     "cos_image_url": "/static/images/SKU-BEA-001.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-002",
@@ -1299,7 +1437,10 @@
     "image_path": "/static/images/SKU-BEA-002.jpg",
     "cos_image_url": "/static/images/SKU-BEA-002.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-003",
@@ -1328,7 +1469,10 @@
     "image_path": "/static/images/SKU-BEA-003.jpg",
     "cos_image_url": "/static/images/SKU-BEA-003.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-004",
@@ -1357,7 +1501,10 @@
     "image_path": "/static/images/SKU-BEA-004.jpg",
     "cos_image_url": "/static/images/SKU-BEA-004.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-005",
@@ -1386,7 +1533,10 @@
     "image_path": "/static/images/SKU-BEA-005.jpg",
     "cos_image_url": "/static/images/SKU-BEA-005.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-006",
@@ -1414,7 +1564,10 @@
     "image_path": "/static/images/SKU-BEA-006.jpg",
     "cos_image_url": "/static/images/SKU-BEA-006.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-007",
@@ -1442,7 +1595,10 @@
     "image_path": "/static/images/SKU-BEA-007.jpg",
     "cos_image_url": "/static/images/SKU-BEA-007.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-008",
@@ -1468,7 +1624,10 @@
     "image_path": "/static/images/SKU-BEA-008.jpg",
     "cos_image_url": "/static/images/SKU-BEA-008.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-009",
@@ -1494,7 +1653,10 @@
     "image_path": "/static/images/SKU-BEA-009.jpg",
     "cos_image_url": "/static/images/SKU-BEA-009.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-010",
@@ -1520,7 +1682,10 @@
     "image_path": "/static/images/SKU-BEA-010.jpg",
     "cos_image_url": "/static/images/SKU-BEA-010.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-011",
@@ -1546,7 +1711,10 @@
     "image_path": "/static/images/SKU-BEA-011.jpg",
     "cos_image_url": "/static/images/SKU-BEA-011.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-012",
@@ -1572,7 +1740,10 @@
     "image_path": "/static/images/SKU-BEA-012.jpg",
     "cos_image_url": "/static/images/SKU-BEA-012.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-013",
@@ -1598,7 +1769,10 @@
     "image_path": "/static/images/SKU-BEA-013.jpg",
     "cos_image_url": "/static/images/SKU-BEA-013.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-014",
@@ -1624,7 +1798,10 @@
     "image_path": "/static/images/SKU-BEA-014.jpg",
     "cos_image_url": "/static/images/SKU-BEA-014.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   },
   {
     "sku_id": "SKU-BEA-015",
@@ -1650,6 +1827,9 @@
     "image_path": "/static/images/SKU-BEA-015.jpg",
     "cos_image_url": "/static/images/SKU-BEA-015.jpg",
     "inventory": 100,
-    "status": "active"
+    "status": "active",
+    "warehouse_city": "广州自营美妆保税仓",
+    "shipping_sla_hours": 24,
+    "inventory_status": "in_stock"
   }
 ]

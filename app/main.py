@@ -181,6 +181,25 @@ class WishlistUpdateRequest(BaseModel):
     admin_note: str = Field(default="", description="采买进展备注")
 
 
+class EvalTriggerRequest(BaseModel):
+    mode: str = Field(default="sandbox", description="运行模式：sandbox (快速沙箱回归) / e2e_llm (模型实测)")
+    scenario_filter: Optional[str] = Field(default=None, description="可选指定评测场景组过滤")
+
+
+class EvalCaseUpdateRequest(BaseModel):
+    standard_response: Optional[str] = Field(default=None, description="修润后的官方自营标杆标准回复")
+    audit_status: Optional[str] = Field(default=None, description="复核状态：verified (已确认) / pending_review (待复核)")
+    hard_constraints: Optional[str] = Field(default=None, description="规格与预算硬约束 JSON 字符串")
+
+
+class EvalAdoptFeedbackRequest(BaseModel):
+    source_type: str = Field(description="来源类型：feedback (C端差评) / handoff (转人工工单)")
+    source_id: str = Field(description="反馈ID或工单ID")
+    scenario_group: str = Field(default="aftersales_verify", description="所属业务场景组")
+    standard_response: str = Field(description="管理员核定的标杆标准答复")
+    query_text: Optional[str] = Field(default=None, description="可选覆盖的用户原始提问")
+
+
 # ============================================================================
 # 基础与 C 端公共接口
 # ============================================================================
@@ -623,6 +642,81 @@ async def admin_eval_attribution_stats_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：获取评测四层归因分布、六层漏斗通过率与高频根因建议统计。"""
     stats = analytics_service.get_attribution_summary_stats()
     return {"status": "ok", "stats": stats}
+
+
+@app.post("/api/v1/admin/eval/trigger")
+async def admin_eval_trigger_endpoint(req: EvalTriggerRequest) -> Dict[str, Any]:
+    """管理后台评测中心：一键异步触发全量自动化评测（支持快速沙箱与实机测试模式）。"""
+    task_id = analytics_service.trigger_eval_run(
+        mode=req.mode,
+        scenario_filter=req.scenario_filter,
+    )
+    return {
+        "status": "started",
+        "task_id": task_id,
+        "mode": req.mode,
+        "message": "评测任务已在后台启动",
+    }
+
+
+@app.get("/api/v1/admin/eval/progress/{task_id}")
+async def admin_eval_progress_endpoint(task_id: str) -> Dict[str, Any]:
+    """管理后台评测中心：轮询当前正在执行的评测进度或查询最新任务状态。"""
+    progress = analytics_service.get_eval_progress(task_id)
+    if not progress:
+        raise HTTPException(status_code=404, detail=f"Eval task {task_id} not found")
+    return progress
+
+
+@app.get("/api/v1/admin/eval/cases")
+async def admin_eval_cases_endpoint(
+    scenario_group: Optional[str] = Query(default=None, description="场景组过滤"),
+    audit_status: Optional[str] = Query(default=None, description="复核状态过滤 verified / pending_review"),
+    case_type: Optional[str] = Query(default=None, description="类型 single_turn / multi_turn"),
+    keyword: Optional[str] = Query(default=None, description="关键字检索"),
+    page: int = Query(default=1, ge=1, description="页码"),
+    page_size: int = Query(default=20, ge=1, le=100, description="每页条数"),
+) -> Dict[str, Any]:
+    """管理后台评测中心：分页查询基准题库与质检复核列表。"""
+    return analytics_service.list_eval_cases(
+        scenario_group=scenario_group,
+        audit_status=audit_status,
+        case_type=case_type,
+        keyword=keyword,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@app.patch("/api/v1/admin/eval/cases/{case_id}")
+async def admin_update_eval_case_endpoint(case_id: str, req: EvalCaseUpdateRequest) -> Dict[str, Any]:
+    """管理后台评测中心：在线修订单个用例的标杆标准回答与复核状态。"""
+    try:
+        updated = analytics_service.update_eval_case(
+            case_id=case_id,
+            standard_response=req.standard_response,
+            audit_status=req.audit_status,
+            hard_constraints=req.hard_constraints,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"status": "ok", "case": updated}
+
+
+@app.post("/api/v1/admin/eval/adopt-feedback")
+async def admin_adopt_feedback_endpoint(req: EvalAdoptFeedbackRequest) -> Dict[str, Any]:
+    """管理后台评测中心：将 C 端点踩反馈或转人工工单直接收录为官方基准用例。"""
+    try:
+        new_case = analytics_service.adopt_feedback_as_case(
+            source_type=req.source_type,
+            source_id=req.source_id,
+            scenario_group=req.scenario_group,
+            standard_response=req.standard_response,
+            query_text=req.query_text,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "ok", "new_case_id": new_case.get("case_id"), "case": new_case}
 
 
 

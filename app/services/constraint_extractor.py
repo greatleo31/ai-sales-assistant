@@ -210,7 +210,16 @@ class ConstraintExtractor:
                     continue
                 if any(not (e_idx <= os or s_idx >= oe) for os, oe in occupied_sub_spans):
                     continue
-                if is_span_negated(norm_q, s_idx, self.neg_regex, self.neg_win):
+                is_neg = is_span_negated(norm_q, s_idx, self.neg_regex, self.neg_win)
+                if not is_neg:
+                    after_slice = norm_q[e_idx : min(len(norm_q), e_idx + 8)]
+                    if re.search(r"^(?:先)?(?:不买|不要|不看|不选|就算了|算了)", after_slice):
+                        is_neg = True
+                    before_slice = norm_q[max(0, s_idx - 6) : s_idx]
+                    if re.search(r"(?:算了|算了吧|先不|先别)\s*$", before_slice):
+                        is_neg = True
+
+                if is_neg:
                     if sc_name not in excluded_sub_categories:
                         excluded_sub_categories.append(sc_name)
                     occupied_sub_spans.append((s_idx, e_idx))
@@ -221,7 +230,7 @@ class ConstraintExtractor:
         matched_subs.sort(key=lambda x: x[0])
         unique_subs: List[str] = []
         for _, sc in matched_subs:
-            if sc not in unique_subs:
+            if sc not in unique_subs and sc not in excluded_sub_categories:
                 unique_subs.append(sc)
 
         # 若未直接命中子类目词，但命中特定独有规格/型号关键词，做安全辅助推断

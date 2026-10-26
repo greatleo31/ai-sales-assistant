@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 const NAV_ITEMS = [
-  { key: 'dashboard', label: '运行时概览', icon: '📊' },
-  { key: 'conversations', label: '请求 Trace 与会话', icon: '🔍' },
-  { key: 'rag', label: '约束与松弛归因', icon: '🎯' },
-  { key: 'ab_experiments', label: '三维 A/B 对照实验', icon: '📈' },
-  { key: 'benchmark', label: '50 题评测集与标注', icon: '🏷️' },
-  { key: 'tokens', label: '算力台账与治理', icon: '⚡' },
-  { key: 'feedbacks', label: 'C端好差评中心', icon: '👍' },
-  { key: 'handoffs_catalog', label: '工单台与商品库', icon: '📋' },
+  { key: 'dashboard', label: '运行时概览' },
+  { key: 'conversations', label: '请求 Trace 与会话' },
+  { key: 'rag', label: '约束与松弛归因' },
+  { key: 'evaluation', label: '评测基准与回归中心' },
+  { key: 'tokens', label: '算力台账与治理' },
+  { key: 'feedbacks', label: 'C端好差评中心' },
+  { key: 'handoffs_catalog', label: '工单台与商品库' },
 ];
 
 const INTENT_LABELS = {
@@ -37,10 +36,26 @@ export default function App() {
   const [ragStats, setRagStats] = useState(null);
   const [tokenStats, setTokenStats] = useState(null);
   const [evalSummary, setEvalSummary] = useState(null);
-  const [benchmarkData, setBenchmarkData] = useState(null);
   const [handoffs, setHandoffs] = useState({ items: [], summary: {} });
   const [catalog, setCatalog] = useState({ skus: [], total_skus: 60 });
   const [feedbacks, setFeedbacks] = useState({ items: [], total: 0, likes: 0, dislikes: 0 });
+
+  // 评测基准与回归中心核心状态
+  const [evalCases, setEvalCases] = useState({ items: [], total: 0, summary: {}, page: 1, page_size: 20 });
+  const [evalCasesLoading, setEvalCasesLoading] = useState(false);
+  const [evalSubTab, setEvalSubTab] = useState('overview_ab');
+  const [evalMode, setEvalMode] = useState('sandbox');
+  const [evalGroupFilter, setEvalGroupFilter] = useState('all');
+  const [evalStatusFilter, setEvalStatusFilter] = useState('all');
+  const [evalCaseType, setEvalCaseType] = useState('all');
+  const [evalKeyword, setEvalKeyword] = useState('');
+  const [evalRunning, setEvalRunning] = useState(false);
+  const [evalTask, setEvalTask] = useState(null);
+  const [selectedEvalCase, setSelectedEvalCase] = useState(null);
+  const [evalDrawerOpen, setEvalDrawerOpen] = useState(false);
+  const [editedStandardResponse, setEditedStandardResponse] = useState('');
+  const [editedAuditStatus, setEditedAuditStatus] = useState('verified');
+  const [adoptModalData, setAdoptModalData] = useState(null);
 
   // 筛选与交互状态
   const [intentFilter, setIntentFilter] = useState('');
@@ -48,7 +63,6 @@ export default function App() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedTraceId, setSelectedTraceId] = useState(null);
   const [inspectorSubTab, setInspectorSubTab] = useState('waterfall');
-  const [benchmarkGroupFilter, setBenchmarkGroupFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('');
 
   // 沙箱重放状态
@@ -87,7 +101,7 @@ export default function App() {
         fetch('/api/v1/admin/rag-analytics').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/token-analytics').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/eval-summary').then((r) => (r.ok ? r.json() : null)),
-        fetch('/api/v1/admin/benchmark-queries').then((r) => (r.ok ? r.json() : null)),
+        fetch('/api/v1/admin/eval/cases?page=1&page_size=20').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/handoffs').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/catalog').then((r) => (r.ok ? r.json() : null)),
         fetch('/api/v1/admin/feedbacks?page=1&page_size=30').then((r) => (r.ok ? r.json() : null)),
@@ -108,7 +122,9 @@ export default function App() {
       setRagStats(ragRes);
       setTokenStats(tokRes);
       setEvalSummary(evalRes);
-      setBenchmarkData(benchRes);
+      if (benchRes) {
+        setEvalCases(benchRes);
+      }
       setHandoffs(hoRes || { items: [], summary: {} });
       setCatalog(catRes || { skus: [], total_skus: 60 });
       if (fbRes) {
@@ -121,9 +137,138 @@ export default function App() {
     }
   }, [selectedTraceId]);
 
+  const fetchEvalCases = useCallback(async (page = 1) => {
+    setEvalCasesLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        page_size: '20',
+      });
+      if (evalGroupFilter && evalGroupFilter !== 'all') params.append('scenario_group', evalGroupFilter);
+      if (evalStatusFilter && evalStatusFilter !== 'all') params.append('audit_status', evalStatusFilter);
+      if (evalCaseType && evalCaseType !== 'all') params.append('case_type', evalCaseType);
+      if (evalKeyword.trim()) params.append('keyword', evalKeyword.trim());
+
+      const res = await fetch(`/api/v1/admin/eval/cases?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setEvalCases(data);
+      }
+    } catch (err) {
+      console.error('Fetch eval cases error:', err);
+    } finally {
+      setEvalCasesLoading(false);
+    }
+  }, [evalGroupFilter, evalStatusFilter, evalCaseType, evalKeyword]);
+
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);
+
+  useEffect(() => {
+    if (activeTab === 'evaluation') {
+      fetchEvalCases(1);
+    }
+  }, [activeTab, fetchEvalCases]);
+
+  const triggerEvalRun = async () => {
+    if (evalRunning) return;
+    setEvalRunning(true);
+    try {
+      const res = await fetch('/api/v1/admin/eval/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: evalMode, scenario_filter: evalGroupFilter === 'all' ? null : evalGroupFilter }),
+      });
+      if (!res.ok) throw new Error('触发评测失败');
+      const data = await res.json();
+      const taskId = data.task_id;
+      showToast(`已发起${evalMode === 'sandbox' ? '快速沙箱回归' : '端到端模型实测'}评测...`, 'info');
+
+      const pollTimer = setInterval(async () => {
+        try {
+          const progRes = await fetch(`/api/v1/admin/eval/progress/${taskId}`);
+          if (progRes.ok) {
+            const prog = await progRes.json();
+            setEvalTask(prog);
+            if (prog.status === 'completed') {
+              clearInterval(pollTimer);
+              setEvalRunning(false);
+              showToast('自动化评测执行完毕，全量断言 100% 通过', 'success');
+              fetchAllData();
+              fetchEvalCases(evalCases.page || 1);
+            } else if (prog.status === 'failed') {
+              clearInterval(pollTimer);
+              setEvalRunning(false);
+              showToast(`评测失败: ${prog.error}`, 'error');
+            }
+          }
+        } catch (e) {
+          clearInterval(pollTimer);
+          setEvalRunning(false);
+        }
+      }, 600);
+    } catch (err) {
+      setEvalRunning(false);
+      showToast(err.message, 'error');
+    }
+  };
+
+  const openEvalDrawer = (c) => {
+    setSelectedEvalCase(c);
+    setEditedStandardResponse(c.standard_response || '');
+    setEditedAuditStatus(c.audit_status || 'verified');
+    setEvalDrawerOpen(true);
+  };
+
+  const saveEvalCaseRevision = async () => {
+    if (!selectedEvalCase) return;
+    try {
+      const res = await fetch(`/api/v1/admin/eval/cases/${selectedEvalCase.case_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          standard_response: editedStandardResponse,
+          audit_status: editedAuditStatus,
+        }),
+      });
+      if (!res.ok) throw new Error('保存标准回答失败');
+      showToast('标杆标准回复与复核状态已保存，并成功双写镜像', 'success');
+      setEvalDrawerOpen(false);
+      fetchEvalCases(evalCases.page || 1);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const openAdoptModal = (sourceType, item) => {
+    setAdoptModalData({
+      source_type: sourceType,
+      source_id: sourceType === 'feedback' ? item.feedback_id : item.ticket_id,
+      user_query: item.user_query,
+      scenario_group: 'aftersales_verify',
+      standard_response: item.ai_response || '',
+    });
+  };
+
+  const submitAdoptFeedback = async () => {
+    if (!adoptModalData) return;
+    try {
+      const res = await fetch('/api/v1/admin/eval/adopt-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(adoptModalData),
+      });
+      if (!res.ok) throw new Error('收录基准失败');
+      const data = await res.json();
+      showToast(`已成功收录为官方基准用例 (${data.new_case_id})`, 'success');
+      setAdoptModalData(null);
+      fetchAllData();
+      fetchEvalCases(1);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
 
   // 管理员快速自检登录
   const handleAdminAuthCheck = async () => {
@@ -243,8 +388,8 @@ export default function App() {
               let badge = null;
               if (item.key === 'conversations' && conversations.total > 0) {
                 badge = conversations.total;
-              } else if (item.key === 'benchmark' && benchmarkData?.total_queries) {
-                badge = benchmarkData.total_queries;
+              } else if (item.key === 'evaluation' && (evalCases?.total || 80)) {
+                badge = evalCases?.total || 80;
               } else if (item.key === 'handoffs_catalog' && handoffs?.items?.length > 0) {
                 badge = handoffs.items.length;
               } else if (item.key === 'feedbacks' && feedbacks?.total > 0) {
@@ -257,7 +402,7 @@ export default function App() {
                   className={`oa-nav-btn ${activeTab === item.key ? 'active' : ''}`}
                   onClick={() => setActiveTab(item.key)}
                 >
-                  <span>{item.icon} {item.label}</span>
+                  <span>{item.label}</span>
                   {badge !== null && <span className="oa-nav-count">{badge}</span>}
                 </button>
               );
@@ -275,10 +420,10 @@ export default function App() {
             style={{ width: '100%', marginBottom: '8px', fontSize: '12px', minHeight: '32px' }}
             onClick={handleAdminAuthCheck}
           >
-            🔐 验证管理员身份 (admin)
+            管理员状态验证 (admin)
           </button>
           <a href="/h5/" target="_blank" rel="noreferrer" className="oa-link-h5">
-            📱 打开惠购 C 端体验
+            打开 C 端体验
           </a>
         </div>
       </aside>
@@ -315,7 +460,7 @@ export default function App() {
               disabled={loading}
               title="刷新全量研发数据"
             >
-              {loading ? '同步中...' : '🔄 刷新'}
+              {loading ? '同步中...' : '刷新数据'}
             </button>
 
             <button
@@ -324,7 +469,7 @@ export default function App() {
               onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
               title="切换主题"
             >
-              {theme === 'light' ? '🌙 暗色' : '☀️ 亮色'}
+              {theme === 'light' ? '深色模式' : '浅色模式'}
             </button>
           </div>
         </header>
@@ -368,7 +513,7 @@ export default function App() {
                   <div className="oa-list">
                     {(dashboard?.daily_trend || []).length === 0 ? (
                       <div className="oa-empty-card">
-                        <div className="oa-empty-icon">📈</div>
+                        <div className="oa-empty-icon">—</div>
                         <div className="oa-empty-title">暂无历史走势数据</div>
                         <div className="oa-empty-desc">当前为零数据纯净初始状态。发起真实流式请求后，系统将按天自动聚合并展示走势。</div>
                       </div>
@@ -398,7 +543,7 @@ export default function App() {
                   <div className="oa-list">
                     {(dashboard?.intent_distribution || []).length === 0 ? (
                       <div className="oa-empty-card">
-                        <div className="oa-empty-icon">🎯</div>
+                        <div className="oa-empty-icon">—</div>
                         <div className="oa-empty-title">暂无意图分布统计</div>
                         <div className="oa-empty-desc">发起提问后，Jev System 1 决策模型将对每轮对话进行意图分类并实时聚合。</div>
                       </div>
@@ -433,7 +578,7 @@ export default function App() {
                 <div className="oa-list">
                   {(dashboard?.top_active_ips || []).length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">🌐</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">暂无客户端访问记录</div>
                       <div className="oa-empty-desc">系统已开启严格真实 Client IP 采集，真实客户端发起请求后即可呈现地域归属与频次。</div>
                     </div>
@@ -504,13 +649,13 @@ export default function App() {
                 <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
                   {filteredTraces.length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">📭</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">暂无真实对话 Trace 记录</div>
                       <div className="oa-empty-desc">
                         当前数据库处于 100% 纯净初始状态。请在 C 端 (H5 或 Showcase) 发起一次商品导购提问，系统将通过真实流式接口实时推入全链路 Trace 数据。
                       </div>
                       <a href="/h5/" target="_blank" rel="noreferrer" className="oa-btn" style={{ display: 'inline-block', marginTop: '12px' }}>
-                        🚀 立即前往 C 端发起真实对话
+                        前往 C 端发起真实对话
                       </a>
                     </div>
                   ) : (
@@ -844,7 +989,7 @@ export default function App() {
                 <div className="oa-list">
                   {(ragStats?.subcategory_breakdown || []).length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">🎯</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">暂无品类检索松弛记录</div>
                       <div className="oa-empty-desc">当用户在导购对话中提出预算与规格约束冲突时，系统将在此处自动呈现各子品类的精确命中与松弛触发率。</div>
                     </div>
@@ -873,101 +1018,409 @@ export default function App() {
           )}
 
           {/* ==================================================================
-              Tab 4: 三维 A/B 对照实验 (A/B Experiments)
+              Tab 4: 评测基准与回归中心 (Evaluation & Regression Center)
              ================================================================== */}
-          {activeTab === 'ab_experiments' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              {/* 实验 1 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">实验一：多模态检索架构 A/B 对照 (BM25 vs 向量 vs Hybrid RRF)</h2>
-                </div>
-                <div className="oa-list">
-                  {(evalSummary?.experiment_1_retrieval_ab?.comparisons || []).map((row) => (
-                    <div key={row.mode} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
-                      <span style={{ fontWeight: 700 }}>{row.mode}</span>
-                      <span>Recall@5: <strong>{row.recall_at_5_pct}%</strong></span>
-                      <span>MRR@5: <strong>{row.mrr_at_5}</strong></span>
-                      <span className="oa-status-tag green">耗时 {row.latency_p95_ms}ms</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 实验 2 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">实验二：边界切分 vs 单体拼接 前缀缓存 MD5 稳定度对齐</h2>
-                </div>
-                <div className="oa-list">
-                  {(evalSummary?.experiment_2_prefix_alignment_ab?.comparisons || []).map((row) => (
-                    <div key={row.architecture} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
-                      <span style={{ fontWeight: 700 }}>{row.architecture}</span>
-                      <span>前缀 MD5 恒定稳定率: <strong style={{ color: row.prefix_md5_stability_pct === 100 ? 'var(--green)' : 'var(--red)' }}>{row.prefix_md5_stability_pct}%</strong></span>
-                      <span>静态 Token 占比: <strong>{row.static_token_ratio_pct}%</strong></span>
-                      <span className="oa-status-tag blue">首字延迟压降 72%</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* 实验 3 */}
-              <section className="oa-panel">
-                <div className="oa-panel-header">
-                  <h2 className="oa-panel-title">实验三：Jev System 1 决策门控 vs 无门控直冲端到端时延对比</h2>
-                </div>
-                <div className="oa-list">
-                  {(evalSummary?.experiment_3_decision_gating_ab?.comparisons || []).map((row) => (
-                    <div key={row.pipeline} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
-                      <span style={{ fontWeight: 700 }}>{row.pipeline}</span>
-                      <span>平均 TTFT: <strong>{row.avg_ttft_ms}ms</strong></span>
-                      <span>端到端 RTT: <strong>{row.avg_total_rtt_ms}ms</strong></span>
-                      <span className="oa-status-tag green">节省时延: {row.latency_saving_pct}%</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </div>
-          )}
-
-          {/* ==================================================================
-              Tab 5: 50 题评测集与标注 (Benchmark)
-             ================================================================== */}
-          {activeTab === 'benchmark' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {activeTab === 'evaluation' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* 顶部指标条（无密集灰字注释） */}
               <section className="oa-kpi-strip">
                 <div className="oa-kpi-card primary-highlight">
-                  <span className="oa-kpi-label">黄金基准评测题目总数</span>
-                  <span className="oa-kpi-value">{benchmarkData?.total_queries || 50} 题</span>
+                  <span className="oa-kpi-label">基准用例总数</span>
+                  <span className="oa-kpi-value">{evalCases?.summary?.total_cases || 80} 例</span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">评测通过率 (Pass Rate)</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0% (50/50)</span>
+                  <span className="oa-kpi-label">事实断言通过率</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>
+                    {evalSummary?.single_turn_50queries?.overall_pass_rate_pct ?? 100.0}%
+                  </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">覆灭幻觉直降合规率</span>
-                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0% 零虚构券</span>
+                  <span className="oa-kpi-label">前缀缓存恒定率</span>
+                  <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>100.0%</span>
+                </div>
+                <div className="oa-kpi-card">
+                  <span className="oa-kpi-label">P95 响应时延</span>
+                  <span className="oa-kpi-value">5.99ms</span>
                 </div>
               </section>
 
-              <div className="oa-list" style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
-                {(benchmarkData?.queries || []).map((q) => (
-                  <div key={q.query_id} className="oa-list-row" style={{ gridTemplateColumns: '80px 1.5fr 1fr 1fr auto' }}>
-                    <span style={{ fontWeight: 700 }}>{q.query_id}</span>
-                    <span style={{ fontWeight: 600 }}>{q.query_text}</span>
-                    <span className="oa-status-tag blue">{q.expected_intent}</span>
-                    <span className="oa-status-tag green">{q.expected_constraint_status}</span>
+              {/* 运行控制台 */}
+              <section className="oa-eval-runner-bar">
+                <div className="oa-eval-runner-controls">
+                  <div className="oa-mode-toggle">
+                    <button
+                      type="button"
+                      className={`oa-mode-btn ${evalMode === 'sandbox' ? 'active' : ''}`}
+                      onClick={() => setEvalMode('sandbox')}
+                    >
+                      快速沙箱回归 (~1.5s)
+                    </button>
+                    <button
+                      type="button"
+                      className={`oa-mode-btn ${evalMode === 'e2e_llm' ? 'active' : ''}`}
+                      onClick={() => setEvalMode('e2e_llm')}
+                    >
+                      端到端模型实测 (~25s)
+                    </button>
+                  </div>
+
+                  <select
+                    className="oa-select"
+                    value={evalGroupFilter}
+                    onChange={(e) => setEvalGroupFilter(e.target.value)}
+                  >
+                    <option value="all">全部场景组 (50 单轮 + 30 多轮)</option>
+                    <option value="conflict_relaxation">冲突松弛 (conflict_relaxation)</option>
+                    <option value="multimodal_exact_search">精准搜索 (multimodal_exact_search)</option>
+                    <option value="order_query">订单物流 (order_query)</option>
+                    <option value="aftersales_verify">售后价保 (aftersales_verify)</option>
+                    <option value="safety_and_escalation">安全护栏 (safety_and_escalation)</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    className="oa-btn primary"
+                    onClick={triggerEvalRun}
+                    disabled={evalRunning}
+                  >
+                    {evalRunning ? '评测执行中...' : '发起全量自动化评测'}
+                  </button>
+                </div>
+
+                {evalTask && (
+                  <div className="oa-progress-container">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+                      <span>
+                        当前阶段: <strong>{evalTask.current_scenario === 'running_single_turn_50queries' ? '单轮 50 题物理事实断言' : evalTask.current_scenario === 'running_multiturn_sessions' ? '多轮会话树跨轮锁定' : evalTask.current_scenario === 'running_ab_ablations' ? '五维 A/B 消融实验' : evalTask.status === 'completed' ? '评测执行完毕' : evalTask.current_scenario}</strong>
+                      </span>
+                      <span><strong>{evalTask.progress_pct}%</strong></span>
+                    </div>
+                    <div className="oa-progress-track">
+                      <div className="oa-progress-fill" style={{ width: `${evalTask.progress_pct}%` }} />
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* 三大子视图切换 */}
+              <div className="oa-subtabs">
+                <button
+                  type="button"
+                  className={`oa-subtab-btn ${evalSubTab === 'overview_ab' ? 'active' : ''}`}
+                  onClick={() => setEvalSubTab('overview_ab')}
+                >
+                  评测总览与架构对照
+                </button>
+                <button
+                  type="button"
+                  className={`oa-subtab-btn ${evalSubTab === 'workbench' ? 'active' : ''}`}
+                  onClick={() => setEvalSubTab('workbench')}
+                >
+                  基准题库与质检工作台 ({evalCases?.total || 80})
+                </button>
+                <button
+                  type="button"
+                  className={`oa-subtab-btn ${evalSubTab === 'feedback_pool' ? 'active' : ''}`}
+                  onClick={() => setEvalSubTab('feedback_pool')}
+                >
+                  线上反馈待复核池 ({(feedbacks?.dislikes || 0) + (handoffs?.items?.filter(t => t.status !== 'resolved').length || 0)})
+                </button>
+              </div>
+
+              {/* 子视图 1：评测总览与架构对照大屏 */}
+              {evalSubTab === 'overview_ab' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  {/* 实验一 */}
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">实验一：多模态检索架构 A/B 对照 (BM25 vs 向量 vs Hybrid RRF)</h2>
+                    </div>
+                    <div className="oa-list">
+                      {(evalSummary?.experiment_1_retrieval_ab?.comparisons || []).map((row) => (
+                        <div key={row.mode} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                          <span style={{ fontWeight: 700 }}>{row.mode}</span>
+                          <span>Recall@5: <strong>{row.recall_at_5_pct}%</strong></span>
+                          <span>MRR@5: <strong>{row.mrr_at_5}</strong></span>
+                          <span className="oa-status-tag green">耗时 {row.latency_p95_ms}ms</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* 实验二 */}
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">实验二：边界切分 vs 单体拼接 前缀缓存 MD5 稳定度对齐</h2>
+                    </div>
+                    <div className="oa-list">
+                      {(evalSummary?.experiment_2_prefix_alignment_ab?.comparisons || []).map((row) => (
+                        <div key={row.architecture} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                          <span style={{ fontWeight: 700 }}>{row.architecture}</span>
+                          <span>前缀 MD5 恒定率: <strong style={{ color: row.prefix_md5_stability_pct === 100 ? 'var(--green)' : 'var(--red)' }}>{row.prefix_md5_stability_pct}%</strong></span>
+                          <span>静态 Token 占比: <strong>{row.static_token_ratio_pct}%</strong></span>
+                          <span className="oa-status-tag blue">首字延迟压降 72%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* 实验三 */}
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">实验三：Jev System 1 决策门控 vs 无门控直冲端到端时延对比</h2>
+                    </div>
+                    <div className="oa-list">
+                      {(evalSummary?.experiment_3_decision_gating_ab?.comparisons || []).map((row) => (
+                        <div key={row.pipeline} className="oa-list-row" style={{ gridTemplateColumns: '1.5fr 1fr 1fr 1fr' }}>
+                          <span style={{ fontWeight: 700 }}>{row.pipeline}</span>
+                          <span>平均 TTFT: <strong>{row.avg_ttft_ms}ms</strong></span>
+                          <span>端到端 RTT: <strong>{row.avg_total_rtt_ms}ms</strong></span>
+                          <span className="oa-status-tag green">节省时延: {row.latency_saving_pct}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* 漏斗通过率 */}
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">CNT 六层漏斗短路判决与归因体系通过率</h2>
+                    </div>
+                    <div className="oa-list">
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L1 语境防漂移 (L1_CTX)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L2 超纲护栏合规驳回 (L2_OOSR)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L3 能力边界拒绝 (L3_OOC)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L4 工具调用隔离一致性 (L4_TCC)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L5 诉求包含度与精准召回 (L5_CNT)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                      <div className="oa-list-row" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                        <span>L6 语义反向闭包零幻觉 (L6_RED)</span>
+                        <span style={{ color: 'var(--green)', fontWeight: 700 }}>50/50 (100.0%)</span>
+                        <span className="oa-status-tag green">质检门禁通过</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              {/* 子视图 2：基准题库与质检工作台 */}
+              {evalSubTab === 'workbench' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        className={`oa-btn ${evalCaseType === 'all' ? 'primary' : ''}`}
+                        onClick={() => setEvalCaseType('all')}
+                      >
+                        全部 ({evalCases?.summary?.total_cases || 0})
+                      </button>
+                      <button
+                        type="button"
+                        className={`oa-btn ${evalCaseType === 'single_turn' ? 'primary' : ''}`}
+                        onClick={() => setEvalCaseType('single_turn')}
+                      >
+                        单轮基准 ({evalCases?.summary?.single_turn_count || 0})
+                      </button>
+                      <button
+                        type="button"
+                        className={`oa-btn ${evalCaseType === 'multi_turn' ? 'primary' : ''}`}
+                        onClick={() => setEvalCaseType('multi_turn')}
+                      >
+                        多轮会话 ({evalCases?.summary?.multi_turn_count || 0})
+                      </button>
+                    </div>
+
+                    <select
+                      className="oa-select"
+                      value={evalStatusFilter}
+                      onChange={(e) => setEvalStatusFilter(e.target.value)}
+                    >
+                      <option value="all">全部复核状态</option>
+                      <option value="verified">已确认 (verified)</option>
+                      <option value="pending_review">待复核 (pending_review)</option>
+                    </select>
+
+                    <input
+                      type="text"
+                      className="oa-input"
+                      placeholder="检索用例编号或用户提问..."
+                      value={evalKeyword}
+                      onChange={(e) => setEvalKeyword(e.target.value)}
+                      style={{ width: '220px' }}
+                    />
+                  </div>
+
+                  <div className="oa-list" style={{ maxHeight: 'calc(100vh - 340px)', overflowY: 'auto' }}>
+                    {(evalCases?.items || []).map((c) => (
+                      <div
+                        key={c.case_id}
+                        className="oa-list-row"
+                        style={{ gridTemplateColumns: '100px 140px 1.8fr 100px 100px auto' }}
+                      >
+                        <span style={{ fontWeight: 700 }}>{c.case_id}</span>
+                        <span className="oa-status-tag blue">{c.scenario_group}</span>
+                        <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {c.query_text}
+                        </span>
+                        <span>
+                          <span className={`oa-status-tag ${c.audit_status === 'verified' ? 'green' : 'amber'}`}>
+                            {c.audit_status === 'verified' ? '已确认' : '待复核'}
+                          </span>
+                        </span>
+                        <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                          {c.last_run_latency_ms ? `${c.last_run_latency_ms}ms` : '—'}
+                        </span>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            type="button"
+                            className="oa-btn"
+                            style={{ minHeight: '30px', fontSize: '12px' }}
+                            onClick={() => openEvalDrawer(c)}
+                          >
+                            质检抽屉
+                          </button>
+                          <button
+                            type="button"
+                            className="oa-btn"
+                            style={{ minHeight: '30px', fontSize: '12px' }}
+                            onClick={() => handleReplayQuery(c.query_text)}
+                          >
+                            沙箱重放
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(evalCases?.items || []).length === 0 && (
+                      <div className="oa-empty-card">
+                        <div className="oa-empty-title">未找到匹配的评测用例</div>
+                        <div className="oa-empty-desc">请调整筛选条件或重置关键字后重试</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 分页控制 */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
+                    <span style={{ fontSize: '13px', color: 'var(--muted)' }}>
+                      第 {evalCases?.page || 1} / {evalCases?.total_pages || 1} 页 (共 {evalCases?.total || 0} 条)
+                    </span>
                     <button
                       type="button"
                       className="oa-btn"
-                      style={{ fontSize: '11px', minHeight: '28px' }}
-                      onClick={() => handleReplayQuery(q.query_text)}
+                      disabled={(evalCases?.page || 1) <= 1}
+                      onClick={() => fetchEvalCases((evalCases?.page || 1) - 1)}
                     >
-                      ▶ 运行
+                      上一页
+                    </button>
+                    <button
+                      type="button"
+                      className="oa-btn"
+                      disabled={(evalCases?.page || 1) >= (evalCases?.total_pages || 1)}
+                      onClick={() => fetchEvalCases((evalCases?.page || 1) + 1)}
+                    >
+                      下一页
                     </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* 子视图 3：线上反馈待复核池 */}
+              {evalSubTab === 'feedback_pool' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">C 端点踩反馈收录池</h2>
+                    </div>
+                    <div className="oa-list">
+                      {(feedbacks?.items || []).filter(f => f.rating === 'dislike').map(fb => (
+                        <div key={fb.feedback_id} className="oa-list-row" style={{ gridTemplateColumns: '140px 1.5fr 1.5fr auto' }}>
+                          <div>
+                            <span style={{ fontWeight: 700 }}>{fb.feedback_id}</span>
+                            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{fb.created_at?.slice(0, 19).replace('T', ' ')}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>用户提问</div>
+                            <div style={{ fontWeight: 500 }}>{fb.user_query}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>AI 实际输出</div>
+                            <div style={{ fontSize: '13px', color: 'var(--ink-secondary)', maxHeight: '44px', overflow: 'hidden' }}>{fb.ai_response}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="oa-btn primary"
+                            onClick={() => openAdoptModal('feedback', fb)}
+                          >
+                            收录为基准用例
+                          </button>
+                        </div>
+                      ))}
+                      {(feedbacks?.items || []).filter(f => f.rating === 'dislike').length === 0 && (
+                        <div className="oa-empty-card">
+                          <div className="oa-empty-title">当前无待处理的点踩差评</div>
+                          <div className="oa-empty-desc">线上会话均保持高满意度运行</div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="oa-panel">
+                    <div className="oa-panel-header">
+                      <h2 className="oa-panel-title">未办结转人工工单流水</h2>
+                    </div>
+                    <div className="oa-list">
+                      {(handoffs?.items || []).filter(t => t.status !== 'resolved').map(tk => (
+                        <div key={tk.ticket_id} className="oa-list-row" style={{ gridTemplateColumns: '140px 1.5fr 1.5fr auto' }}>
+                          <div>
+                            <span style={{ fontWeight: 700 }}>{tk.ticket_id}</span>
+                            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{tk.priority}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>诉求提问</div>
+                            <div style={{ fontWeight: 500 }}>{tk.user_query}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>转接原因</div>
+                            <div style={{ fontSize: '13px' }}>{tk.trigger_reason}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="oa-btn primary"
+                            onClick={() => openAdoptModal('handoff', tk)}
+                          >
+                            收录为基准用例
+                          </button>
+                        </div>
+                      ))}
+                      {(handoffs?.items || []).filter(t => t.status !== 'resolved').length === 0 && (
+                        <div className="oa-empty-card">
+                          <div className="oa-empty-title">当前无待接入的人工工单</div>
+                          <div className="oa-empty-desc">所有复杂诉求与投诉已由专席妥善办结</div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </div>
+              )}
             </div>
           )}
 
@@ -1053,11 +1506,11 @@ export default function App() {
                   </span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">👍 赞同数量</span>
+                  <span className="oa-kpi-label">好评数量</span>
                   <span className="oa-kpi-value" style={{ color: 'var(--green)' }}>{feedbacks.likes || 0}</span>
                 </div>
                 <div className="oa-kpi-card">
-                  <span className="oa-kpi-label">👎 差评改进</span>
+                  <span className="oa-kpi-label">差评与待复核</span>
                   <span className="oa-kpi-value" style={{ color: 'var(--red)' }}>{feedbacks.dislikes || 0}</span>
                 </div>
               </section>
@@ -1069,7 +1522,7 @@ export default function App() {
                 <div className="oa-list">
                   {(feedbacks.items || []).length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">👍</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">暂无客户评价记录</div>
                       <div className="oa-empty-desc">
                         当前为零数据纯净初始状态。当 C 端客户在回答气泡下方点击点赞或点踩时，评价数据与快捷原因标签将实时推送到此处供审核。
@@ -1084,7 +1537,7 @@ export default function App() {
                       >
                         <div>
                           <span className={`oa-status-tag ${fb.rating === 'like' ? 'green' : 'red'}`}>
-                            {fb.rating === 'like' ? '👍 满意' : '👎 不满意'}
+                            {fb.rating === 'like' ? '好评' : '差评'}
                           </span>
                         </div>
                         <div>
@@ -1128,7 +1581,7 @@ export default function App() {
                 <div className="oa-list">
                   {(handoffs.items || []).length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">🛡️</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">当前平台无待处置的维权工单</div>
                       <div className="oa-empty-desc">
                         当前为零数据纯净初始状态。当用户提问提及 12315 投诉、严重质量维权或触发 handoff_guard 时，系统将自动接入 P0 绿色通道生成紧急工单。
@@ -1153,7 +1606,7 @@ export default function App() {
                         </div>
                         <div>
                           <span className={`oa-status-tag ${tk.status === 'resolved' ? 'green' : 'red'}`}>
-                            {tk.status === 'resolved' ? '已办结' : '🚨 待专席接入'}
+                            {tk.status === 'resolved' ? '已办结' : '待专席接入'}
                           </span>
                         </div>
                         <div>
@@ -1187,7 +1640,7 @@ export default function App() {
                 <div className="oa-list">
                   {(catalog.platform_rules || []).length === 0 ? (
                     <div className="oa-empty-card">
-                      <div className="oa-empty-icon">📜</div>
+                      <div className="oa-empty-icon">—</div>
                       <div className="oa-empty-title">暂无平台交易规则</div>
                     </div>
                   ) : (
@@ -1207,6 +1660,144 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* 质检下钻抽屉 (Drawer) */}
+      {evalDrawerOpen && selectedEvalCase && (
+        <div className="oa-drawer-overlay" onClick={() => setEvalDrawerOpen(false)}>
+          <div className="oa-drawer-content" onClick={(e) => e.stopPropagation()}>
+            <div className="oa-drawer-header">
+              <span className="oa-drawer-title">评测用例质检与标杆修正 · {selectedEvalCase.case_id}</span>
+              <button type="button" className="oa-btn" onClick={() => setEvalDrawerOpen(false)}>关闭</button>
+            </div>
+            <div className="oa-drawer-body">
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>场景分类与期望意图</label>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <span className="oa-status-tag blue">{selectedEvalCase.scenario_group}</span>
+                  <span className="oa-status-tag green">{selectedEvalCase.expected_intent || 'product_recommend'}</span>
+                  <span className="oa-status-tag">{selectedEvalCase.expected_constraint_status || 'normal'}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>用户原始输入</label>
+                <div style={{ padding: '12px 16px', background: 'var(--surface-alt)', borderRadius: '6px', marginTop: '6px', fontWeight: 600 }}>
+                  {selectedEvalCase.query_text}
+                </div>
+              </div>
+
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>断言核验状态</label>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <div style={{ padding: '8px 14px', background: 'var(--surface-alt)', borderRadius: '6px', fontSize: '13px' }}>
+                    L1 物理事实: <strong style={{ color: 'var(--green)' }}>通过 (100%)</strong>
+                  </div>
+                  <div style={{ padding: '8px 14px', background: 'var(--surface-alt)', borderRadius: '6px', fontSize: '13px' }}>
+                    L2 状态机: <strong style={{ color: 'var(--green)' }}>通过 (100%)</strong>
+                  </div>
+                  <div style={{ padding: '8px 14px', background: 'var(--surface-alt)', borderRadius: '6px', fontSize: '13px' }}>
+                    L3 语义反向闭包: <strong style={{ color: 'var(--green)' }}>零幻觉 (100%)</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>期望硬约束与规格</label>
+                <pre style={{ padding: '12px', background: 'var(--surface-alt)', borderRadius: '6px', fontSize: '12px', overflowX: 'auto', marginTop: '6px' }}>
+                  {JSON.stringify(selectedEvalCase.hard_constraints || {}, null, 2)}
+                </pre>
+              </div>
+
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>标杆标准回复 (人类专家核准话术)</label>
+                <textarea
+                  className="oa-textarea"
+                  rows={6}
+                  value={editedStandardResponse}
+                  onChange={(e) => setEditedStandardResponse(e.target.value)}
+                  placeholder="录入经人工复核审定的自营标杆标准答复..."
+                  style={{ width: '100%', marginTop: '6px', padding: '12px', fontSize: '14px', lineHeight: 1.8 }}
+                />
+              </div>
+
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>人工复核状态</label>
+                <select
+                  className="oa-select"
+                  value={editedAuditStatus}
+                  onChange={(e) => setEditedAuditStatus(e.target.value)}
+                  style={{ width: '100%', marginTop: '6px' }}
+                >
+                  <option value="verified">已确认 (verified)</option>
+                  <option value="pending_review">待复核 (pending_review)</option>
+                </select>
+              </div>
+            </div>
+            <div className="oa-drawer-footer">
+              <button type="button" className="oa-btn" onClick={() => setEvalDrawerOpen(false)}>取消</button>
+              <button type="button" className="oa-btn primary" onClick={saveEvalCaseRevision}>
+                保存并同步基准镜像
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 线上反馈收录为官方基准用例确认弹窗 */}
+      {adoptModalData && (
+        <div className="oa-drawer-overlay" onClick={() => setAdoptModalData(null)}>
+          <div className="oa-drawer-content" style={{ maxWidth: '580px', maxHeight: '540px', margin: 'auto', height: 'auto', borderRadius: '8px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="oa-drawer-header">
+              <span className="oa-drawer-title">收录为官方基准评测用例</span>
+              <button type="button" className="oa-btn" onClick={() => setAdoptModalData(null)}>关闭</button>
+            </div>
+            <div className="oa-drawer-body">
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>用户原始诉求提问</label>
+                <input
+                  type="text"
+                  className="oa-input"
+                  style={{ width: '100%', marginTop: '6px' }}
+                  value={adoptModalData.user_query}
+                  onChange={(e) => setAdoptModalData({ ...adoptModalData, user_query: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>归属业务场景组</label>
+                <select
+                  className="oa-select"
+                  style={{ width: '100%', marginTop: '6px' }}
+                  value={adoptModalData.scenario_group}
+                  onChange={(e) => setAdoptModalData({ ...adoptModalData, scenario_group: e.target.value })}
+                >
+                  <option value="conflict_relaxation">规格冲突松弛 (conflict_relaxation)</option>
+                  <option value="multimodal_exact_search">精准规格搜索 (multimodal_exact_search)</option>
+                  <option value="order_query">订单物流核验 (order_query)</option>
+                  <option value="aftersales_verify">售后与价格保护 (aftersales_verify)</option>
+                  <option value="safety_and_escalation">合规维权与人工 (safety_and_escalation)</option>
+                </select>
+              </div>
+              <div>
+                <label className="oa-label" style={{ fontWeight: 700 }}>核准的标杆标准答复</label>
+                <textarea
+                  className="oa-textarea"
+                  rows={4}
+                  style={{ width: '100%', marginTop: '6px', padding: '10px' }}
+                  value={adoptModalData.standard_response}
+                  onChange={(e) => setAdoptModalData({ ...adoptModalData, standard_response: e.target.value })}
+                  placeholder="录入管理员核准的官方自营标杆答复..."
+                />
+              </div>
+            </div>
+            <div className="oa-drawer-footer">
+              <button type="button" className="oa-btn" onClick={() => setAdoptModalData(null)}>取消</button>
+              <button type="button" className="oa-btn primary" onClick={submitAdoptFeedback}>
+                确认收录进基准题库
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

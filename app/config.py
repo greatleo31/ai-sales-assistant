@@ -81,7 +81,7 @@ class AppConfig:
     jev_model: str = os.environ.get("JEV_MODEL", "jev-latest")
     # 在线推理默认超时时间（支持调用方按场景传入 0.8s 严格 SLA 超时或 3.5s 跨境实时超时）
     jev_timeout_sec: float = _env_float("JEV_TIMEOUT_SEC", 3.5)
-    jev_sla_timeout_sec: float = _env_float("JEV_SLA_TIMEOUT_SEC", 0.8)
+    jev_sla_timeout_sec: float = _env_float("JEV_SLA_TIMEOUT_SEC", 3.0)
     jev_high_confidence: float = _env_float("JEV_HIGH_CONFIDENCE", 0.75)
     jev_low_confidence: float = _env_float("JEV_LOW_CONFIDENCE", 0.45)
     need_rag_threshold: float = _env_float("NEED_RAG_THRESHOLD", 0.50)
@@ -124,7 +124,7 @@ class AppConfig:
         "RERANK_API_KEY", "sk-dkxvhitmipiogdtofgbaurcmquszwgktycjkmtqmpcqqzncu"
     )
     rerank_model: str = os.environ.get("RERANK_MODEL", "Pro/BAAI/bge-reranker-v2-m3")
-    rerank_timeout_sec: float = _env_float("RERANK_TIMEOUT_SEC", 3.0)
+    rerank_timeout_sec: float = _env_float("RERANK_TIMEOUT_SEC", 4.5)
 
     # 4. 腾讯云 COS
     cos_host: str = os.environ.get("COS_HOST", "")

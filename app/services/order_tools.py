@@ -135,7 +135,7 @@ class DeterministicOrderTools:
         if scenario_hint == "aftersales_return":
             return self.orders_by_id.get("ORD-20261001-002")
 
-        return self.orders[0] if self.orders else None
+        return None
 
     def query_order_status(
         self,

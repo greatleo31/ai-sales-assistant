@@ -22,6 +22,7 @@ import hashlib
 import json
 import logging
 import re
+import sqlite3
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -30,6 +31,14 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
 
 from app.config import settings
+from app.core.candidate_lock import (
+    CandidateDiffMeta,
+    CandidateLockManager,
+    StreamOrderAligner,
+    META_CORRECTION_RE,
+    COMMON_SCENE_VOCAB,
+    COMMON_COLOR_VOCAB,
+)
 from app.core.context_harness import DecisionLedgerState, HierarchicalContextHarness
 from app.core.telemetry import count_tokens_exact
 from app.services.admin_analytics_service import analytics_service
@@ -47,6 +56,89 @@ from app.services.rule_governance import (
 from app.services.strategy_injector import StrategyInjector
 
 logger = logging.getLogger(__name__)
+
+# 内存级多轮推荐会话缓存，加速多轮代词与比价实体继承
+_SESSION_RECOMMENDED_CACHE: Dict[str, Dict[str, Any]] = {}
+
+_PRONOUN_INQUIRY_RE = re.compile(
+    r"(?:^|[，。！？\s])(?:这[款个件台副条支]|那[款个件台副条支]|它|这件衣服|这款包|这个包|这款充电宝|这个充电头|这个耳机|这款键盘|这款冲锋衣|这个手表)"
+    r".*(?:有现货|现货|发货|几天到|几天能到|什么时候到|从哪发|哪发货|什么快递|时效|物流|保修|质保|防水|尺寸|多大|重量|多重|能装下|能放下|怎么用|适合吗|多少瓦|参数|材质|能退|退货|正品|到手价|价格)",
+    re.IGNORECASE,
+)
+
+_CHEAPER_INQUIRY_RE = re.compile(
+    r"(?:那个|那款|哪款|哪个)?(?:更便宜|最便宜|便宜点|便宜的|低价|价格更低|实惠点)",
+    re.IGNORECASE,
+)
+
+_ORDINAL_INQUIRY_RE = re.compile(
+    r"(?:第([一二两三123])|前([一1])|后([一1])|另一)[个款]",
+    re.IGNORECASE,
+)
+
+
+def get_session_last_recommendations(
+    session_id: str,
+    conv_history: Optional[List[Dict[str, Any]]] = None,
+    catalog: Optional[List[Dict[str, Any]]] = None,
+) -> Optional[Dict[str, Any]]:
+    """获取当前会话最近一轮成功推荐的商品清单与类目信息，三级防穿透。"""
+    if conv_history is not None and len(conv_history) == 0:
+        return None
+
+    # 1. 内存会话缓存优先
+    if session_id in _SESSION_RECOMMENDED_CACHE:
+        entry = _SESSION_RECOMMENDED_CACHE[session_id]
+        if entry.get("recommended_skus"):
+            return entry
+
+    # 2. SQLite 历史审计日志查询
+    try:
+        conn = sqlite3.connect("data/admin_analytics.db", timeout=3.0)
+        cur = conn.cursor()
+        row = cur.execute(
+            "SELECT top_skus_json, ui_cards_json, sub_category, primary_intent, user_query FROM chat_audit_logs "
+            "WHERE session_id = ? AND top_skus_json IS NOT NULL AND top_skus_json != '[]' "
+            "ORDER BY rowid DESC LIMIT 1",
+            (session_id,),
+        ).fetchone()
+        conn.close()
+        if row and row[0]:
+            top_skus = json.loads(row[0])
+            cards = json.loads(row[1]) if row[1] else {}
+            if top_skus:
+                rec = {
+                    "recommended_skus": top_skus,
+                    "product_cards": cards.get("product_cards", []),
+                    "sub_category": row[2],
+                    "primary_intent": row[3],
+                    "user_query": row[4],
+                }
+                _SESSION_RECOMMENDED_CACHE[session_id] = rec
+                return rec
+    except Exception:
+        pass
+
+    # 3. 历史对话文本回溯兜底
+    if conv_history and catalog:
+        for msg in reversed(conv_history):
+            if msg.get("role") != "user":
+                content = str(msg.get("content") or "")
+                found_skus = re.findall(r"(SKU-(?:3C|APP|BEA)-\d{3})", content, re.IGNORECASE)
+                if not found_skus:
+                    for item in catalog:
+                        if item["title"][:6] in content:
+                            found_skus.append(item["sku_id"])
+                if found_skus:
+                    rec = {
+                        "recommended_skus": list(dict.fromkeys(found_skus)),
+                        "product_cards": [],
+                        "sub_category": None,
+                        "primary_intent": "product_recommend",
+                        "user_query": "",
+                    }
+                    return rec
+    return None
 
 VALID_IN_CATALOG_SUB_CATEGORIES = {
     "laptop_bag",
@@ -177,10 +269,21 @@ def synthesize_deterministic_response(
     aftersales_result: Optional[Dict[str, Any]],
     guard_warning: Optional[str] = None,
     vision_info: Optional[Dict[str, Any]] = None,
+    is_meta_correction: bool = False,
+    missing_order_msg: Optional[str] = None,
 ) -> str:
     """
     基于 100% 真实结构化上下文生成零幻觉导购/客服回复（所有价格、规格、时间差与差价均直接取自真源卡片）。
     """
+    if missing_order_msg:
+        return missing_order_msg
+
+    if is_meta_correction:
+        return (
+            "已为您恢复并展示上一轮推荐的款式。系统已锁定前序选品快照，"
+            "请问针对这几款您还需要了解哪些具体规格、履约发货或使用场景？"
+        )
+
     primary_intent = jev_decision.get("primary_intent", "product_recommend")
     handoff_guard = bool(jev_decision.get("handoff_guard", False))
     parts: List[str] = []
@@ -305,6 +408,21 @@ def synthesize_deterministic_response(
                     f"- **{path_label}**：推荐 **{card['title']}**（`{sid}`），当前到手价 **¥{card['final_price']}**（日常原价 **¥{card['original_price']}**，官方直降立减 **¥{disc}**）。标签：{card.get('match_badge')}；核心亮点：{hl}。"
                 )
             parts.append("您可以根据更看重**核心规格达标**还是**严守预算上限**点击下方卡片或追问胶囊查看详情！")
+            return "\n\n".join(parts)
+
+        # 单品现货/发货时效专项答复（零推测、锚定真实履约字段、大厂专业自营话术）
+        is_shipping_inq = any(k in user_query for k in ("现货", "发货", "几天到", "到货", "发货地", "库存"))
+        if is_shipping_inq and cards:
+            c = cards[0]
+            w_city = c.get("warehouse_city", "广州自营数码仓")
+            sla_h = c.get("shipping_sla_hours", 24)
+            inv_st = c.get("inventory_status", "in_stock")
+            inv_zh = "现货在库" if inv_st == "in_stock" else "缺货/预售"
+            parts.append(
+                f"您好，商品 **{c['title']}**（`{c['sku_id']}`）当前为**{inv_zh}**状态。由**{w_city}**直发，官方承诺支付后 **{sla_h} 小时内**安排打包发出。"
+                f"正常情况下主流同城次日即可送达，省外常规地区预计 2~3 天送达（具体以您的收货地址为准）。\n\n"
+                "您可以点击下方卡片查看完整规格与实时时效！"
+            )
             return "\n\n".join(parts)
 
         # 满足硬约束的正常混合检索推荐
@@ -871,6 +989,8 @@ class ShoppingAgentOrchestrator:
         entities = EntityTracker.extract(conv_history, clean_query)
 
         if input_guard.action == GuardAction.BLOCK:
+            # 话题衰减：物理斩断旧品类与商品缓存，杜绝越界/黑客探测后在后续轮次强推旧品类
+            _SESSION_RECOMMENDED_CACHE.pop(session_id, None)
             # 输入触发 Prompt 注入或违法违禁词，Fail-Closed 安全阻断并输出完整 6 类 SSE 事件
             blocked_meta = {
                 "message_id": message_id,
@@ -983,6 +1103,8 @@ class ShoppingAgentOrchestrator:
         # ====================================================================
         # Step 2: 多模态视觉预解析 + 多轮上下文类目锁继承 + asyncio.gather 并发执行
         # ====================================================================
+        yield format_sse_event("agent_status", {"status": "analyzing", "text": "惠购小助手正在理解您的需求与偏好..."})
+
         extracted = self.extractor.extract(clean_query)
 
         # 全平台未覆盖品类词表（优先检测当前句是否切换到未上架新品类）
@@ -996,7 +1118,26 @@ class ShoppingAgentOrchestrator:
             "冻干猫粮", "猫粮", "狗粮", "猫砂", "咖啡", "零食", "奶粉", "香水", "口红",
             "粉底液", "眼影", "洗发水", "沐浴露", "护手霜", "马克杯", "水杯", "保温杯",
         ]
-        has_missing_kw_in_current = any(kw in clean_query for kw in missing_item_keywords)
+
+        def detect_actual_missing_item(query: str, current_extracted: Dict[str, Any]) -> Optional[str]:
+            """精准判别是否真正询问未覆盖品类，防止数码配件（充电宝/快充/电脑包）中提及'手机/笔记本'时被误杀。"""
+            if current_extracted.get("sub_category") in VALID_IN_CATALOG_SUB_CATEGORIES:
+                return None
+            accessory_triggers = (
+                "充电宝", "充电", "快充", "充电器", "充头", "内胆包", "电脑包", "双肩包",
+                "背包", "收纳包", "保护套", "数据线", "转接头", "拓展坞", "贴膜", "防摔", "能充", "供电"
+            )
+            is_accessory_context = any(t in query for t in accessory_triggers)
+            for kw in missing_item_keywords:
+                if kw in ("手机", "平板", "iPad") and is_accessory_context:
+                    continue
+                if kw == "咖啡" and ("咖啡色" in query or "咖啡金" in query):
+                    continue
+                if kw in query:
+                    return kw
+            return None
+
+        has_missing_kw_in_current = bool(detect_actual_missing_item(clean_query, extracted))
 
         vision_info: Optional[Dict[str, Any]] = None
         if has_image and image_base64:
@@ -1016,36 +1157,170 @@ class ShoppingAgentOrchestrator:
             elif vision_info.get("scene_type") == "out_of_catalog_product":
                 has_missing_kw_in_current = True
 
-        # 若当前追问（如“把预算放宽到 230 元以内，再帮我找一轮最合适的款式”）省略了商品名，
-        # 自动从最近的历史对话轮次继承 sub_category 类目锁与未被覆盖的规格条件，防止跨类目漂移到 SKU-3C-001（笔记本内胆包）
-        effective_rag_query = clean_query
-        if vision_info and vision_info.get("scene_type") == "in_catalog_product":
-            effective_rag_query = (
-                f"{vision_info.get('recognized_item', '')} "
-                f"{vision_info.get('visual_keywords', '')} "
-                f"{clean_query}"
-            ).strip()
-        elif not extracted.get("sub_category") and not has_missing_kw_in_current and conv_history:
-            user_hist = [m for m in reversed(conv_history) if m.get("role") == "user"]
-            all_hist = user_hist + [m for m in reversed(conv_history) if m.get("role") != "user"]
-            for h_msg in all_hist:
-                h_text = str(h_msg.get("content") or "").strip()
-                if not h_text:
-                    continue
-                h_ext = self.extractor.extract(h_text)
-                if h_ext.get("sub_category"):
-                    inherited_sub = h_ext["sub_category"]
-                    extracted["sub_category"] = inherited_sub
-                    extracted["matched_sub_categories"] = [inherited_sub]
-                    extracted["sub_category_ambiguity"] = "none"
-                    effective_rag_query = f"{inherited_sub} {clean_query}"
+        # 多轮代词指代与候选比价锁定 (Pronoun & Candidate Context Locking)
+        context_locking_directive = ""
+        last_rec = get_session_last_recommendations(
+            session_id=session_id,
+            conv_history=conv_history,
+            catalog=self.rag_engine.catalog,
+        )
 
-                    # 继承历史对话中的软约束偏好（不强锁上一轮已冲突的硬规格，使放宽预算后能正常筛出同品类候选）
-                    if h_msg.get("role") == "user":
-                        for sc in h_ext.get("soft_constraints") or []:
-                            if sc not in (extracted.get("soft_constraints") or []):
-                                extracted.setdefault("soft_constraints", []).append(sc)
+        is_sub_category_conflict = bool(
+            extracted.get("excluded_sub_categories")
+            and last_rec
+            and last_rec.get("sub_category") in extracted.get("excluded_sub_categories")
+        )
+
+        effective_rag_query = clean_query
+
+        # 检查是否为元对话纠错（如“怎么和上一轮不一样”、“卡片呢”）
+        is_meta_correction = bool(
+            last_rec
+            and last_rec.get("product_cards")
+            and META_CORRECTION_RE.search(clean_query)
+        )
+
+        # 导购激活态下的短词属性识别（如“通勤”、“换黑色”、“250元”），防止 Jev 判为 chitchat
+        is_short_query = len(clean_query) <= 15
+        hit_scenes = [sc for sc in COMMON_SCENE_VOCAB if sc in clean_query]
+        hit_colors = [co for co in COMMON_COLOR_VOCAB if co in clean_query]
+        is_relax_query, _ = CandidateLockManager.is_relaxation_query(clean_query)
+
+        if is_short_query and (hit_scenes or hit_colors or is_relax_query) and last_rec and last_rec.get("sub_category"):
+            if not extracted.get("sub_category"):
+                extracted["sub_category"] = last_rec["sub_category"]
+                extracted["matched_sub_categories"] = [last_rec["sub_category"]]
+                extracted["sub_category_ambiguity"] = "none"
+            for sc in hit_scenes:
+                if sc not in (extracted.get("soft_constraints") or []):
+                    extracted.setdefault("soft_constraints", []).append(sc)
+            effective_rag_query = f"{last_rec['sub_category']} {clean_query}"
+
+        # 单品精准点名识别（如“漫步者 W820NB”，触发单品聚焦，严禁混入竞品）
+        matched_single_sku_id = None
+        q_upper = clean_query.upper().replace(" ", "")
+        for s in self.rag_engine.catalog:
+            title_clean = s.get("title", "").upper().replace(" ", "")
+            brand_clean = s.get("brand", "").upper().replace(" ", "")
+            sid = s.get("sku_id")
+            aliases = [brand_clean + title_clean, title_clean]
+            if "W820NB" in title_clean:
+                aliases.extend(["W820NB", "漫步者W820NB", "漫步者耳机"])
+            if "V98" in title_clean:
+                aliases.extend(["V98", "VGNV98", "V98键盘"])
+            for al in aliases:
+                if len(al) >= 4 and al in q_upper:
+                    matched_single_sku_id = sid
                     break
+            if matched_single_sku_id:
+                break
+
+        # 检查是否满足代词追问或比价追问
+        if last_rec and last_rec.get("recommended_skus") and not is_sub_category_conflict:
+            rec_skus = last_rec["recommended_skus"]
+            prev_sub = last_rec.get("sub_category")
+
+            # 场景 A: 单品代词追问现货/物流/参数（例如“这款包有现货吗？一般从哪发货、几天能到”）
+            if _PRONOUN_INQUIRY_RE.search(clean_query):
+                target_sku_id = rec_skus[0]
+                locked_item = self.rag_engine.sku_by_id.get(target_sku_id)
+                if locked_item:
+                    extracted["locked_sku_ids"] = [target_sku_id]
+                    if prev_sub:
+                        extracted["sub_category"] = prev_sub
+                        extracted["matched_sub_categories"] = [prev_sub]
+                        extracted["sub_category_ambiguity"] = "none"
+                    wh_city = locked_item.get("warehouse_city", "广州自营数码仓")
+                    sla = locked_item.get("shipping_sla_hours", 24)
+                    inv = "现货在库" if locked_item.get("inventory_status") == "in_stock" else "少量现货"
+                    context_locking_directive = (
+                        f"\n【单品追问指代锁定】：用户使用代词追问前序推荐的款式【{locked_item['title']} ({target_sku_id})】。"
+                        f"该商品真实库存状态为【{inv}】，发货仓为【{wh_city}】，"
+                        f"发货履约承诺为【承诺 {sla} 小时内揽收发货，主流城市通常 2~3 天送达】。请直接基于该款式真源数据回答，严禁更换为全库其他无关款式！\n"
+                    )
+
+            # 场景 B: 比较/更便宜追问（例如“那个更便宜的呢？”）
+            elif _CHEAPER_INQUIRY_RE.search(clean_query):
+                cand_items = [
+                    self.rag_engine.sku_by_id[sid]
+                    for sid in rec_skus
+                    if sid in self.rag_engine.sku_by_id
+                ]
+                if cand_items:
+                    cand_items.sort(key=lambda x: float(x.get("final_price", 0)))
+                    cheapest_item = cand_items[0]
+                    cheaper_skus = [c["sku_id"] for c in cand_items]
+                    extracted["locked_sku_ids"] = cheaper_skus
+                    if prev_sub:
+                        extracted["sub_category"] = prev_sub
+                        extracted["matched_sub_categories"] = [prev_sub]
+                        extracted["sub_category_ambiguity"] = "none"
+                    effective_rag_query = f"{prev_sub or ''} 便宜 性价比".strip()
+                    cand_summary_lines = "\n".join(
+                        f"- {c['title']} ({c['sku_id']}): 到手价 ¥{float(c['final_price']):.1f}"
+                        for c in cand_items
+                    )
+                    context_locking_directive = (
+                        "\n【多轮候选比价确定性指令】：用户正在追问前序推荐中更便宜的款式。"
+                        f"前序推荐候选商品到手价分别为：\n{cand_summary_lines}\n"
+                        f"★ 必须直接说明其中最便宜的款式为【{cheapest_item['title']}】（到手价 ¥{float(cheapest_item['final_price']):.1f}）；"
+                        "严禁颠倒价格高低，严禁声称更高价格的款式是当前推荐中最便宜的！\n"
+                    )
+
+            # 场景 C: 序数代词追问（如“第一款”、“第二款”）
+            elif _ORDINAL_INQUIRY_RE.search(clean_query):
+                m_ord = _ORDINAL_INQUIRY_RE.search(clean_query)
+                ord_char = m_ord.group(1) or m_ord.group(2) or m_ord.group(3) or "1"
+                ord_idx = 1 if ord_char in ("二", "两", "2") else 0
+                if ord_char in ("三", "3"):
+                    ord_idx = 2
+                target_sku_id = rec_skus[ord_idx] if ord_idx < len(rec_skus) else rec_skus[0]
+                locked_item = self.rag_engine.sku_by_id.get(target_sku_id)
+                if locked_item:
+                    extracted["locked_sku_ids"] = [target_sku_id]
+                    if prev_sub:
+                        extracted["sub_category"] = prev_sub
+                        extracted["matched_sub_categories"] = [prev_sub]
+                        extracted["sub_category_ambiguity"] = "none"
+                    effective_rag_query = f"{prev_sub or ''} {clean_query}".strip()
+                    context_locking_directive = (
+                        f"\n【序数款式指代锁定】：用户追问前序第 {ord_idx + 1} 款商品【{locked_item['title']} ({target_sku_id})】。"
+                        f"请直接围绕该款式的规格、价格与物流时效进行答复，严禁漂移到其他无关商品！\n"
+                    )
+
+        # 若当前追问未命中单品锁定且省略了商品名，自动从最近的历史对话轮次继承 sub_category 类目锁与软约束
+        if not extracted.get("locked_sku_ids"):
+            if vision_info and vision_info.get("scene_type") == "in_catalog_product":
+                effective_rag_query = (
+                    f"{vision_info.get('recognized_item', '')} "
+                    f"{vision_info.get('visual_keywords', '')} "
+                    f"{clean_query}"
+                ).strip()
+            elif not extracted.get("sub_category") and not has_missing_kw_in_current and conv_history:
+                user_hist = [m for m in reversed(conv_history) if m.get("role") == "user"]
+                all_hist = user_hist + [m for m in reversed(conv_history) if m.get("role") != "user"]
+                for h_msg in all_hist:
+                    h_text = str(h_msg.get("content") or "").strip()
+                    if not h_text:
+                        continue
+                    h_ext = self.extractor.extract(h_text)
+                    if h_ext.get("sub_category"):
+                        inherited_sub = h_ext["sub_category"]
+                        if inherited_sub in (extracted.get("excluded_sub_categories") or []):
+                            continue
+                        extracted["sub_category"] = inherited_sub
+                        extracted["matched_sub_categories"] = [inherited_sub]
+                        extracted["sub_category_ambiguity"] = "none"
+                        effective_rag_query = f"{inherited_sub} {clean_query}"
+
+                        # 继承历史对话中的软约束偏好（不强锁上一轮已冲突的硬规格，使放宽预算后能正常筛出同品类候选）
+                        if h_msg.get("role") == "user":
+                            for sc in h_ext.get("soft_constraints") or []:
+                                if sc not in (extracted.get("soft_constraints") or []):
+                                    extracted.setdefault("soft_constraints", []).append(sc)
+                        break
+
+        yield format_sse_event("agent_status", {"status": "retrieving", "text": "惠购小助手正在检索自营库存与履约时效..."})
 
         jev_task = asyncio.create_task(
             self.jev_router.evaluate_async(
@@ -1064,6 +1339,23 @@ class ShoppingAgentOrchestrator:
             )
         )
         jev_decision, pre_rag_result = await asyncio.gather(jev_task, rag_pre_task)
+
+        # 元对话纠错覆盖：若为质疑推荐或卡片丢失，100% 恢复上一轮快照，不重新检索
+        if is_meta_correction and last_rec and last_rec.get("product_cards"):
+            primary_intent = "product_recommend"
+            jev_decision["primary_intent"] = "product_recommend"
+            jev_decision["need_rag"] = True
+            pre_rag_result = {
+                "product_cards": list(last_rec["product_cards"]),
+                "price_explain_cards": list(last_rec.get("price_explain_cards") or []),
+                "constraint_status": "satisfied",
+                "relaxation_reason": None,
+                "sub_category": last_rec.get("sub_category"),
+            }
+        elif is_short_query and (hit_scenes or hit_colors or is_relax_query) and last_rec and last_rec.get("sub_category"):
+            if jev_decision.get("primary_intent") == "chitchat":
+                jev_decision["primary_intent"] = "product_recommend"
+                jev_decision["need_rag"] = True
 
         # 若上传图片命中了 60-SKU 原图 SHA-256 指纹且 pre_rag_result 有商品卡，确保对应同款排在首位
         if (
@@ -1129,25 +1421,37 @@ class ShoppingAgentOrchestrator:
             and not handoff_guard
             and not (vision_info and vision_info.get("scene_type") == "non_product_or_blurry")
         ):
-            for kw in missing_item_keywords:
-                if kw in clean_query:
-                    detected_missing_item = kw
-                    break
+            detected_missing_item = detect_actual_missing_item(clean_query, extracted)
 
+        missing_order_reply_msg: Optional[str] = None
         if primary_intent == "order_query":
             order_result = self.order_tools.query_order_status(
                 order_id=entities.get("order_id"),
                 query_text=clean_query,
             )
+            if not order_result or not order_result.get("found"):
+                missing_order_reply_msg = (
+                    "为了帮您准确核实订单与最新物流轨迹，请提供您的**订单编号（以 ORD- 开头，如 ORD-20261001-XXX）**，"
+                    "或告知您购买的具体商品名称。"
+                )
+                order_result = None
         elif primary_intent == "aftersales_qa":
             aftersales_result = self.order_tools.evaluate_aftersales_eligibility(
                 order_id=entities.get("order_id"),
                 query_text=clean_query,
             )
-            order_result = self.order_tools.query_order_status(
-                order_id=aftersales_result.get("order_id") or entities.get("order_id"),
-                query_text=clean_query,
-            )
+            if aftersales_result and aftersales_result.get("found"):
+                order_result = self.order_tools.query_order_status(
+                    order_id=aftersales_result.get("order_id") or entities.get("order_id"),
+                    query_text=clean_query,
+                )
+            else:
+                missing_order_reply_msg = (
+                    "为了帮您准确核实 7 天无理由退货（168h）或 15 天价保（360h）退差资格，"
+                    "请提供您的**订单编号（以 ORD- 开头，如 ORD-20261001-XXX）**，或告知您需要办理售后的具体商品名称。"
+                )
+                aftersales_result = None
+                order_result = None
         elif detected_missing_item:
             primary_intent = "product_recommend"
             jev_decision["primary_intent"] = "product_recommend"
@@ -1180,12 +1484,37 @@ class ShoppingAgentOrchestrator:
                     f"抱歉，惠购目前暂无「{detected_missing_item}」相关商品，我们会尽快安排补货上架。"
                     f"您可以点击上方卡片一键登记心愿单，上架后第一时间通知您。"
                 )
-        elif has_product_constraints and (
+        elif (
             primary_intent == "product_recommend"
-            or (jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat"))
-            or has_product_constraints
-        ):
+            or (jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat", "order_query", "aftersales_qa"))
+        ) and (has_product_constraints or (pre_rag_result and pre_rag_result.get("product_cards"))):
             rag_result = pre_rag_result
+
+            # 候选集集合代数锁定 (CandidateLockManager)
+            if last_rec and last_rec.get("product_cards") and rag_result and rag_result.get("product_cards"):
+                reconciled_cards, diff_meta = CandidateLockManager.reconcile_candidates(
+                    current_query=clean_query,
+                    previous_cards=last_rec["product_cards"],
+                    new_retrieved_cards=rag_result["product_cards"],
+                    constraints=extracted,
+                    matched_single_sku_id=matched_single_sku_id,
+                    is_meta_correction=is_meta_correction,
+                )
+                rag_result["product_cards"] = reconciled_cards
+            elif matched_single_sku_id and rag_result and rag_result.get("product_cards"):
+                target_cards = [c for c in rag_result["product_cards"] if c.get("sku_id") == matched_single_sku_id]
+                if target_cards:
+                    rag_result["product_cards"] = target_cards
+
+            # 单品现货/发货/库存问询聚焦：只保留锁定款式
+            is_single_item_fulfillment_query = (
+                any(k in clean_query for k in ("现货", "发货", "几天到", "到货", "发货地", "库存"))
+                and any(k in clean_query for k in ("这款", "这个", "此款", "该款", "包", "宝贝", "商品"))
+            )
+            if is_single_item_fulfillment_query and rag_result and rag_result.get("product_cards"):
+                rag_result["product_cards"] = rag_result["product_cards"][:1]
+                if rag_result.get("price_explain_cards"):
+                    rag_result["price_explain_cards"] = rag_result["price_explain_cards"][:1]
 
         # ====================================================================
         # Step 4: 发送 SSE 事件 1 —— `event: decision_meta`
@@ -1286,6 +1615,16 @@ class ShoppingAgentOrchestrator:
         }
         yield format_sse_event("ui_cards", ui_cards_payload)
 
+        # 记录本轮推荐至会话缓存，供后续代词追问与比价快速继承
+        if rag_result and rag_result.get("product_cards"):
+            _SESSION_RECOMMENDED_CACHE[session_id] = {
+                "recommended_skus": [c["sku_id"] for c in rag_result["product_cards"] if c.get("sku_id")],
+                "product_cards": rag_result["product_cards"],
+                "sub_category": extracted.get("sub_category"),
+                "primary_intent": primary_intent,
+                "user_query": clean_query,
+            }
+
         # ====================================================================
         # Step 6: 编译缓存对齐系统提示词 (SYSTEM_PROMPT_DYNAMIC_BOUNDARY)
         # ====================================================================
@@ -1355,14 +1694,18 @@ class ShoppingAgentOrchestrator:
                 )
 
         c_end_format_rule = (
-            "\n【C端客户界面排版硬约束】：直接输出面向消费者的清爽纯中文与列表，"
+            "\n【C端客户界面排版硬约束】：直接输出面向消费者的自然专业中文流式回答（120~220字），"
+            "语言自然流畅、专业得体、直击要害，像大厂自营专业客服顾问一样高效说人话。"
+            "严禁生成‘先给结论：’、‘结论：’、‘观点先行：’、‘针对您的诉求’等任何生硬格式化小标题，也严禁使用轻浮俚语网梗。"
             "严禁输出 `<br>`、`<div>` 等任何 HTML 标签，严禁输出 `$...$`、`\\rightarrow` 等 LaTeX 数学公式符号或 Markdown 表格线。\n"
         )
-        llm_input_text = f"{dynamic_suffix}{vision_context_block}{history_block}{c_end_format_rule}\n请直接基于以上真源数据回复用户：{clean_query}"
+        llm_input_text = f"{dynamic_suffix}{vision_context_block}{context_locking_directive}{history_block}{c_end_format_rule}\n请直接基于以上真源数据回复用户：{clean_query}"
 
         # ====================================================================
         # Step 7: 调用主生成模型 (/v1/responses) 或确定性合成器，经滑动窗口过滤推送 `text_delta`
         # ====================================================================
+        yield format_sse_event("agent_status", {"status": "generating", "text": "惠购小助手正在组织专业回答..."})
+
         stream_filter = SlidingWindowStreamFilter(overlap_chars=12)
         selected_node = self.llm_router.select_node()
         gateway_node_used = selected_node.name
@@ -1372,7 +1715,25 @@ class ShoppingAgentOrchestrator:
         emitted_full_text_parts: List[str] = []
 
         remote_succeeded = False
-        if missing_stock_reply_msg:
+        if missing_order_reply_msg:
+            gateway_node_used = "missing-order-guard"
+            chunk_size = 28
+            for i in range(0, len(missing_order_reply_msg), chunk_size):
+                piece = missing_order_reply_msg[i : i + chunk_size]
+                safe_piece = stream_filter.filter_delta(piece)
+                if safe_piece:
+                    if ttft_ms is None:
+                        ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+                    emitted_full_text_parts.append(safe_piece)
+                    yield format_sse_event("text_delta", {"delta": safe_piece})
+            tail_piece = stream_filter.flush()
+            if tail_piece:
+                if ttft_ms is None:
+                    ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
+                emitted_full_text_parts.append(tail_piece)
+                yield format_sse_event("text_delta", {"delta": tail_piece})
+            remote_succeeded = True
+        elif missing_stock_reply_msg:
             gateway_node_used = "missing-stock-wishlist"
             chunk_size = 28
             for i in range(0, len(missing_stock_reply_msg), chunk_size):
@@ -1391,6 +1752,7 @@ class ShoppingAgentOrchestrator:
                 yield format_sse_event("text_delta", {"delta": tail_piece})
             remote_succeeded = True
         elif allow_remote_llm and selected_node.api_key:
+            aligner = StreamOrderAligner(candidate_cards=rag_result["product_cards"] if rag_result else [])
             t_llm_0 = time.perf_counter()
             try:
                 async for item in self._stream_remote_responses_api(
@@ -1400,7 +1762,8 @@ class ShoppingAgentOrchestrator:
                     image_data_url=vision_info.get("data_url") if vision_info else None,
                 ):
                     if item["type"] == "delta":
-                        safe_chunk = stream_filter.filter_delta(item["delta"])
+                        clean_delta = aligner.feed_chunk(item["delta"])
+                        safe_chunk = stream_filter.filter_delta(clean_delta)
                         if safe_chunk:
                             if ttft_ms is None:
                                 ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
@@ -1415,13 +1778,15 @@ class ShoppingAgentOrchestrator:
                             if isinstance(details, dict):
                                 llm_cached_tokens = int(details.get("cached_tokens") or 0)
 
+                aligner_tail = aligner.flush()
                 tail_chunk = stream_filter.flush()
-                if tail_chunk:
-                    is_leaked = ContentGuard.check_output(tail_chunk)
+                combined_tail = (aligner_tail or "") + (tail_chunk or "")
+                if combined_tail:
+                    is_leaked = ContentGuard.check_output(combined_tail)
                     final_tail = (
                         "（系统安全拦截：已过滤内部配置文本）"
                         if is_leaked
-                        else tail_chunk
+                        else combined_tail
                     )
                     if ttft_ms is None:
                         ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
@@ -1432,6 +1797,15 @@ class ShoppingAgentOrchestrator:
                     remote_succeeded = True
                     selected_node.breaker.record_success()
                     selected_node.update_latency((time.perf_counter() - t_llm_0) * 1000.0)
+                    # 原子级重排卡片并写回会话缓存
+                    aligned_cards = aligner.finalize_aligned_cards()
+                    if aligned_cards and rag_result:
+                        rag_result["product_cards"] = aligned_cards
+                        if session_id in _SESSION_RECOMMENDED_CACHE:
+                            _SESSION_RECOMMENDED_CACHE[session_id]["product_cards"] = aligned_cards
+                            _SESSION_RECOMMENDED_CACHE[session_id]["recommended_skus"] = [
+                                c["sku_id"] for c in aligned_cards if c.get("sku_id")
+                            ]
             except Exception as exc:
                 logger.warning(f"[ShoppingAgentOrchestrator] 远端 /v1/responses 异常，切换本地确定性合成兜底: {exc}")
                 selected_node.breaker.record_failure()
@@ -1454,6 +1828,8 @@ class ShoppingAgentOrchestrator:
                 aftersales_result=aftersales_result,
                 guard_warning=input_guard.category if input_guard.action == GuardAction.WARN else None,
                 vision_info=vision_info,
+                is_meta_correction=is_meta_correction,
+                missing_order_msg=missing_order_reply_msg,
             )
             # 模拟真实流式切片经过 SlidingWindowStreamFilter 输出
             chunk_size = 28
@@ -1551,15 +1927,15 @@ class ShoppingAgentOrchestrator:
         telemetry_payload = {
             "ttft_ms": ttft_ms,
             "total_rtt_ms": total_rtt_ms,
-            "rag_retrieve_ms": rag_result["rag_retrieve_ms"] if rag_result else 0.0,
+            "rag_retrieve_ms": rag_result.get("rag_retrieve_ms", 0.0) if rag_result else 0.0,
             "jev_rtt_ms": jev_decision.get("jev_rtt_ms", 0.0),
-            "index_mode": rag_result["index_mode"] if rag_result else "none",
+            "index_mode": rag_result.get("index_mode", "none") if rag_result else "none",
             "db_backend": (
-                rag_result["db_backend"] if rag_result else self.rag_engine.db_backend
+                rag_result.get("db_backend", self.rag_engine.db_backend) if rag_result else self.rag_engine.db_backend
             ),
             "recall_channels": (
-                rag_result["recall_channels"]
-                if rag_result
+                rag_result.get("recall_channels")
+                if (rag_result and rag_result.get("recall_channels"))
                 else {
                     "sub_category_pool": 0,
                     "hard_filtered": 0,

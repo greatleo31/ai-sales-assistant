@@ -1810,3 +1810,75 @@ html, body {
   }
 }
 
+/* ==========================================================================
+   京东小精灵 / 惠购 AI 助手动态心跳动效气泡 (agent_status)
+   ========================================================================== */
+.hg-agent-status-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 102, 0, 0.08) 0%, rgba(255, 170, 40, 0.12) 100%);
+  border: 1px solid rgba(255, 102, 0, 0.2);
+  border-radius: 20px;
+  padding: 6px 14px;
+  margin-bottom: 10px;
+  animation: hgStatusFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hg-agent-status-sparkle {
+  color: var(--accent);
+  font-size: 13px;
+  display: inline-block;
+  animation: hgSparkleRotate 2s linear infinite;
+}
+
+.hg-agent-status-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.2px;
+}
+
+.hg-agent-status-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: hgPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hgSparkleRotate {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+
+@keyframes hgPulse {
+  0% { transform: scale(0.7); opacity: 0.4; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.7); opacity: 0.4; }
+}
+
+@keyframes hgStatusFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hg-gen-ui-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  animation: hgCardsFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hgCardsFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

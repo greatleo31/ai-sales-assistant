@@ -1580,6 +1580,9 @@ def main() -> None:
             "cos_image_url": existing_cos_map.get(sid),
             "inventory": 100,
             "status": "active",
+            "warehouse_city": "广州自营数码仓" if item["category"] == "3c_digital" else ("华东自营服饰仓" if item["category"] == "apparel" else "广州自营美妆保税仓"),
+            "shipping_sla_hours": 24,
+            "inventory_status": "in_stock",
         }
         enriched_skus.append(sku_obj)
 

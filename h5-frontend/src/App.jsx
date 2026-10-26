@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CustomerRichText } from './utils/streamSanitizer';
-import ProductImagePreview from './components/ProductImagePreview.jsx';
 
 /* ==========================================================================
    0. 全局唯一 ID 生成器与生产级数值精度防漂移工具函数
@@ -524,13 +523,15 @@ function ProductGenUICard({ products, priceCards }) {
 
         return (
           <div key={skuId} className="hg-prod-item">
-            <ProductImagePreview
+            <img
+              className="hg-prod-thumb"
               src={
                 item.image_path ||
                 item.image_url ||
                 getSkuImage(item.sku_id || 'SKU-3C-001')
               }
               alt={item.title || '商品图片'}
+              loading="lazy"
             />
             <div className="hg-prod-info">
               <div className="hg-prod-name">{item.title}</div>
@@ -644,13 +645,15 @@ function RelaxationGenUICard({ products, maxBudget, subCategory, onSendPrompt })
       </div>
 
       <div className="hg-prod-item">
-        <ProductImagePreview
+        <img
+          className="hg-prod-thumb"
           src={
             current.image_url ||
             current.image_path ||
             getSkuImage(current.sku_id || 'SKU-3C-015')
           }
           alt={current.title || '商品图片'}
+          loading="lazy"
         />
         <div className="hg-prod-info">
           <div className="hg-prod-name">{current.title}</div>
@@ -1388,6 +1391,14 @@ export default function App() {
         clearInterval(pacer);
         activePacerRef.current = null;
         setIsStreaming(false);
+        setTimeout(() => {
+          if (mainScrollRef.current) {
+            const el = mainScrollRef.current;
+            if (el.scrollHeight - el.scrollTop - el.clientHeight < 240) {
+              el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            }
+          }
+        }, 80);
       }
     }, 28);
     activePacerRef.current = pacer;
@@ -1458,6 +1469,17 @@ export default function App() {
                         ...m,
                         decisionMeta: parsed,
                         serverMessageId: parsed.message_id || m.serverMessageId,
+                      }
+                    : m
+                )
+              );
+            } else if (currentEvent === 'agent_status') {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === assistantMsgId
+                    ? {
+                        ...m,
+                        agentStatus: parsed,
                       }
                     : m
                 )
@@ -1800,7 +1822,7 @@ export default function App() {
         {/* 对话消息流 */}
         {messages.length > 0 && (
           <div className="hg-chat-stream">
-            {messages.map((msg) => {
+            {messages.map((msg, idx) => {
               if (msg.role === 'user') {
                 return (
                   <div key={msg.id} className="hg-msg-row user">
@@ -1837,6 +1859,8 @@ export default function App() {
               const cards = msg.uiCards || {};
               const isRelaxed = msg.decisionMeta?.constraint_status === 'relaxed';
               const maxBudget = msg.decisionMeta?.extracted_constraints?.max_price;
+              const isCurrentStreaming = isStreaming && idx === messages.length - 1;
+              const showCards = !isCurrentStreaming;
 
               return (
                 <div key={msg.id} className="hg-msg-row assistant">
@@ -1848,6 +1872,17 @@ export default function App() {
 
                   {/* 白色回答卡片（含正文 + 浅灰 Generative UI Tab + 底部点赞/不满意/重答） */}
                   <div className="hg-bubble-assistant">
+                    {/* 京东小精灵风格：正在查询/分析/生成中的动态呼吸反馈气泡 */}
+                    {isStreaming && (!msg.text || msg.text.trim().length === 0) && (
+                      <div className="hg-agent-status-bubble">
+                        <span className="hg-agent-status-sparkle">◆</span>
+                        <span className="hg-agent-status-text">
+                          {msg.agentStatus?.text || '惠购小助手正在努力查询中...'}
+                        </span>
+                        <span className="hg-agent-status-pulse" />
+                      </div>
+                    )}
+
                     <div className="hg-clean-text">
                       <CustomerRichText
                         text={msg.text || ''}
@@ -1864,38 +1899,43 @@ export default function App() {
                       />
                     )}
 
-                    {/* 缺货心愿单浅灰钩子卡 */}
-                    {cards.wishlist_card && (
-                      <WishlistGenUICard
-                        card={cards.wishlist_card}
-                        sessionId={sessionId}
-                      />
-                    )}
+                    {/* Generative UI 结构化卡片（流式门控与平滑淡入：文字输出完毕后统一呈现，杜绝卡片抢跑） */}
+                    {showCards && (
+                      <div className="hg-gen-ui-cards-container">
+                        {/* 缺货心愿单浅灰钩子卡 */}
+                        {cards.wishlist_card && (
+                          <WishlistGenUICard
+                            card={cards.wishlist_card}
+                            sessionId={sessionId}
+                          />
+                        )}
 
-                    {/* 双路径松弛或商品导购浅灰卡 */}
-                    {isRelaxed && (cards.product_cards || []).length >= 2 ? (
-                      <RelaxationGenUICard
-                        products={cards.product_cards}
-                        maxBudget={maxBudget}
-                        subCategory={msg.decisionMeta?.extracted_constraints?.sub_category}
-                        onSendPrompt={(p) => sendMessage(p)}
-                      />
-                    ) : (
-                      (cards.product_cards || []).length > 0 && (
-                        <ProductGenUICard
-                          products={cards.product_cards}
-                          priceCards={cards.price_explain_cards}
-                        />
-                      )
-                    )}
+                        {/* 双路径松弛或商品导购浅灰卡 */}
+                        {isRelaxed && (cards.product_cards || []).length >= 2 ? (
+                          <RelaxationGenUICard
+                            products={cards.product_cards}
+                            maxBudget={maxBudget}
+                            subCategory={msg.decisionMeta?.extracted_constraints?.sub_category}
+                            onSendPrompt={(p) => sendMessage(p)}
+                          />
+                        ) : (
+                          (cards.product_cards || []).length > 0 && (
+                            <ProductGenUICard
+                              products={cards.product_cards}
+                              priceCards={cards.price_explain_cards}
+                            />
+                          )
+                        )}
 
-                    {/* 订单物流与售后核验浅灰卡 */}
-                    {((cards.order_cards && cards.order_cards.length > 0) ||
-                      cards.aftersales_card) && (
-                      <OrderAftersalesGenUICard
-                        orderCards={cards.order_cards}
-                        aftersalesCard={cards.aftersales_card}
-                      />
+                        {/* 订单物流与售后核验浅灰卡 */}
+                        {((cards.order_cards && cards.order_cards.length > 0) ||
+                          cards.aftersales_card) && (
+                          <OrderAftersalesGenUICard
+                            orderCards={cards.order_cards}
+                            aftersalesCard={cards.aftersales_card}
+                          />
+                        )}
+                      </div>
                     )}
 
                     {/* 点 7：精简的卡片底部操作栏（左纯图标 👍 / 👎，右 ↻ 重答） */}

@@ -305,12 +305,14 @@ class TestModule4Pipeline(unittest.TestCase):
             self.assertIn("text/event-stream", resp.headers.get("content-type", ""))
             events = parse_sse_stream_text(resp.text)
 
-            # 合并连续的 text_delta 事件名以检查阶段顺序
+            # 合并连续的 text_delta 事件名以检查阶段顺序（兼容渐进式 agent_status 状态推送）
             dedup_names: List[str] = []
             for ename, _ in events:
                 if not dedup_names or dedup_names[-1] != ename:
                     dedup_names.append(ename)
-            self.assertEqual(dedup_names, expected_event_order, f"[{cid}] SSE 事件顺序错误: {dedup_names}")
+            self.assertIn("agent_status", [e[0] for e in events])
+            base_names = [n for n in dedup_names if n != "agent_status"]
+            self.assertEqual(base_names, expected_event_order, f"[{cid}] SSE 事件顺序错误: {dedup_names}")
 
             event_dict: Dict[str, Any] = {}
             deltas: List[str] = []
@@ -482,8 +484,10 @@ class TestModule4Pipeline(unittest.TestCase):
             for k, _ in events:
                 if not ev_names or ev_names[-1] != k:
                     ev_names.append(k)
+            self.assertIn("agent_status", [e[0] for e in events])
+            base_ev_names = [n for n in ev_names if n != "agent_status"]
             self.assertEqual(
-                ev_names,
+                base_ev_names,
                 ["decision_meta", "ui_cards", "text_delta", "followup_pills", "telemetry", "done"],
             )
             ev_map = {k: v for k, v in events if k != "text_delta"}

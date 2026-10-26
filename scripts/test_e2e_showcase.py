@@ -26,7 +26,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.main import app
 
-EXPECTED_STATIC_MD5 = "d313736e0462445e200a1b25c2310987"
+EXPECTED_STATIC_MD5 = "1f18c0485f5b61cba3c16752a192f962"
 
 
 def parse_sse_response(raw_text: str) -> List[Tuple[str, Any]]:
@@ -122,20 +122,23 @@ class TestEndToEndShowcaseAndBenchmark(unittest.TestCase):
             events = parse_sse_response(resp.text)
             event_names = [e[0] for e in events]
 
-            # Must start with decision_meta -> ui_cards -> text_delta(s) -> followup_pills -> telemetry -> done
-            self.assertEqual(event_names[0], "decision_meta")
-            self.assertEqual(event_names[1], "ui_cards")
+            # SSE 流中包含渐进式 agent_status 状态心跳与完整闭环事件
+            self.assertIn("agent_status", event_names)
+            self.assertIn("decision_meta", event_names)
+            self.assertIn("ui_cards", event_names)
             self.assertIn("text_delta", event_names)
             self.assertEqual(event_names[-3], "followup_pills")
             self.assertEqual(event_names[-2], "telemetry")
             self.assertEqual(event_names[-1], "done")
 
-            meta = events[0][1]
+            meta_ev = next(e for e in events if e[0] == "decision_meta")
+            meta = meta_ev[1]
             self.assertEqual(meta["primary_intent"], "product_recommend")
             self.assertEqual(meta["constraint_status"], "relaxed")
             self.assertEqual(meta["extracted_constraints"]["sub_category"], pair["sub_category"])
 
-            ui_cards = events[1][1]
+            ui_cards_ev = next(e for e in events if e[0] == "ui_cards")
+            ui_cards = ui_cards_ev[1]
             prod_cards = ui_cards["product_cards"]
             price_cards = ui_cards["price_explain_cards"]
             self.assertEqual(len(prod_cards), 2)

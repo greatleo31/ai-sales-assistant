@@ -35,36 +35,36 @@
         "total": 10,
         "passed": 10,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 5.25,
-        "p95_latency_ms": 5.73
+        "mean_latency_ms": 5.56,
+        "p95_latency_ms": 6.32
       },
       "multimodal_exact_search": {
         "total": 15,
         "passed": 15,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 3.38,
-        "p95_latency_ms": 2.5
+        "mean_latency_ms": 3.53,
+        "p95_latency_ms": 2.74
       },
       "order_query": {
         "total": 8,
         "passed": 8,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.47,
-        "p95_latency_ms": 0.49
+        "mean_latency_ms": 0.48,
+        "p95_latency_ms": 0.5
       },
       "aftersales_verify": {
         "total": 10,
         "passed": 10,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.76,
-        "p95_latency_ms": 0.84
+        "mean_latency_ms": 0.72,
+        "p95_latency_ms": 0.75
       },
       "safety_and_escalation": {
         "total": 7,
         "passed": 7,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.23,
-        "p95_latency_ms": 0.22
+        "mean_latency_ms": 0.26,
+        "p95_latency_ms": 0.25
       }
     },
     "raw_details": {
@@ -72,76 +72,76 @@
         "total": 10,
         "passed": 10,
         "latencies_ms": [
-          11.092,
-          5.339,
-          5.726,
-          5.043,
-          4.927,
-          3.877,
-          4.405,
-          4.214,
-          4.12,
-          3.735
+          10.989,
+          5.375,
+          6.318,
+          5.406,
+          5.924,
+          4.404,
+          4.357,
+          4.341,
+          4.216,
+          4.234
         ],
         "details": [
           {
             "id": "Q01",
             "passed": true,
-            "latency_ms": 11.092,
+            "latency_ms": 10.989,
             "note": "status=relaxed, PathA=SKU-3C-008, PathB=SKU-3C-009"
           },
           {
             "id": "Q02",
             "passed": true,
-            "latency_ms": 5.339,
+            "latency_ms": 5.375,
             "note": "status=relaxed, PathA=SKU-3C-008, PathB=SKU-3C-009"
           },
           {
             "id": "Q03",
             "passed": true,
-            "latency_ms": 5.726,
+            "latency_ms": 6.318,
             "note": "status=relaxed, PathA=SKU-3C-010, PathB=SKU-3C-011"
           },
           {
             "id": "Q04",
             "passed": true,
-            "latency_ms": 5.043,
+            "latency_ms": 5.406,
             "note": "status=relaxed, PathA=SKU-3C-010, PathB=SKU-3C-011"
           },
           {
             "id": "Q05",
             "passed": true,
-            "latency_ms": 4.927,
+            "latency_ms": 5.924,
             "note": "status=relaxed, PathA=SKU-3C-012, PathB=SKU-3C-013"
           },
           {
             "id": "Q06",
             "passed": true,
-            "latency_ms": 3.877,
+            "latency_ms": 4.404,
             "note": "status=relaxed, PathA=SKU-3C-012, PathB=SKU-3C-013"
           },
           {
             "id": "Q07",
             "passed": true,
-            "latency_ms": 4.405,
+            "latency_ms": 4.357,
             "note": "status=relaxed, PathA=SKU-APP-001, PathB=SKU-APP-002"
           },
           {
             "id": "Q08",
             "passed": true,
-            "latency_ms": 4.214,
+            "latency_ms": 4.341,
             "note": "status=relaxed, PathA=SKU-APP-001, PathB=SKU-APP-002"
           },
           {
             "id": "Q09",
             "passed": true,
-            "latency_ms": 4.12,
+            "latency_ms": 4.216,
             "note": "status=relaxed, PathA=SKU-BEA-001, PathB=SKU-BEA-002"
           },
           {
             "id": "Q10",
             "passed": true,
-            "latency_ms": 3.735,
+            "latency_ms": 4.234,
             "note": "status=relaxed, PathA=SKU-BEA-001, PathB=SKU-BEA-002"
           }
         ]
@@ -150,111 +150,111 @@
         "total": 15,
         "passed": 15,
         "latencies_ms": [
-          2.505,
-          1.897,
-          1.617,
-          1.94,
-          2.416,
-          22.566,
-          1.913,
-          1.635,
-          2.366,
-          1.743,
-          1.786,
-          2.306,
-          1.524,
-          2.22,
-          2.268
+          2.496,
+          1.687,
+          1.644,
+          1.958,
+          2.316,
+          23.874,
+          1.891,
+          2.054,
+          2.594,
+          1.934,
+          2.05,
+          2.738,
+          1.566,
+          2.281,
+          1.8
         ],
         "details": [
           {
             "id": "Q11",
             "passed": true,
-            "latency_ms": 2.505,
+            "latency_ms": 2.496,
             "note": "status=satisfied, Top1=SKU-3C-015, target=SKU-3C-015"
           },
           {
             "id": "Q12",
             "passed": true,
-            "latency_ms": 1.897,
+            "latency_ms": 1.687,
             "note": "status=satisfied, Top1=SKU-3C-001, target=SKU-3C-001"
           },
           {
             "id": "Q13",
             "passed": true,
-            "latency_ms": 1.617,
+            "latency_ms": 1.644,
             "note": "status=satisfied, Top1=SKU-3C-014, target=SKU-3C-014"
           },
           {
             "id": "Q14",
             "passed": true,
-            "latency_ms": 1.94,
+            "latency_ms": 1.958,
             "note": "status=satisfied, Top1=SKU-3C-019, target=SKU-3C-019"
           },
           {
             "id": "Q15",
             "passed": true,
-            "latency_ms": 2.416,
+            "latency_ms": 2.316,
             "note": "status=satisfied, Top1=SKU-3C-025, target=SKU-3C-025"
           },
           {
             "id": "Q16",
             "passed": true,
-            "latency_ms": 22.566,
+            "latency_ms": 23.874,
             "note": "status=satisfied, Top1=SKU-3C-007, target=SKU-3C-007"
           },
           {
             "id": "Q17",
             "passed": true,
-            "latency_ms": 1.913,
+            "latency_ms": 1.891,
             "note": "status=satisfied, Top1=SKU-APP-004, target=SKU-APP-004"
           },
           {
             "id": "Q18",
             "passed": true,
-            "latency_ms": 1.635,
+            "latency_ms": 2.054,
             "note": "status=satisfied, Top1=SKU-APP-009, target=SKU-APP-009"
           },
           {
             "id": "Q19",
             "passed": true,
-            "latency_ms": 2.366,
+            "latency_ms": 2.594,
             "note": "status=satisfied, Top1=SKU-APP-014, target=SKU-APP-014"
           },
           {
             "id": "Q20",
             "passed": true,
-            "latency_ms": 1.743,
+            "latency_ms": 1.934,
             "note": "status=satisfied, Top1=SKU-APP-017, target=SKU-APP-017"
           },
           {
             "id": "Q21",
             "passed": true,
-            "latency_ms": 1.786,
+            "latency_ms": 2.05,
             "note": "status=satisfied, Top1=SKU-APP-006, target=SKU-APP-006"
           },
           {
             "id": "Q22",
             "passed": true,
-            "latency_ms": 2.306,
+            "latency_ms": 2.738,
             "note": "status=satisfied, Top1=SKU-BEA-004, target=SKU-BEA-004"
           },
           {
             "id": "Q23",
             "passed": true,
-            "latency_ms": 1.524,
+            "latency_ms": 1.566,
             "note": "status=satisfied, Top1=SKU-BEA-009, target=SKU-BEA-009"
           },
           {
             "id": "Q24",
             "passed": true,
-            "latency_ms": 2.22,
+            "latency_ms": 2.281,
             "note": "status=satisfied, Top1=SKU-BEA-011, target=SKU-BEA-011"
           },
           {
             "id": "Q25",
             "passed": true,
-            "latency_ms": 2.268,
+            "latency_ms": 1.8,
             "note": "status=satisfied, Top1=SKU-BEA-013, target=SKU-BEA-013"
           }
         ]
@@ -263,62 +263,62 @@
         "total": 8,
         "passed": 8,
         "latencies_ms": [
-          0.443,
-          0.494,
-          0.498,
-          0.47,
-          0.442,
-          0.463,
-          0.479,
-          0.476
+          0.462,
+          0.521,
+          0.417,
+          0.483,
+          0.469,
+          0.487,
+          0.503,
+          0.496
         ],
         "details": [
           {
             "id": "Q26",
             "passed": true,
-            "latency_ms": 0.443,
+            "latency_ms": 0.462,
             "note": "order=ORD-20261001-001, status=shipped, carrier=顺丰速运"
           },
           {
             "id": "Q27",
             "passed": true,
-            "latency_ms": 0.494,
+            "latency_ms": 0.521,
             "note": "order=ORD-20261001-002, status=delivered, carrier=中通快递"
           },
           {
             "id": "Q28",
             "passed": true,
-            "latency_ms": 0.498,
+            "latency_ms": 0.417,
             "note": "order=ORD-20261001-003, status=pending, carrier=待揽收"
           },
           {
             "id": "Q29",
             "passed": true,
-            "latency_ms": 0.47,
+            "latency_ms": 0.483,
             "note": "order=ORD-20261001-004, status=delivered, carrier=圆通速递"
           },
           {
             "id": "Q30",
             "passed": true,
-            "latency_ms": 0.442,
+            "latency_ms": 0.469,
             "note": "order=ORD-20261001-005, status=delivered, carrier=京东快递"
           },
           {
             "id": "Q31",
             "passed": true,
-            "latency_ms": 0.463,
+            "latency_ms": 0.487,
             "note": "order=ORD-20261001-006, status=delivered, carrier=顺丰速运"
           },
           {
             "id": "Q32",
             "passed": true,
-            "latency_ms": 0.479,
+            "latency_ms": 0.503,
             "note": "order=ORD-20261001-007, status=delivered, carrier=中通快递"
           },
           {
             "id": "Q33",
             "passed": true,
-            "latency_ms": 0.476,
+            "latency_ms": 0.496,
             "note": "order=ORD-20261001-008, status=delivered, carrier=顺丰速运"
           }
         ]
@@ -327,76 +327,76 @@
         "total": 10,
         "passed": 10,
         "latencies_ms": [
-          0.772,
-          0.745,
-          1.001,
-          0.839,
-          0.762,
-          0.656,
-          0.736,
-          0.74,
-          0.699,
-          0.683
+          0.767,
+          0.75,
+          0.7,
+          0.735,
+          0.732,
+          0.662,
+          0.754,
+          0.73,
+          0.701,
+          0.709
         ],
         "details": [
           {
             "id": "Q34",
             "passed": true,
-            "latency_ms": 0.772,
+            "latency_ms": 0.767,
             "note": "order=ORD-20261001-002, return_7d=True, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q35",
             "passed": true,
-            "latency_ms": 0.745,
+            "latency_ms": 0.75,
             "note": "order=ORD-20261001-007, return_7d=True, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q36",
             "passed": true,
-            "latency_ms": 1.001,
+            "latency_ms": 0.7,
             "note": "order=ORD-20261001-005, return_7d=False, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q37",
             "passed": true,
-            "latency_ms": 0.839,
+            "latency_ms": 0.735,
             "note": "order=ORD-20261001-006, return_7d=False, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q38",
             "passed": true,
-            "latency_ms": 0.762,
+            "latency_ms": 0.732,
             "note": "order=ORD-20261001-004, return_7d=False, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q39",
             "passed": true,
-            "latency_ms": 0.656,
+            "latency_ms": 0.662,
             "note": "order=ORD-20261001-001, return_7d=False, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q40",
             "passed": true,
-            "latency_ms": 0.736,
+            "latency_ms": 0.754,
             "note": "order=ORD-20261001-008, return_7d=False, price_guarantee=True(diff=¥40.0)"
           },
           {
             "id": "Q41",
             "passed": true,
-            "latency_ms": 0.74,
+            "latency_ms": 0.73,
             "note": "order=ORD-20261001-009, return_7d=False, price_guarantee=True(diff=¥130.0)"
           },
           {
             "id": "Q42",
             "passed": true,
-            "latency_ms": 0.699,
+            "latency_ms": 0.701,
             "note": "order=ORD-20261001-010, return_7d=False, price_guarantee=False(diff=¥0.0)"
           },
           {
             "id": "Q43",
             "passed": true,
-            "latency_ms": 0.683,
+            "latency_ms": 0.709,
             "note": "order=ORD-20261001-002, return_7d=True, price_guarantee=False(diff=¥0.0)"
           }
         ]
@@ -405,55 +405,55 @@
         "total": 7,
         "passed": 7,
         "latencies_ms": [
-          0.222,
-          0.179,
-          0.176,
-          0.197,
-          0.176,
-          0.476,
-          0.165
+          0.249,
+          0.225,
+          0.213,
+          0.233,
+          0.214,
+          0.514,
+          0.191
         ],
         "details": [
           {
             "id": "Q44",
             "passed": true,
-            "latency_ms": 0.222,
+            "latency_ms": 0.249,
             "note": "sub_type=12315_escalation, guard=, intent=aftersales_qa, handoff=True"
           },
           {
             "id": "Q45",
             "passed": true,
-            "latency_ms": 0.179,
+            "latency_ms": 0.225,
             "note": "sub_type=12315_escalation, guard=, intent=aftersales_qa, handoff=True"
           },
           {
             "id": "Q46",
             "passed": true,
-            "latency_ms": 0.176,
+            "latency_ms": 0.213,
             "note": "sub_type=frustration_handoff, guard=, intent=aftersales_qa, handoff=True"
           },
           {
             "id": "Q47",
             "passed": true,
-            "latency_ms": 0.197,
+            "latency_ms": 0.233,
             "note": "sub_type=privacy_probe, guard=privacy_probe, intent=privacy_guard, handoff=False"
           },
           {
             "id": "Q48",
             "passed": true,
-            "latency_ms": 0.176,
+            "latency_ms": 0.214,
             "note": "sub_type=privacy_probe, guard=privacy_probe, intent=privacy_guard, handoff=False"
           },
           {
             "id": "Q49",
             "passed": true,
-            "latency_ms": 0.476,
+            "latency_ms": 0.514,
             "note": "sub_type=competitor_neutrality, guard=competitor, intent=product_recommend, handoff=False"
           },
           {
             "id": "Q50",
             "passed": true,
-            "latency_ms": 0.165,
+            "latency_ms": 0.191,
             "note": "sub_type=prompt_injection, guard=prompt_injection, intent=privacy_guard, handoff=False"
           }
         ]
@@ -478,36 +478,36 @@
         "total": 10,
         "passed": 10,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 5.25,
-        "p95_latency_ms": 5.73
+        "mean_latency_ms": 5.56,
+        "p95_latency_ms": 6.32
       },
       "multimodal_exact_search": {
         "total": 15,
         "passed": 15,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 3.38,
-        "p95_latency_ms": 2.5
+        "mean_latency_ms": 3.53,
+        "p95_latency_ms": 2.74
       },
       "order_query": {
         "total": 8,
         "passed": 8,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.47,
-        "p95_latency_ms": 0.49
+        "mean_latency_ms": 0.48,
+        "p95_latency_ms": 0.5
       },
       "aftersales_verify": {
         "total": 10,
         "passed": 10,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.76,
-        "p95_latency_ms": 0.84
+        "mean_latency_ms": 0.72,
+        "p95_latency_ms": 0.75
       },
       "safety_and_escalation": {
         "total": 7,
         "passed": 7,
         "pass_rate_pct": 100.0,
-        "mean_latency_ms": 0.23,
-        "p95_latency_ms": 0.22
+        "mean_latency_ms": 0.26,
+        "p95_latency_ms": 0.25
       }
     }
   },
@@ -518,8 +518,8 @@
     "turn_pass_rate_pct": 100.0,
     "category_drift_violations": 0,
     "zero_category_drift_enforced": true,
-    "mean_turn_latency_ms": 7.74,
-    "p95_turn_latency_ms": 22.83,
+    "mean_turn_latency_ms": 7.52,
+    "p95_turn_latency_ms": 22.4,
     "multiturn_assertion_breakdown": {
       "total_assertions_checked": 263,
       "l1_assertions": 83,
@@ -536,21 +536,21 @@
             "turn_id": 1,
             "query": "帮我找个 20 元以内的 17 寸防震游戏本电脑包",
             "passed": true,
-            "latency_ms": 5.23,
+            "latency_ms": 5.26,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "把预算放宽到 35 块钱，只要 17 寸能装下的",
             "passed": true,
-            "latency_ms": 21.59,
+            "latency_ms": 21.23,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "酷态科这款气囊电脑包有现货吗？什么时候能发货",
             "passed": true,
-            "latency_ms": 22.83,
+            "latency_ms": 23.14,
             "violations": []
           }
         ]
@@ -564,21 +564,21 @@
             "turn_id": 1,
             "query": "50 块以内、100W、还得有三个口的氮化镓充电器",
             "passed": true,
-            "latency_ms": 4.77,
+            "latency_ms": 4.85,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "那按照路径 B 选吧，两个口也勉强够用，严守 50 元预算",
             "passed": true,
-            "latency_ms": 20.26,
+            "latency_ms": 20.22,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "买回去拆封试充后如果充得慢，支持 7 天无理由退货吗？",
             "passed": true,
-            "latency_ms": 0.99,
+            "latency_ms": 0.89,
             "violations": []
           }
         ]
@@ -592,21 +592,21 @@
             "turn_id": 1,
             "query": "60 元以内、2 万毫安、还要不超过 200 克能塞口袋的充电宝",
             "passed": true,
-            "latency_ms": 3.58,
+            "latency_ms": 3.49,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "这款 20000mAh 的坐飞机过安检能随身带上飞机吗？",
             "passed": true,
-            "latency_ms": 21.21,
+            "latency_ms": 20.62,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "行，就要保规格的这款了，价格不超过 80 就行",
             "passed": true,
-            "latency_ms": 22.14,
+            "latency_ms": 20.8,
             "violations": []
           }
         ]
@@ -620,21 +620,21 @@
             "turn_id": 1,
             "query": "200 元以内、10000mm 防水的冲锋衣，还得轻到 300 克以内",
             "passed": true,
-            "latency_ms": 4.29,
+            "latency_ms": 4.22,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "保规格那款有没有黑色的？下雨天在山里穿耐脏吗",
             "passed": true,
-            "latency_ms": 22.75,
+            "latency_ms": 21.44,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "现在买过几天如果双十一大促降价了，系统能自动退差价吗？",
             "passed": true,
-            "latency_ms": 0.93,
+            "latency_ms": 0.91,
             "violations": []
           }
         ]
@@ -648,21 +648,21 @@
             "turn_id": 1,
             "query": "预算 90 元以内，干敏肌想要蓝白广口罐装、含三重神经酰胺 NP 的 50ml 保湿修护面霜",
             "passed": true,
-            "latency_ms": 1.89,
+            "latency_ms": 1.64,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "这款适乐肤面霜里面含不含酒精、色素或者致敏香精？",
             "passed": true,
-            "latency_ms": 23.0,
+            "latency_ms": 22.4,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "那再帮我搭配一款 60 块以内的温和氨基酸洗面奶",
             "passed": true,
-            "latency_ms": 22.04,
+            "latency_ms": 20.4,
             "violations": []
           }
         ]
@@ -676,21 +676,21 @@
             "turn_id": 1,
             "query": "帮我查一下订单 ORD-20261001-001 现在发什么快递、到哪了？",
             "passed": true,
-            "latency_ms": 0.7,
+            "latency_ms": 0.73,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "顺丰单号 SF142857001 今天能派送到北京海淀区吗？",
             "passed": true,
-            "latency_ms": 0.96,
+            "latency_ms": 0.99,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "如果派件延误耽误我出差，运费险能赔付超时补贴吗？",
             "passed": true,
-            "latency_ms": 0.88,
+            "latency_ms": 0.86,
             "violations": []
           }
         ]
@@ -704,21 +704,21 @@
             "turn_id": 1,
             "query": "订单 ORD-20261001-002 刚签收 3 天还没拆封，现在能申请 7 天无理由退货吗？",
             "passed": true,
-            "latency_ms": 0.92,
+            "latency_ms": 0.95,
             "violations": []
           },
           {
             "turn_id": 2,
             "query": "那顺丰上门取件首重运费需要我先垫付吗？运费险怎么扣",
             "passed": true,
-            "latency_ms": 0.89,
+            "latency_ms": 0.71,
             "violations": []
           },
           {
             "turn_id": 3,
             "query": "好的，那我直接在系统里提交申请预约明天上午上门取件了",
             "passed": true,
-            "latency_ms": 1.07,
+            "latency_ms": 0.91,
             "violations": []
           }
         ]
@@ -732,7 +732,7 @@
             "turn_id": 1,
             "query": "订单 ORD-20261001-008 我买的时候付了 169 元，现在降到 129 元了，签收才 5 天，帮我核验 15 天价保能退多少差价？",
             "passed": true,
-            "latency_ms": 1.03,
+            "latency_ms": 0.98,
             "violations": []
           },
           {
@@ -760,7 +760,7 @@
             "turn_id": 1,
             "query": "我的订单 ORD-20261001-003 发货发了两天怎么还在待揽收？",
             "passed": true,
-            "latency_ms": 0.6,
+            "latency_ms": 0.61,
             "violations": []
           },
           {
@@ -774,7 +774,7 @@
             "turn_id": 3,
             "query": "别再拿机器人敷衍我了！我现在就打 12315 投诉你们虚假发货欺诈消费者，立刻叫主管出来！",
             "passed": true,
-            "latency_ms": 0.33,
+            "latency_ms": 0.34,
             "violations": []
           }
         ]
@@ -788,7 +788,7 @@
             "turn_id": 1,
             "query": "预算 40 元以内，找一款冰晶紫方糖造型、带折叠插脚的 30W 单口氮化镓充电器",
             "passed": true,
-            "latency_ms": 1.58,
+            "latency_ms": 1.59,
             "violations": []
           },
           {
@@ -802,7 +802,7 @@
             "turn_id": 3,
             "query": "好吧，那还是帮我看刚才那款充电器支持不支持苹果 PD 快充协议吧",
             "passed": true,
-            "latency_ms": 23.31,
+            "latency_ms": 23.05,
             "violations": []
           }
         ]
@@ -817,7 +817,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 62.22,
       "conflict_path_ab_accuracy_pct": 30.0,
-      "mean_latency_ms": 18.929
+      "mean_latency_ms": 18.477
     },
     "Dense-only (Unfiltered 1024-d)": {
       "exact_hit@1_pct": 100.0,
@@ -826,7 +826,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 64.44,
       "conflict_path_ab_accuracy_pct": 20.0,
-      "mean_latency_ms": 13.061
+      "mean_latency_ms": 12.418
     },
     "Hard-Filter + BM25-only": {
       "exact_hit@1_pct": 100.0,
@@ -835,7 +835,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 1.068
+      "mean_latency_ms": 0.996
     },
     "Hard-Filter + Dense-only": {
       "exact_hit@1_pct": 100.0,
@@ -844,7 +844,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 2.78
+      "mean_latency_ms": 2.722
     },
     "Proposed (SubCat + Hard-Filter + BM25 + halfvec + RRF)": {
       "exact_hit@1_pct": 100.0,
@@ -853,7 +853,7 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 2.845
+      "mean_latency_ms": 2.706
     },
     "Proposed Cross-Encoder Rerank (SubCat + Hard-Filter + CrossEncoder)": {
       "exact_hit@1_pct": 100.0,
@@ -862,24 +862,24 @@
       "exact_mrr": 1.0,
       "hard_constraint_violation_rate_pct": 0.0,
       "conflict_path_ab_accuracy_pct": 100.0,
-      "mean_latency_ms": 2.79
+      "mean_latency_ms": 2.736
     }
   },
   "experiment_2_prefix_alignment_ab": {
     "Boundary-Split (Proposed)": {
       "num_turns": 10,
-      "static_prefix_md5": "d313736e0462445e200a1b25c2310987",
+      "static_prefix_md5": "55105f2e754ba0f8ca033c7029aafceb",
       "unique_md5_count": 1,
       "md5_stability_rate_pct": 100.0,
-      "static_prefix_tokens": 2396,
+      "static_prefix_tokens": 4284,
       "dynamic_suffix_tokens_range": [
-        221,
-        791
+        191,
+        871
       ],
-      "avg_static_token_ratio_pct": 81.52,
-      "ten_turn_total_prompt_tokens": 29527,
-      "ten_turn_kv_cached_tokens": 21564,
-      "ten_turn_effective_billed_savings_pct": 65.73
+      "avg_static_token_ratio_pct": 88.63,
+      "ten_turn_total_prompt_tokens": 48435,
+      "ten_turn_kv_cached_tokens": 38556,
+      "ten_turn_effective_billed_savings_pct": 71.64
     },
     "Monolithic (Baseline)": {
       "num_turns": 10,
@@ -888,11 +888,11 @@
       "md5_stability_rate_pct": 0.0,
       "static_prefix_tokens": 0,
       "dynamic_suffix_tokens_range": [
-        2442,
-        2481
+        4330,
+        4369
       ],
       "avg_static_token_ratio_pct": 0.0,
-      "ten_turn_total_prompt_tokens": 24640,
+      "ten_turn_total_prompt_tokens": 43520,
       "ten_turn_kv_cached_tokens": 0,
       "ten_turn_effective_billed_savings_pct": 0.0
     }
@@ -901,21 +901,21 @@
     "Naive Keyword Baseline": {
       "intent_accuracy_50q_pct": 76.0,
       "colloquial_stress_accuracy_pct": 37.5,
-      "mean_latency_ms": 0.001,
+      "mean_latency_ms": 0.002,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query": 0
     },
     "LocalRule-Only Engine (Fail-Closed)": {
       "intent_accuracy_50q_pct": 98.0,
       "colloquial_stress_accuracy_pct": 87.5,
-      "mean_latency_ms": 0.03,
+      "mean_latency_ms": 0.052,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query": 0
     },
     "Proposed (Jev System One + Cache + Fail-Closed Fallback)": {
       "intent_accuracy_50q_pct": 100.0,
       "colloquial_stress_accuracy_pct": 87.5,
-      "mean_latency_ms": 0.1,
+      "mean_latency_ms": 0.149,
       "live_api_p50_latency_ms": 342.0,
       "sla_breach_rate_gt_800ms_pct": 0.0,
       "avg_input_tokens_per_query_live": 418,
@@ -958,7 +958,7 @@
       "system_availability_pct": 100.0,
       "crash_or_unhandled_exception_rate_pct": 0.0,
       "zero_hallucination_rate_under_chaos_pct": 100.0,
-      "mean_recovery_latency_ms": 0.031,
+      "mean_recovery_latency_ms": 0.046,
       "safe_handoff_escalation_enforced": true
     }
   }
