@@ -56,7 +56,14 @@ class TrapezoidalMF(MembershipFunction):
     d: float  # 右底脚 (μ=0)
 
     def evaluate(self, x: float) -> float:
-        if x <= self.a or x >= self.d:
+        # 左侧平台（如 [0, 0, 2, 6]）
+        if self.a == self.b and x <= self.b:
+            return 1.0
+        # 右侧平台（如 [36, 72, 120, 120]）
+        if self.c == self.d and x >= self.c:
+            return 1.0
+
+        if x < self.a or x > self.d:
             return 0.0
         if self.b <= x <= self.c:
             return 1.0
