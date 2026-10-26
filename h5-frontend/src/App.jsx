@@ -760,23 +760,48 @@ function WishlistGenUICard({ card, sessionId }) {
  */
 function OrderAftersalesGenUICard({ orderCards, aftersalesCard }) {
   const [actionDone, setActionDone] = useState('');
+  const [showProofTree, setShowProofTree] = useState(false);
   const order = orderCards && orderCards[0];
   if (!order && !aftersalesCard) return null;
 
-  const refundAmount = Number(aftersalesCard?.refund_amount ?? 0);
-  const eligible = aftersalesCard ? Boolean(aftersalesCard.eligible) : true;
+  const refundAmount = Number(aftersalesCard?.refund_amount ?? aftersalesCard?.price_diff_amount ?? 0);
+  const arbitration = aftersalesCard?.arbitration;
+  const isSpecialApproved = arbitration?.decision_code === 'SPECIAL_APPROVED';
+  const eligible = aftersalesCard ? Boolean(aftersalesCard.return_7d_eligible || isSpecialApproved || aftersalesCard.eligible) : true;
+  const compAmount = arbitration ? Number(arbitration.compensation_amount || 0) : 0;
+  const resp = arbitration?.responsibility_distribution;
+  const proofTree = arbitration?.proof_tree;
 
   return (
-    <div className="hg-inbubble-section">
+    <div className="hg-inbubble-section" style={{ border: isSpecialApproved ? '1.5px solid #27ae60' : undefined }}>
+      {/* 头部仲裁徽章 */}
+      {arbitration && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px dashed #e2e8f0' }}>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 700,
+            padding: '2px 8px',
+            borderRadius: '12px',
+            background: isSpecialApproved ? '#e8f8f0' : arbitration.is_eligible ? '#eef2ff' : '#fff1f0',
+            color: isSpecialApproved ? '#27ae60' : arbitration.is_eligible ? '#4338ca' : '#cf1322'
+          }}>
+            {isSpecialApproved ? '⚡ 双轨智能仲裁：特批换新' : arbitration.decision_code === 'ELIGIBLE_7D_STANDARD' ? '✓ 7天无理由完全合规' : arbitration.is_eligible ? '✓ 审核通过' : '⚖️ 争议柔性协商结案'}
+          </span>
+          <span style={{ fontSize: '11px', color: '#64748b' }}>
+            {arbitration.reasoning_mode === 'HYBRID_NEURO_SYMBOLIC' ? '双轨混合推理' : '确定性规则'}
+          </span>
+        </div>
+      )}
+
       {order && (
         <>
           <div className="hg-order-kv">
             <span className="hg-order-kv-label">订单编号</span>
-            <span className="hg-order-kv-val">{order.order_id}</span>
+            <span className="hg-order-kv-val">{order.order_id || aftersalesCard?.order_id}</span>
           </div>
           <div className="hg-order-kv">
             <span className="hg-order-kv-label">商品名称</span>
-            <span className="hg-order-kv-val">{order.sku_title || order.title}</span>
+            <span className="hg-order-kv-val">{order.sku_title || order.title || aftersalesCard?.sku_title}</span>
           </div>
           {order.carrier && (
             <div className="hg-order-kv">
@@ -789,6 +814,31 @@ function OrderAftersalesGenUICard({ orderCards, aftersalesCard }) {
         </>
       )}
 
+      {/* D-S 责任划分天平条 */}
+      {resp && (
+        <div style={{ margin: '8px 0', padding: '6px 8px', background: '#f8fafc', borderRadius: '6px', fontSize: '11px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: '#475569', fontWeight: 600 }}>
+            <span>D-S 多源责任判责</span>
+            <span>商 {((resp.seller_fault || 0) * 100).toFixed(0)}% · 运 {((resp.logistics_fault || 0) * 100).toFixed(0)}% · 买 {((resp.buyer_fault || 0) * 100).toFixed(0)}%</span>
+          </div>
+          <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: `${(resp.seller_fault || 0) * 100}%`, background: '#27ae60' }} title="商家责任" />
+            <div style={{ width: `${(resp.logistics_fault || 0) * 100}%`, background: '#3b82f6' }} title="物流责任" />
+            <div style={{ width: `${(resp.buyer_fault || 0) * 100}%`, background: '#f97316' }} title="买家责任" />
+          </div>
+        </div>
+      )}
+
+      {/* 模糊关怀心意券 */}
+      {compAmount > 0 && (
+        <div className="hg-order-kv" style={{ background: '#fffbeb', padding: '4px 6px', borderRadius: '4px', margin: '4px 0' }}>
+          <span className="hg-order-kv-label" style={{ color: '#b45309', fontWeight: 600 }}>特批关怀礼券</span>
+          <span className="hg-order-kv-val" style={{ color: '#b45309', fontWeight: 700 }}>
+            ¥{compAmount.toFixed(1)} 元
+          </span>
+        </div>
+      )}
+
       {aftersalesCard && refundAmount > 0 && (
         <div className="hg-order-kv">
           <span className="hg-order-kv-label">核定可退差额</span>
@@ -798,32 +848,88 @@ function OrderAftersalesGenUICard({ orderCards, aftersalesCard }) {
         </div>
       )}
 
-      {eligible && (
-        <div>
-          {actionDone ? (
-            <div className="hg-done-banner">{actionDone}</div>
-          ) : refundAmount > 0 ? (
-            <button
-              type="button"
-              className="hg-primary-btn"
-              onClick={() =>
-                setActionDone(`已受理 ¥${refundAmount.toFixed(2)} 价保退差，预计 2 小时内退回原账户`)
-              }
-            >
-              一键申领 ¥{refundAmount.toFixed(2)} 差价
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="hg-gray-full-btn"
-              style={{ background: '#FFFFFF' }}
-              onClick={() => setActionDone('已为您生成极速退换服务单，快递员将预约上门取件')}
-            >
-              申请退换货服务
-            </button>
+      {/* 可折叠白盒证明树 */}
+      {proofTree && proofTree.steps && proofTree.steps.length > 0 && (
+        <div style={{ marginTop: '8px' }}>
+          <button
+            type="button"
+            onClick={() => setShowProofTree(!showProofTree)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#3b82f6',
+              fontSize: '11px',
+              padding: '2px 0',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>{showProofTree ? '▾ 收起白盒证明链' : '▸ 查看白盒推理证明链 (Proof Tree)'}</span>
+          </button>
+          {showProofTree && (
+            <div style={{ marginTop: '6px', padding: '6px 8px', background: '#f1f5f9', borderRadius: '6px', fontSize: '10.5px', color: '#334155', maxHeight: '180px', overflowY: 'auto' }}>
+              <div style={{ fontWeight: 700, marginBottom: '4px', color: '#1e293b' }}>产生式规则推导序列：</div>
+              {proofTree.steps.map((st, i) => (
+                <div key={i} style={{ marginBottom: '6px', borderLeft: '2px solid #3b82f6', paddingLeft: '6px' }}>
+                  <div style={{ fontWeight: 600 }}>[{st.step}] 命中 {st.rule_id} ({st.rule_name})</div>
+                  <div style={{ color: '#64748b', fontSize: '10px' }}>依据: {st.conditions?.join(' ∧ ')}</div>
+                  <div style={{ color: '#0f766e', fontSize: '10px' }}>派生: {st.fact} = {String(st.value)}</div>
+                </div>
+              ))}
+              {proofTree.metrics && (
+                <div style={{ fontSize: '10px', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '4px' }}>
+                  耗时: {proofTree.metrics.execution_time_us?.toFixed(1)}μs · 剪枝跳过: {proofTree.metrics.pruned_rules}条
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
+
+      <div style={{ marginTop: '8px' }}>
+        {actionDone ? (
+          <div className="hg-done-banner">{actionDone}</div>
+        ) : refundAmount > 0 ? (
+          <button
+            type="button"
+            className="hg-primary-btn"
+            onClick={() =>
+              setActionDone(`已受理 ¥${refundAmount.toFixed(2)} 价保退差，预计 2 小时内退回原账户`)
+            }
+          >
+            一键申领 ¥{refundAmount.toFixed(2)} 差价
+          </button>
+        ) : isSpecialApproved ? (
+          <button
+            type="button"
+            className="hg-primary-btn"
+            style={{ background: '#27ae60' }}
+            onClick={() => setActionDone('已通过双轨仲裁特批换新！已为您预约顺丰专员上门送新取旧')}
+          >
+            一键确认特批换新 (立享关怀券)
+          </button>
+        ) : eligible ? (
+          <button
+            type="button"
+            className="hg-gray-full-btn"
+            style={{ background: '#FFFFFF' }}
+            onClick={() => setActionDone('已为您生成极速退换服务单，快递员将预约上门取件')}
+          >
+            申请退换货服务
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="hg-gray-full-btn"
+            style={{ background: '#FFFFFF' }}
+            onClick={() => setActionDone('已为您领取关怀心意礼券，并转接专属客服为您协助处理')}
+          >
+            领取关怀券并转人工协调
+          </button>
+        )}
+      </div>
     </div>
   );
 }

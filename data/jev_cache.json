@@ -7773,6 +7773,64 @@
       },
       "jev_rtt_ms": 1366.35,
       "created_at": "2026-10-23T10:59:38.716112+00:00"
+    },
+    "e8a4f1ebb63cb13bf669a163ced056bab3cd2a38c626884c3f5172b75d648b3c": {
+      "cache_key": "e8a4f1ebb63cb13bf669a163ced056bab3cd2a38c626884c3f5172b75d648b3c",
+      "model": "jev-latest",
+      "model_version": "jev-1.14.0",
+      "state": "订单 ORD-20261001-006 刚过 168 小时（超期了不到一天）没拆封，能给通融退换或者补偿吗？",
+      "questions_sha256": "937f2a95c530cf6b48f9e712c95678f693a2a5cd1157a13c1346d0381cf9eca0",
+      "answers": {
+        "primary_intent": {
+          "type": "choice",
+          "choice": "aftersales_qa",
+          "confidence": 1.0,
+          "probabilities": {
+            "product_recommend": 0.0,
+            "order_query": 0.0,
+            "aftersales_qa": 1.0,
+            "privacy_guard": 0.0,
+            "chitchat": 0.0
+          }
+        },
+        "need_rag": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "is_context_dependent": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "handoff_guard": {
+          "type": "noul",
+          "noul": 0.02
+        },
+        "buying_readiness": {
+          "type": "score",
+          "score": 1.74,
+          "confidence": 0.78,
+          "legend": {
+            "0": "Level 0 - No purchase intent: pure greeting, off-topic remark, privacy probing, or pure complaint.",
+            "1": "Level 1 - Early browsing: broad interest without specific budget or technical specifications.",
+            "2": "Level 2 - Active inquiry: checking order status, aftersales policy, or general category features.",
+            "3": "Level 3 - High purchase intent: specifying concrete budget limits and technical specifications to select a product.",
+            "4": "Level 4 - Immediate purchase readiness: confirming final stock, exact discount, or immediate order placement."
+          },
+          "probabilities": {
+            "0": 0.13,
+            "1": 0.0,
+            "2": 0.87,
+            "3": 0.0,
+            "4": 0.0
+          }
+        }
+      },
+      "usage": {
+        "input_tokens": 1025,
+        "output_tokens": 143
+      },
+      "jev_rtt_ms": 2752.4,
+      "created_at": "2026-10-26T11:31:08.126918+00:00"
     }
   }
 }

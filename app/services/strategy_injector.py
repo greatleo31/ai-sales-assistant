@@ -82,7 +82,7 @@ STATIC_SYSTEM_CONSTITUTION = """# 惠购 (Huigou) 原生 AI 购物助手 · 核�
 7. **订单物流与售后核验铁律（确定性秒级时间差准则）**：
    - 7天无理由退货（`RULE-AFTER-001`）：自物流签收时间（`signed_at`）起算满 **168 小时（7×24小时）** 精确滚动窗口（含整点边界），且商品必须**完好未拆封（`is_opened == false`）**；未签收、已拆封或超 168 小时均不支持无理由退货。
    - 15天价格保护（`RULE-PRICE-001`）：自签收时间（`signed_at`，未签收则按支付时间 `paid_at`）起算满 **360 小时（15×24小时）** 精确滚动窗口（含整点边界），不限是否拆封；若实付价高于当前到手价，退差金额严格等于 `pay_amount - current_sku_price`。
-   - 必须 100% 采纳 `aftersales_card` 给出的判定结论、经过小时数与退差金额，严禁自行估算。
+   - 必须 100% 采纳 `aftersales_card` 给出的判定结论、经过小时数与退差金额，严禁自行估算。若附带 `arbitration`（神经-符号双轨智能仲裁决议），必须以仲裁结论为最终执行标准：若裁决为 `SPECIAL_APPROVED`（微超期特批通过），必须温和告知用户已启动双轨智能仲裁并给予微超期特批退换或柔性关怀；若为 `DISPUTE_MEDIATED_CARE`，明确说明已下发柔性关怀券化解争议。
 8. **高危维权情绪与人工转接准则（当 `handoff_guard == true` 时强制执行）**：
    - 若用户表达强烈不满、提及 12315 投诉/欺诈维权或连续重复提问受挫，必须第一时间诚挚致歉并共情安抚，明确告知已开启**【惠购高级售后专员绿色通道】**，并同步给出当前订单的确定性核验事实。
 9. **面向客户的隐私边界与安全护栏铁律**：
@@ -206,6 +206,23 @@ class StrategyInjector:
             dynamic_lines.append(
                 f"- 距离签收已过小时数: `{ac['elapsed_signed_hours']}` 小时 (7天无理由上限 `{ac['return_window_hours']}`h / 15天价保上限 `{ac['price_guarantee_window_hours']}`h)"
             )
+
+            arb = ac.get("arbitration")
+            if arb:
+                dynamic_lines.append(
+                    f"- 【神经-符号双轨智能仲裁决议 (`HYBRID_NEURO_SYMBOLIC` 白盒结论)】: "
+                    f"裁决代码 `{arb['decision_code']}` | 是否特批准予 `{arb['is_eligible']}` | "
+                    f"柔性关怀券金额 `¥{arb.get('compensation_amount', 0.0)}` | "
+                    f"仲裁理由: {arb.get('human_summary')}"
+                )
+                if arb.get("decision_code") == "SPECIAL_APPROVED":
+                    dynamic_lines.append(
+                        "- 【仲裁裁决指令】：系统确定性硬门禁虽然因微超期拦截，但第二阶段不确定性双轨仲裁（高信誉+未拆封微超期+模糊柔性补偿）已特批通过！请在回复中明确说明：系统已为您启动双轨智能仲裁并给予微超期特批处理与关怀，温暖且专业地向用户告知特批结论！"
+                    )
+                elif arb.get("decision_code") == "DISPUTE_MEDIATED_CARE":
+                    dynamic_lines.append(
+                        f"- 【仲裁裁决指令】：系统已启动不确定性 D-S 证据与模糊柔性仲裁，向用户下发 ¥{arb.get('compensation_amount')} 柔性关怀券化解争议，请向用户说明！"
+                    )
 
             is_price_inquiry = any(k in user_query for k in ("保价", "价保", "降价", "差价", "退差", "买贵"))
             is_return_inquiry = any(k in user_query for k in ("退货", "退款", "退换", "不要了", "退掉", "七天", "7天", "无理由"))

@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from app.config import settings
+from app.reasoning.hybrid_arbitrator import get_hybrid_arbitrator
 from scripts.validate_catalog import (
     evaluate_order_eligibility,
     parse_aware_iso_datetime,
@@ -270,6 +271,27 @@ class DeterministicOrderTools:
             "has_freight_insurance": bool(order.get("has_freight_insurance", True)),
             "rule_version": order.get("rule_version", "v2026.10"),
         }
+
+        # 挂载双轨神经-符号混合推理仲裁决议
+        try:
+            arbitrator = get_hybrid_arbitrator()
+            effective_elapsed = elapsed_signed_hours if elapsed_signed_hours is not None else (elapsed_paid_hours or 0.0)
+            arbitration_ctx = {
+                "order_id": order["order_id"],
+                "order_status": order["order_status"],
+                "elapsed_hours": effective_elapsed,
+                "is_opened": bool(order.get("is_opened", False)),
+                "buyer_credit_score": float(order.get("buyer_credit_score", 85.0)),
+                "sensor_shock_g": float(order.get("sensor_shock_g", 1.5)),
+                "defect_confidence": float(order.get("defect_confidence", 0.0)),
+                "defect_kind": str(order.get("defect_kind", "general_wear")),
+                "issue_type": str(order.get("issue_type", "normal_return")),
+                "buyer_risk_level": str(order.get("buyer_risk_level", "NORMAL")),
+            }
+            arbitration_dec = arbitrator.arbitrate(arbitration_ctx)
+            aftersales_card["arbitration"] = arbitration_dec.to_dict()
+        except Exception:
+            aftersales_card["arbitration"] = None
 
         return {
             "found": True,

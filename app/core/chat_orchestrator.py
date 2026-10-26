@@ -353,7 +353,12 @@ def synthesize_deterministic_response(
                     f"- **15天价格保护核验说明**：当前状态为 `{ac['price_guarantee_15d_reason_code']}`——{ac['price_guarantee_15d_explanation']}。"
                 )
         else:
-            if ac["return_7d_eligible"]:
+            arb = ac.get("arbitration")
+            if arb and arb.get("decision_code") == "SPECIAL_APPROVED":
+                parts.append(
+                    f"- **双轨智能仲裁决议**：{arb['human_summary']}"
+                )
+            elif ac["return_7d_eligible"]:
                 parts.append(
                     f"- **7天无理由退货核验通过**：该订单已签收 **{ac['elapsed_signed_hours']} 小时**（未超 **168 小时** 上限），且商品状态为**完好未拆封**，符合平台7天无理由退货条款，且享运费险补贴。"
                 )
@@ -361,7 +366,9 @@ def synthesize_deterministic_response(
                 parts.append(
                     f"- **7天无理由退货核验说明**：当前状态为 `{ac['return_7d_reason_code']}`——{ac['return_7d_explanation']}。"
                 )
-                if ac["price_guarantee_15d_eligible"]:
+                if arb and arb.get("decision_code") == "DISPUTE_MEDIATED_CARE":
+                    parts.append(f"- **柔性关怀方案**：{arb['human_summary']}")
+                elif ac["price_guarantee_15d_eligible"]:
                     parts.append(
                         f"- **补充权益提醒**：虽然已拆封不支持无理由退货，但该订单符合 **15天价格保护** 条件，可退还差价 **¥{ac['price_diff_amount']}**。"
                     )
@@ -1607,6 +1614,11 @@ class ShoppingAgentOrchestrator:
             ),
             "aftersales_card": (
                 aftersales_result["aftersales_card"]
+                if (aftersales_result and aftersales_result.get("aftersales_card"))
+                else None
+            ),
+            "arbitration_card": (
+                aftersales_result["aftersales_card"].get("arbitration")
                 if (aftersales_result and aftersales_result.get("aftersales_card"))
                 else None
             ),

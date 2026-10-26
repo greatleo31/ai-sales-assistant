@@ -27,7 +27,10 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 80.0,
+    "sensor_shock_g": 3.0,
+    "issue_type": "intercept_request"
   },
   {
     "order_id": "ORD-20261001-002",
@@ -57,7 +60,11 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 95.0,
+    "sensor_shock_g": 1.0,
+    "defect_confidence": 0.0,
+    "issue_type": "standard_7d_return"
   },
   {
     "order_id": "ORD-20261001-003",
@@ -87,7 +94,10 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 85.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.0
   },
   {
     "order_id": "ORD-20261001-004",
@@ -117,7 +127,11 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 42.0,
+    "sensor_shock_g": 2.0,
+    "defect_confidence": 0.1,
+    "issue_type": "expired_opened_return"
   },
   {
     "order_id": "ORD-20261001-005",
@@ -147,7 +161,12 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 88.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.85,
+    "defect_kind": "internal_circuit",
+    "issue_type": "performance_failure"
   },
   {
     "order_id": "ORD-20261001-006",
@@ -177,7 +196,11 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 92.0,
+    "sensor_shock_g": 1.2,
+    "defect_confidence": 0.0,
+    "issue_type": "marginal_overdue_return"
   },
   {
     "order_id": "ORD-20261001-007",
@@ -207,7 +230,10 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "NO_PRICE_DROP",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 85.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.0
   },
   {
     "order_id": "ORD-20261001-008",
@@ -237,7 +263,10 @@
       "price_guarantee_15d_eligible": true,
       "price_guarantee_15d_reason_code": "ELIGIBLE",
       "price_diff_amount": 40.0
-    }
+    },
+    "buyer_credit_score": 85.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.0
   },
   {
     "order_id": "ORD-20261001-009",
@@ -267,7 +296,10 @@
       "price_guarantee_15d_eligible": true,
       "price_guarantee_15d_reason_code": "ELIGIBLE",
       "price_diff_amount": 130.0
-    }
+    },
+    "buyer_credit_score": 85.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.0
   },
   {
     "order_id": "ORD-20261001-010",
@@ -297,6 +329,9 @@
       "price_guarantee_15d_eligible": false,
       "price_guarantee_15d_reason_code": "WINDOW_EXPIRED_15D",
       "price_diff_amount": 0.0
-    }
+    },
+    "buyer_credit_score": 85.0,
+    "sensor_shock_g": 1.5,
+    "defect_confidence": 0.0
   }
 ]
