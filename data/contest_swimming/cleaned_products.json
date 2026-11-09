@@ -1,0 +1,545 @@
+[
+  {
+    "sku_id": "P001",
+    "category": "3c_digital",
+    "sub_category": "bone_conduction_earphone",
+    "title": "Zurmek Ralun Pro 骨传导游泳耳机 SR-210",
+    "brand": "Zurmek",
+    "model": "Ralun Pro / SR-210（2024款）",
+    "original_price": 1298.0,
+    "final_price": 1098.0,
+    "specs": {
+      "storage_gb": 32,
+      "bluetooth": true,
+      "battery_mp3_h": 6.0,
+      "battery_bt_h": 9.0,
+      "waterproof_rating": "IP68",
+      "waterproof_depth_m": 2.0,
+      "anc": false,
+      "wearing_type": "bone_conduction",
+      "weight_g": 27.0
+    },
+    "highlights": [
+      "Vondir 2.0+ 骨传导振子（内外侧反相消漏音）",
+      "32GB 本地存储，脱机水下播放",
+      "游泳 EQ 水下听感模式",
+      "IP68，官方声明淡水 2 米内最长 2 小时",
+      "官方标注 10 分钟快充约 3 小时（计量口径未写明）",
+      "约 27g，适配泳帽与泳镜",
+      "24 个月保修（以销售地区政策为准）"
+    ],
+    "retrieval_text": "【商品】Zurmek Ralun Pro 骨传导游泳耳机 SR-210 【品牌】Zurmek 【类目】3c_digital/bone_conduction_earphone (骨传导游泳耳机) 【价格】到手价¥1098 (原价¥1298，直降¥200) 【核心规格】存储容量:32GB | 蓝牙:支持 | MP3模式续航:6.0h | 蓝牙模式续航:9.0h | 防水等级:IP68 | 最大防水水深:2.0m | 主动降噪:不支持 | 佩戴形态:骨传导 | 整机重量:27.0g 【核心卖点】Vondir 2.0+ 骨传导振子（内外侧反相消漏音）；32GB 本地存储，脱机水下播放；游泳 EQ 水下听感模式；IP68，官方声明淡水 2 米内最长 2 小时；官方标注 10 分钟快充约 3 小时（计量口径未写明）；约 27g，适配泳帽与泳镜；24 个月保修（以销售地区政策为准）",
+    "evidence": {
+      "shelf": {
+        "file": "Data_for_Users/01_Ecommerce_Listings/Ecommerce_Listing_Snapshot.csv",
+        "raw": "P001 / 平台自营旗舰店 / 展示价 1098 / 优惠前 1298 / 已售 25",
+        "note": "五源中唯一给出成交价的一手来源"
+      },
+      "official_site": {
+        "file": "Data_for_Users/04_Brand_Official_Sites/P001_RalunPro_Official_Site.txt",
+        "page_date": "2026-08-20",
+        "raw": "32GB本地存储；蓝牙模式最长9小时；MP3模式最长6小时；约27g；IP68，淡水2米内最长2小时；无主动降噪；游泳EQ"
+      },
+      "media_coverage": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P01_Product_Coverage.txt",
+        "pub_date": "2026-06-09",
+        "raw": "IP68 经水珠喷溅/流水冲洗/静态浸泡一小时三项验证正常；机身物理按键入水可按压"
+      },
+      "third_party_review": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P01_Third_Party_Review.txt",
+        "test_date": "2026-08-06",
+        "raw": "优点『水下音质清晰/32GB充足/陆水两用』；缺点『水下只能使用MP3模式』"
+      },
+      "user_feedback": {
+        "file": "Data_for_Users/03_User_Feedback_and_Complaints/User_Feedback_Excerpts.csv",
+        "n": 1,
+        "dates": [
+          "2025-05-20"
+        ],
+        "raw": "为了游泳买的，非常不错，有水下音质可以选"
+      }
+    },
+    "spec_provenance": {
+      "storage_gb": "official_site",
+      "bluetooth": "official_site",
+      "battery_mp3_h": "official_site",
+      "battery_bt_h": "official_site",
+      "waterproof_rating": "official_site",
+      "waterproof_depth_m": "official_site",
+      "anc": "official_site",
+      "wearing_type": "official_site",
+      "weight_g": "official_site"
+    },
+    "claims_removed": [
+      {
+        "code": "V1",
+        "claim": "蓝牙5.4可在水下2米范围内稳定串流手机音乐",
+        "source": "Data_for_Users/02_Media_Coverage_and_Reviews/P01_Product_Coverage.txt（另一则渠道页面宣称）",
+        "reason": "物理不可行：2.4GHz 电磁波在淡水中衰减量级为每米数十 dB，有效穿透深度为厘米级，2 米稳定串流不存在工程实现；且官网仅将蓝牙列为陆上模式，第三方实测与差评均记录『水下只能使用MP3模式』。判定为渠道虚标，已剔除，不作为 bluetooth 的水下能力依据。"
+      }
+    ],
+    "pending_verification": [
+      {
+        "id": "U3-01",
+        "code": "U3",
+        "item": "final_price=1098",
+        "detail": "价格仅货架快照单一来源，媒体页与第三方测评均未给报价，缺第二渠道交叉核验。"
+      },
+      {
+        "id": "U2-01",
+        "code": "U2",
+        "item": "user_feedback n=1",
+        "detail": "仅 1 条好评（2025-05-20），样本量不足，不构成质量结论，仅作与官网宣称一致性的旁证。"
+      },
+      {
+        "id": "U4-01",
+        "code": "U4",
+        "item": "快充口径",
+        "detail": "官网『10分钟快充约3小时』未写明是播放时长还是充电时长，按原文保留、不折算进任何续航字段。"
+      }
+    ],
+    "data_quality": {
+      "status": "verified_with_pending",
+      "confidence": "high",
+      "uncertain_specs": [],
+      "note": "9/9 规格由官网明示，且仓储页、媒体页、第三方实测三项交叉无矛盾（水下蓝牙虚标已单独剔除）。"
+    }
+  },
+  {
+    "sku_id": "P002",
+    "category": "3c_digital",
+    "sub_category": "bone_conduction_earphone",
+    "title": "Zurmek Ralun 游泳用骨传导运动耳机（第7代，无蓝牙）",
+    "brand": "Zurmek",
+    "model": "Ralun（第7代技术 / 原 Ralun 初版）",
+    "original_price": 2948.0,
+    "final_price": 2948.0,
+    "specs": {
+      "storage_gb": 4,
+      "bluetooth": false,
+      "battery_mp3_h": 8.0,
+      "battery_bt_h": 0.0,
+      "waterproof_rating": "IP68",
+      "waterproof_depth_m": 2.0,
+      "anc": false,
+      "wearing_type": "bone_conduction",
+      "weight_g": 30.0
+    },
+    "highlights": [
+      "Vondir 2.0 骨传导",
+      "4GB 本地存储，不含蓝牙模块",
+      "最长 8 小时（本地播放口径，官网未分模式标注）",
+      "IP68，官方口径水下 2 米",
+      "约 30g，适配泳帽",
+      "24 个月保修（以销售地区政策为准）"
+    ],
+    "retrieval_text": "【商品】Zurmek Ralun 游泳用骨传导运动耳机（第7代，无蓝牙） 【品牌】Zurmek 【类目】3c_digital/bone_conduction_earphone (骨传导游泳耳机) 【价格】到手价¥2948 (无优惠前价披露) 【核心规格】存储容量:4GB | 蓝牙:不支持 | MP3模式续航:8.0h | 蓝牙模式续航:0.0h | 防水等级:IP68 | 最大防水水深:2.0m | 主动降噪:不支持 | 佩戴形态:骨传导 | 整机重量:30.0g 【核心卖点】Vondir 2.0 骨传导；4GB 本地存储，不含蓝牙模块；最长 8 小时（本地播放口径，官网未分模式标注）；IP68，官方口径水下 2 米；约 30g，适配泳帽；24 个月保修（以销售地区政策为准）",
+    "evidence": {
+      "shelf": {
+        "file": "Data_for_Users/01_Ecommerce_Listings/Ecommerce_Listing_Snapshot.csv",
+        "raw": "P002 / 店铺类型空 / 展示价 2948 / 优惠前空 / 已售空",
+        "note": "店铺类型缺失，非旗舰店口径，价格仅此一处"
+      },
+      "official_site": {
+        "file": "Data_for_Users/04_Brand_Official_Sites/P002_Ralun_Official_Site.txt",
+        "page_date": "2026-08-20",
+        "raw": "4GB本地存储；不支持蓝牙；最长8小时；充电约2小时；约30g；IP68，可完全浸水，官方口径水下2米"
+      },
+      "media_coverage": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P02_Product_Coverage.txt",
+        "pub_date": "2026-07-10",
+        "raw": "当前渠道报价主要落在699-999元（测评快照）；另一则渠道页面宣称 Ralun 与 Ralun Pro 配置相同"
+      },
+      "third_party_review": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P02_Third_Party_Review.txt",
+        "test_date": "2026-08-07",
+        "raw": "缺点『仅4GB/完全不支持蓝牙/产品代际较老』"
+      },
+      "user_feedback": {
+        "file": "Data_for_Users/03_User_Feedback_and_Complaints/User_Feedback_Excerpts.csv",
+        "n": 0,
+        "dates": [],
+        "raw": null
+      }
+    },
+    "spec_provenance": {
+      "storage_gb": "official_site",
+      "bluetooth": "official_site",
+      "battery_mp3_h": "official_site（模式归因推导）",
+      "battery_bt_h": "official_site（无蓝牙硬件置0）",
+      "waterproof_rating": "official_site",
+      "waterproof_depth_m": "official_site",
+      "anc": "official_site",
+      "wearing_type": "official_site",
+      "weight_g": "official_site"
+    },
+    "claims_removed": [
+      {
+        "code": "V1",
+        "claim": "Ralun 与 Ralun Pro 配置相同，均支持蓝牙5.4与32GB存储",
+        "source": "Data_for_Users/02_Media_Coverage_and_Reviews/P02_Product_Coverage.txt（另一则渠道页面宣称）",
+        "reason": "与同品牌官网逐项冲突：官网 Ralun 为 4GB、明确『不支持蓝牙』，Ralun Pro 才是 32GB+蓝牙；第三方实测亦记录『完全不支持蓝牙』『仅4GB』。判定为跨代际配置混同的虚标，已剔除，不得把 Ralun 当 Ralun Pro 的减配同款。"
+      }
+    ],
+    "pending_verification": [
+      {
+        "id": "U3-02",
+        "code": "U3",
+        "item": "价格倒挂 final_price=2948",
+        "detail": "货架展示价 2948 元，与媒体渠道快照 699–999 元相差 3.0–4.2 倍，且无优惠前价与销量可用于校验；判定为价格倒挂/口径异常，保留货架价以保证与交易系统一致，但禁止用于性价比结论，须人工核验是否为错价或套餐价。"
+      },
+      {
+        "id": "U1-01",
+        "code": "U1",
+        "item": "battery_mp3_h=8.0",
+        "detail": "官网只写『最长8小时』未分模式；因该机无蓝牙硬件，8 小时按本地 MP3 模式归因（推导值，非实测）。"
+      },
+      {
+        "id": "U2-02",
+        "code": "U2",
+        "item": "user_feedback n=0",
+        "detail": "零条评价样本，差评维度无证据，质量结论空缺。"
+      }
+    ],
+    "data_quality": {
+      "status": "pending_price_verification",
+      "confidence": "medium",
+      "uncertain_specs": [],
+      "note": "规格 9/9 有官网明示，但 1 项为模式归因推导；价格存在跨源倒挂，整体定级 medium。"
+    }
+  },
+  {
+    "sku_id": "P003",
+    "category": "3c_digital",
+    "sub_category": "bone_conduction_earphone",
+    "title": "Yovrix Kandro 2 Pro 多运动版 骨传导游泳耳机",
+    "brand": "Yovrix",
+    "model": "Kandro 2 Pro（2024款 / 多运动版）",
+    "original_price": 1845.0,
+    "final_price": 1845.0,
+    "specs": {
+      "storage_gb": 8,
+      "bluetooth": true,
+      "battery_mp3_h": 6.0,
+      "battery_bt_h": 9.0,
+      "waterproof_rating": "IPX8",
+      "waterproof_depth_m": 3.6,
+      "anc": false,
+      "wearing_type": "bone_conduction",
+      "weight_g": null
+    },
+    "highlights": [
+      "骨传导开放式佩戴（颈后式）",
+      "8GB 本地存储，MP3 与 Larvo 离线模式",
+      "Bluetooth 5.3",
+      "IPX8，官方声明可承受约 3.6 米水深",
+      "含游泳耳塞",
+      "12 个月保修（登记活动或可延长，以地区政策为准）"
+    ],
+    "retrieval_text": "【商品】Yovrix Kandro 2 Pro 多运动版 骨传导游泳耳机 【品牌】Yovrix 【类目】3c_digital/bone_conduction_earphone (骨传导游泳耳机) 【价格】到手价¥1845 (无优惠前价披露) 【核心规格】存储容量:8GB | 蓝牙:支持 | MP3模式续航:6.0h | 蓝牙模式续航:9.0h | 防水等级:IPX8 | 最大防水水深:3.6m | 主动降噪:不支持 | 佩戴形态:骨传导 | 整机重量:待核验 【核心卖点】骨传导开放式佩戴（颈后式）；8GB 本地存储，MP3 与 Larvo 离线模式；Bluetooth 5.3；IPX8，官方声明可承受约 3.6 米水深；含游泳耳塞；12 个月保修（登记活动或可延长，以地区政策为准）",
+    "evidence": {
+      "shelf": {
+        "file": "Data_for_Users/01_Ecommerce_Listings/Ecommerce_Listing_Snapshot.csv",
+        "raw": "P003 / 店铺类型空 / 展示价 1845 / 优惠前空 / 已售空"
+      },
+      "official_site": {
+        "file": "Data_for_Users/04_Brand_Official_Sites/P003_Kandro2Pro_Official_Site.txt",
+        "page_date": "2026-08-20",
+        "raw": "8GB本地存储；Bluetooth 5.3；蓝牙最长9小时；内存模式最长6小时；颈后式开放佩戴；IPX8，约3.6米水深；含游泳耳塞；未披露重量"
+      },
+      "media_coverage": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P03_Product_Coverage.txt",
+        "pub_date": "2026-08-11",
+        "raw": "当前渠道报价主要落在1499-1799元；另一则渠道页面宣称单次续航18小时且任何模式均可在水下直接在线播放"
+      },
+      "third_party_review": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P03_Third_Party_Review.txt",
+        "test_date": "2026-08-08",
+        "raw": "缺点『国内购买和售后不便/应用与导入流程有学习成本』；无重量记录"
+      },
+      "user_feedback": {
+        "file": "Data_for_Users/03_User_Feedback_and_Complaints/User_Feedback_Excerpts.csv",
+        "n": 0,
+        "dates": [],
+        "raw": null
+      }
+    },
+    "spec_provenance": {
+      "storage_gb": "official_site",
+      "bluetooth": "official_site",
+      "battery_mp3_h": "official_site",
+      "battery_bt_h": "official_site",
+      "waterproof_rating": "official_site",
+      "waterproof_depth_m": "official_site",
+      "anc": "official_site",
+      "wearing_type": "official_site",
+      "weight_g": "unavailable（五源均未披露）"
+    },
+    "claims_removed": [
+      {
+        "code": "V1",
+        "claim": "Kandro 2 Pro 单次续航18小时，且任何模式均可在水下直接在线播放",
+        "source": "Data_for_Users/02_Media_Coverage_and_Reviews/P03_Product_Coverage.txt（另一则渠道页面宣称）",
+        "reason": "双重矛盾：续航 18 小时与官网 9 小时(蓝牙)/6 小时(内存) 不符；『任何模式水下在线播放』等于水下蓝牙串流，物理不可行且与官网离线播放设计相反。判定为虚标，已剔除，续航只取官网 9/6 小时。"
+      }
+    ],
+    "pending_verification": [
+      {
+        "id": "U1-02",
+        "code": "U1",
+        "item": "weight_g=null",
+        "detail": "官网、媒体页、第三方实测、货架、评价五源均未披露整机重量，按『未披露』置 null，不估值、不按同门类均值填充。"
+      },
+      {
+        "id": "U3-03",
+        "code": "U3",
+        "item": "final_price=1845",
+        "detail": "高于媒体渠道快照 1499–1799 元（为上限的 1.03 倍），可能含进口渠道溢价或套餐差异，须核验。"
+      },
+      {
+        "id": "U2-03",
+        "code": "U2",
+        "item": "user_feedback n=0",
+        "detail": "零条评价样本，差评维度无证据。"
+      }
+    ],
+    "data_quality": {
+      "status": "partial_pending_verification",
+      "confidence": "medium",
+      "uncertain_specs": [
+        "weight_g"
+      ],
+      "note": "8/9 规格有官网明示；重量缺口影响『轻量佩戴』类查询的硬过滤，下游须按未知处理而非按通过处理。"
+    }
+  },
+  {
+    "sku_id": "P004",
+    "category": "3c_digital",
+    "sub_category": "bone_conduction_earphone",
+    "title": "Norvek VD-140 / Vantu V 系列 防水一体式 MP3 颈挂式游泳耳机",
+    "brand": "Norvek",
+    "model": "VD-140 / Vantu V 系列（2017款）",
+    "original_price": 456.0,
+    "final_price": 456.0,
+    "specs": {
+      "storage_gb": 4,
+      "bluetooth": true,
+      "battery_mp3_h": 12.0,
+      "battery_bt_h": 4.0,
+      "waterproof_rating": "IP68",
+      "waterproof_depth_m": 2.0,
+      "anc": false,
+      "wearing_type": "neckband_in_ear",
+      "weight_g": 32.0
+    },
+    "highlights": [
+      "入耳式颈挂一体式 MP3 播放器形态（非骨传导）",
+      "4GB 本地存储，支持 MP3/WMA/PCM/AAC",
+      "本地 MP3 最长约 12 小时",
+      "陆上支持蓝牙 / NFC，水下蓝牙不可用",
+      "IP65/IP68，戴游泳耳塞时淡水/海水约 2 米内 30 分钟",
+      "3 分钟快充约 60 分钟播放",
+      "约 32g，支持环境声模式"
+    ],
+    "retrieval_text": "【商品】Norvek VD-140 / Vantu V 系列 防水一体式 MP3 颈挂式游泳耳机 【品牌】Norvek 【类目】3c_digital/bone_conduction_earphone (骨传导游泳耳机) 【价格】到手价¥456 (无优惠前价披露) 【核心规格】存储容量:4GB | 蓝牙:支持 | MP3模式续航:12.0h | 蓝牙模式续航:4.0h | 防水等级:IP68 | 最大防水水深:2.0m | 主动降噪:不支持 | 佩戴形态:颈挂入耳式 | 整机重量:32.0g 【核心卖点】入耳式颈挂一体式 MP3 播放器形态（非骨传导）；4GB 本地存储，支持 MP3/WMA/PCM/AAC；本地 MP3 最长约 12 小时；陆上支持蓝牙 / NFC，水下蓝牙不可用；IP65/IP68，戴游泳耳塞时淡水/海水约 2 米内 30 分钟；3 分钟快充约 60 分钟播放；约 32g，支持环境声模式",
+    "evidence": {
+      "shelf": {
+        "file": "Data_for_Users/01_Ecommerce_Listings/Ecommerce_Listing_Snapshot.csv",
+        "raw": "P004 / 店铺类型空 / 展示价 456 / 优惠前空 / 已售空"
+      },
+      "official_site": {
+        "file": "Data_for_Users/04_Brand_Official_Sites/P004_VD-140_Official_Site.txt",
+        "page_date": "2026-08-20",
+        "raw": "入耳式便携播放器系列；4GB；陆上支持蓝牙/NFC；本地MP3最长约12小时；蓝牙约4小时；约32g；IP65/IP68；使用游泳耳塞时淡水/海水约2米内30分钟；水下蓝牙不可用；无主动降噪"
+      },
+      "media_coverage": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P04_Product_Coverage.txt",
+        "pub_date": "2026-05-12",
+        "raw": "当前渠道报价主要落在999-1499元；另一则渠道页面宣称2026年新上市爆款、5万名国内买家评分5.0"
+      },
+      "third_party_review": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P04_Third_Party_Review.txt",
+        "test_date": "2026-08-09",
+        "raw": "优点『水下稳定/实体按键清晰/支持海水场景』；缺点『蓝牙续航短/老型号软件体验一般/现货不稳定』"
+      },
+      "user_feedback": {
+        "file": "Data_for_Users/03_User_Feedback_and_Complaints/User_Feedback_Excerpts.csv",
+        "n": 0,
+        "dates": [],
+        "raw": null
+      }
+    },
+    "spec_provenance": {
+      "storage_gb": "official_site",
+      "bluetooth": "official_site（仅陆上）",
+      "battery_mp3_h": "official_site",
+      "battery_bt_h": "official_site",
+      "waterproof_rating": "official_site（IP65/IP68 双标归一）",
+      "waterproof_depth_m": "official_site（条件：游泳耳塞 + 30 分钟上限）",
+      "anc": "official_site",
+      "wearing_type": "official_site（入耳式颈挂，非骨传导）",
+      "weight_g": "official_site"
+    },
+    "claims_removed": [
+      {
+        "code": "V1",
+        "claim": "VD-140 是 2026 年新上市爆款，已有 5 万名国内买家评分 5.0",
+        "source": "Data_for_Users/02_Media_Coverage_and_Reviews/P04_Product_Coverage.txt（另一则渠道页面宣称）",
+        "reason": "三重反证：官网写明 2017 款（与本项目货架同一型号），『2026 新上市』为年份伪造；货架『已售/付款人数』栏为空，媒体页无销量数据，5 万买家评分无任何可核验来源；第三方实测记录的缺点包含『老型号软件体验一般』『现货不稳定』，与『新上市爆款』互斥。已剔除。"
+      }
+    ],
+    "pending_verification": [
+      {
+        "id": "U4-02",
+        "code": "U4",
+        "item": "waterproof_rating=IP68 / depth=2.0",
+        "detail": "官网标注 IP65/IP68 双等级：IP65 为非耳塞状态的防喷水等级，仅在使用游泳耳塞时达到约 2 米/30 分钟；按项目词表取 IP68，但水深 2 米与 30 分钟上限为强条件，不得外推为『无时长限制的 2 米防水』。"
+      },
+      {
+        "id": "U3-04",
+        "code": "U3",
+        "item": "final_price=456",
+        "detail": "显著低于媒体渠道快照 999–1499 元（约为下限的 0.46 倍），疑为清库存/促销或不同套餐，须核验是否为同一 SKU 与正品口径。"
+      },
+      {
+        "id": "U2-04",
+        "code": "U2",
+        "item": "user_feedback n=0",
+        "detail": "零条评价样本，与『5 万买家评分』虚标形成对照，差评维度无证据。"
+      }
+    ],
+    "data_quality": {
+      "status": "verified_with_pending",
+      "confidence": "medium",
+      "uncertain_specs": [],
+      "note": "9/9 规格有官网明示；形态为颈挂入耳（wearing_type=neckband_in_ear），不得与骨传导款混同；防水值为条件值。"
+    }
+  },
+  {
+    "sku_id": "P005",
+    "category": "3c_digital",
+    "sub_category": "bone_conduction_earphone",
+    "title": "珂沐 Sorbik Pro 5 骨传导游泳蓝牙耳机",
+    "brand": "珂沐",
+    "model": "Sorbik Pro 5（第5代）",
+    "original_price": 1498.0,
+    "final_price": 1138.0,
+    "specs": {
+      "storage_gb": 32,
+      "bluetooth": true,
+      "battery_mp3_h": null,
+      "battery_bt_h": null,
+      "waterproof_rating": "IP68",
+      "waterproof_depth_m": null,
+      "anc": false,
+      "wearing_type": "bone_conduction",
+      "weight_g": null
+    },
+    "highlights": [
+      "骨传导开放式佩戴",
+      "32GB 本地存储，支持蓝牙与本地音乐",
+      "35° 可调结构",
+      "IP68（官网未给出水深与时长，须查说明书）",
+      "平台展示已售 2000+"
+    ],
+    "retrieval_text": "【商品】珂沐 Sorbik Pro 5 骨传导游泳蓝牙耳机 【品牌】珂沐 【类目】3c_digital/bone_conduction_earphone (骨传导游泳耳机) 【价格】到手价¥1138 (原价¥1498，直降¥360) 【核心规格】存储容量:32GB | 蓝牙:支持 | MP3模式续航:待核验 | 蓝牙模式续航:待核验 | 防水等级:IP68 | 最大防水水深:待核验 | 主动降噪:不支持 | 佩戴形态:骨传导 | 整机重量:待核验 【核心卖点】骨传导开放式佩戴；32GB 本地存储，支持蓝牙与本地音乐；35° 可调结构；IP68（官网未给出水深与时长，须查说明书）；平台展示已售 2000+",
+    "evidence": {
+      "shelf": {
+        "file": "Data_for_Users/01_Ecommerce_Listings/Ecommerce_Listing_Snapshot.csv",
+        "raw": "P005 / 品牌官方旗舰店 / 展示价 1138 / 优惠前 1498 / 已售2000+"
+      },
+      "official_site": {
+        "file": "Data_for_Users/04_Brand_Official_Sites/P005_SorbikPro5_Official_Site.txt",
+        "page_date": "2026-08-20",
+        "raw": "32GB本地存储；支持蓝牙与本地音乐；部分详细格式待核验；续航『官方产品索引未完整披露统一测试口径』；35°可调结构；IP68；水深/时长须查说明书，不以IP等级外推"
+      },
+      "media_coverage": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P05_Product_Coverage.txt",
+        "pub_date": "2026-06-13",
+        "raw": "当前渠道报价主要落在1099-1499元；另一则渠道页面宣称经权威机构认证为全球游泳耳机销量第一"
+      },
+      "third_party_review": {
+        "file": "Data_for_Users/02_Media_Coverage_and_Reviews/P05_Third_Party_Review.txt",
+        "test_date": "2026-08-10",
+        "raw": "优点『容量大/可调佩戴/价格低于部分国际品牌』；缺点『详细防水条件不易查/营销话术较多/音质评价分化』"
+      },
+      "user_feedback": {
+        "file": "Data_for_Users/03_User_Feedback_and_Complaints/User_Feedback_Excerpts.csv",
+        "n": 2,
+        "dates": [
+          "2026-09-06",
+          "2026-09-06"
+        ],
+        "raw": "两条均正面：①第二个了、客服售后换新 ②跑步佩戴稳固不硌耳"
+      }
+    },
+    "spec_provenance": {
+      "storage_gb": "official_site",
+      "bluetooth": "official_site",
+      "battery_mp3_h": "unavailable（官网明确未披露统一口径）",
+      "battery_bt_h": "unavailable（同上）",
+      "waterproof_rating": "official_site",
+      "waterproof_depth_m": "unavailable（官网要求查说明书，禁止按 IP68 外推）",
+      "anc": "official_site",
+      "wearing_type": "official_site",
+      "weight_g": "unavailable（五源均未披露）"
+    },
+    "claims_removed": [
+      {
+        "code": "V2",
+        "claim": "Sorbik Pro 5 经权威机构认证为全球游泳耳机销量第一",
+        "source": "Data_for_Users/02_Media_Coverage_and_Reviews/P05_Product_Coverage.txt（另一则渠道页面宣称）",
+        "reason": "无依据宣称：未指明机构名称、统计年份、口径与口径边界（品类定义、区域），无法核验；可观测的货架信号仅为『已售 2000+』，与『全球第一』量级不匹配；第三方实测直接点名『营销话术较多』。判定为营销话术，剔除，不进入任何事实字段。"
+      }
+    ],
+    "pending_verification": [
+      {
+        "id": "U1-03",
+        "code": "U1",
+        "item": "battery_mp3_h = null",
+        "detail": "官网明确『未完整披露统一测试口径』，媒体页与第三方实测均照抄该缺口；按未披露置 null，禁止用同门类均值代填。"
+      },
+      {
+        "id": "U1-04",
+        "code": "U1",
+        "item": "battery_bt_h = null",
+        "detail": "同上，蓝牙模式续航与 MP3 模式一并缺失，两个字段均为空，不可只填其一。"
+      },
+      {
+        "id": "U1-05",
+        "code": "U1",
+        "item": "waterproof_depth_m = null",
+        "detail": "官网仅有 IP68，并明确要求『具体水深/时长查说明书，不以 IP 等级自行外推』，故拒填 2.0 米等其他型号口径。"
+      },
+      {
+        "id": "U1-06",
+        "code": "U1",
+        "item": "weight_g = null",
+        "detail": "五源均未披露重量；评价中『没有压耳感』为定性描述，不可折算。"
+      },
+      {
+        "id": "U2-05",
+        "code": "U2",
+        "item": "user_feedback n=2 同日",
+        "detail": "2 条评价日期完全相同（2026-09-06）且均无缺点描述，样本独立性与代表性存疑，不构成质量或差评结论。"
+      },
+      {
+        "id": "U3-05",
+        "code": "U3",
+        "item": "final_price=1138",
+        "detail": "落在媒体渠道快照 1099–1499 区间内，价格可信度相对最高，但仍为单渠道成交价。"
+      }
+    ],
+    "data_quality": {
+      "status": "partial_pending_verification",
+      "confidence": "low",
+      "uncertain_specs": [
+        "battery_mp3_h",
+        "battery_bt_h",
+        "waterproof_depth_m",
+        "weight_g"
+      ],
+      "note": "5/9 规格可证，4 项为官方主动不披露；续航与水深两项恰是游泳场景核心决策项，下游须显式提示『信息不足』而非默认合格。"
+    }
+  }
+]

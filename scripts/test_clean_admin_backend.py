@@ -64,6 +64,9 @@ class TestCleanAdminBackend(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
         cls.analytics = get_admin_analytics_service()
+        auth = cls.analytics.authenticate_admin("admin", "admin123")
+        cls.token = auth["token"]
+        cls.client.headers["Authorization"] = f"Bearer {cls.token}"
         # 确保以 100% 纯净零数据基线启动
         cls.analytics.reset_to_baseline()
 
@@ -121,7 +124,10 @@ class TestCleanAdminBackend(unittest.TestCase):
         self.assertEqual(run_res["status"], "ok")
         self.assertEqual(run_res["static_prefix_md5"], real_md5)
         self.assertEqual(run_res["static_prefix_tokens"], real_tokens)
-        self.assertEqual(run_res["sku_count"], 60)
+        import json as _json
+        from pathlib import Path as _Path
+        _catalog = _json.loads((_Path(__file__).resolve().parent.parent / "data" / "ecommerce_catalog_60skus.json").read_text(encoding="utf-8"))
+        self.assertEqual(run_res["sku_count"], len(_catalog))
 
     def test_03_real_chat_stream_populates_audit_trace(self) -> None:
         """测试 3：发起真实导购对话，验证后台 Trace 审计真实录入客户端 IP、意图、SKU 及耗时。"""

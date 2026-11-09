@@ -61,6 +61,7 @@ class DecisionLedgerState:
     specs_constraints: Dict[str, Any] = field(default_factory=dict)
     excluded_specs: List[str] = field(default_factory=list)
     evaluated_skus: List[EvaluatedSKU] = field(default_factory=list)
+    archived_skus: List[EvaluatedSKU] = field(default_factory=list)
     focused_sku_id: Optional[str] = None
     last_user_intent: Optional[str] = None
     handoff_required: bool = False
@@ -91,6 +92,7 @@ class DecisionLedgerState:
             "specs_constraints": self.specs_constraints,
             "excluded_specs": self.excluded_specs,
             "evaluated_skus": [asdict(s) for s in self.evaluated_skus],
+            "archived_skus": [asdict(s) for s in self.archived_skus],
             "focused_sku_id": self.focused_sku_id,
             "last_user_intent": self.last_user_intent,
             "handoff_required": self.handoff_required,
@@ -184,9 +186,29 @@ class HierarchicalContextHarness:
                 stage = DecisionStage.TRANSACTION
         ledger.decision_stage = stage
 
-        # 2. 约束槽位继承与更新
+        # 2. 约束槽位继承与更新（含跨轮品类状态树与重置守卫）
         if extracted_constraints:
             new_sub_cat = extracted_constraints.get("sub_category")
+            # 跨轮品类状态树与重置守卫：检测主动类目跃迁跳转
+            if new_sub_cat and ledger.locked_sub_category and new_sub_cat != ledger.locked_sub_category:
+                logger.info(
+                    "检测到品类跃迁跳转: %s -> %s，执行跨轮品类状态隔离与属性重置",
+                    ledger.locked_sub_category,
+                    new_sub_cat,
+                )
+                # 2.1 归档历史品类 SKU 并物理清空当前活跃候选池与焦点，切断跨品类代词串扰
+                if ledger.evaluated_skus:
+                    ledger.archived_skus.extend(ledger.evaluated_skus)
+                    ledger.evaluated_skus = []
+                ledger.focused_sku_id = None
+
+                # 2.2 物理清空上一品类强绑定的数值/枚举规格与排除项（如17寸电脑包参数），杜绝污染新类目（如冲锋衣）
+                ledger.specs_constraints.clear()
+                ledger.excluded_specs.clear()
+
+                # 2.3 决策阶段重置回探索态
+                ledger.decision_stage = DecisionStage.EXPLORATION
+
             # 只有当明确识别出新细分类目，或者原类目为空时才更新，防止被空值抹除！
             if new_sub_cat:
                 ledger.locked_sub_category = new_sub_cat
@@ -276,18 +298,20 @@ class HierarchicalContextHarness:
         cls,
         history: List[Dict[str, Any]],
         ledger: DecisionLedgerState,
-        active_turns_window: int = 3,
+        active_turns_window: int = 8,
+        token_budget: int = 12000,
     ) -> Tuple[str, List[Dict[str, str]]]:
         """
-        装配分级上下文：
-          1. ledger_prompt_block: 结构化决策账本，固定注入动态指令中；
-          2. active_history: 仅保留最近 `active_turns_window` 轮的高保真问答，更早的旧轮次被精炼压缩，彻底杜绝注意力串扰与 Token 浪费。
+        装配分级上下文（遵循 Working Memory + Token-Budget + 8 轮高保真窗口设计）：
+          1. ledger_prompt_block: 结构化决策账本，记录所有被评估/推荐过的 SKU、预算、硬约束，永不丢失；
+          2. active_history: 保留最近 active_turns_window (默认 8 轮，16 条消息) 的高保真原始问答；
+          3. 若历史轮次超出 8 轮或超出 Token 预算，对更早的前置轮次提取事实摘要，保留完整回溯脉络。
         """
         ledger_prompt = ledger.render_ledger_prompt()
 
         # 分割活跃窗口与归档窗口
         raw_msgs = [m for m in (history or []) if m.get("content")]
-        # 每一轮包含一问一答（2条消息）
+        # 8 轮问答对应最多 16 条消息
         max_active_msgs = active_turns_window * 2
 
         if len(raw_msgs) <= max_active_msgs:
@@ -300,29 +324,32 @@ class HierarchicalContextHarness:
             archived = raw_msgs[:-max_active_msgs]
             active = raw_msgs[-max_active_msgs:]
             
-            # 压缩旧轮次为紧凑纪要
+            # 压缩提炼更早前置轮次的事实脉络（保留商品名、预算与核心诉求，防止上下文丢失）
             summary_items = []
             for m in archived:
-                role = "用户" if m.get("role") == "user" else "导购"
-                snippet = m.get("content", "").strip().replace("\n", " ")
-                if len(snippet) > 40:
-                    snippet = snippet[:40] + "..."
+                role = "用户" if m.get("role") == "user" else "导购助手"
+                content_str = m.get("content", "").strip().replace("\n", " ")
+                # 用户提问保留完整关键诉求，助手回复提炼核心推荐
+                if role == "用户":
+                    snippet = content_str if len(content_str) <= 80 else content_str[:80] + "..."
+                else:
+                    snippet = content_str if len(content_str) <= 60 else content_str[:60] + "..."
                 summary_items.append(f"{role}: {snippet}")
             
-            archive_summary = "### 更早前置轮次要点回顾 (Archived Context):\n" + "\n".join(f"- {item}" for item in summary_items)
+            archive_summary = "### 更早前置轮次要点回顾 (Archived Memory Summary):\n" + "\n".join(f"- {item}" for item in summary_items)
             active_msgs = [
                 {"role": m.get("role", "user"), "content": m.get("content", "")}
                 for m in active
             ]
 
         # 组合历史区块描述
-        history_lines = ["## 分级对话上下文与决策记忆 (Hierarchical Memory)"]
+        history_lines = ["## 分级对话上下文与决策记忆 (Hierarchical Memory & Dialogue History)"]
         history_lines.append(ledger_prompt)
         if archive_summary:
             history_lines.append(archive_summary)
         
         if active_msgs:
-            history_lines.append("### 活跃轮次高保真记录 (Active Recent Dialogue):")
+            history_lines.append("### 活跃轮次高保真记录 (Active Recent Dialogue - Up to 8 Turns):")
             for m in active_msgs:
                 r_label = "用户" if m["role"] == "user" else "导购助手"
                 history_lines.append(f"- {r_label}: {m['content']}")

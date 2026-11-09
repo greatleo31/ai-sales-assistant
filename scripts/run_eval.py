@@ -757,7 +757,8 @@ class EvaluationSuiteRunner:
                     scored_d = []
                     for s in self.rag_engine.catalog:
                         sid = s["sku_id"]
-                        sim = cosine_similarity_halfvec(q_hv, self.rag_engine.sku_halfvecs[sid])
+                        s_hv = self.rag_engine.sku_halfvecs.get(sid)
+                        sim = cosine_similarity_halfvec(q_hv, s_hv) if s_hv else 0.0
                         scored_d.append((sid, sim))
                     scored_d.sort(key=lambda x: (-x[1], x[0]))
                     ranked_ids = [sid for sid, _ in scored_d[:5]]
@@ -800,7 +801,8 @@ class EvaluationSuiteRunner:
                     scored_d = []
                     for s in self.rag_engine.catalog:
                         sid = s["sku_id"]
-                        sim = cosine_similarity_halfvec(q_hv, self.rag_engine.sku_halfvecs[sid])
+                        s_hv = self.rag_engine.sku_halfvecs.get(sid)
+                        sim = cosine_similarity_halfvec(q_hv, s_hv) if s_hv else 0.0
                         scored_d.append((sid, sim))
                     scored_d.sort(key=lambda x: (-x[1], x[0]))
                     ranked_ids = [sid for sid, _ in scored_d[:5]]

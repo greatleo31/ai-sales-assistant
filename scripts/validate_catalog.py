@@ -42,6 +42,13 @@ CANONICAL_SPEC_OPS: Dict[Tuple[str, str], str] = {
     ("power_bank", "weight_g"): "<=",
     ("usb_hub_cable", "port_count"): ">=",
     ("usb_hub_cable", "protocol"): "==",
+    ("bone_conduction_earphone", "storage_gb"): ">=",
+    ("bone_conduction_earphone", "battery_mp3_h"): ">=",
+    ("bone_conduction_earphone", "battery_bt_h"): ">=",
+    ("bone_conduction_earphone", "waterproof_rating"): "==",
+    ("bone_conduction_earphone", "waterproof_depth_m"): ">=",
+    ("bone_conduction_earphone", "wearing_type"): "==",
+    ("bone_conduction_earphone", "weight_g"): "<=",
     ("hoodie", "fabric_weight_gm2"): ">=",
     ("knit_cardigan", "fabric_weight_gm2"): ">=",
     ("windbreaker", "waterproof_mm"): ">=",
@@ -62,6 +69,11 @@ CANONICAL_SPEC_OPS: Dict[Tuple[str, str], str] = {
 }
 
 ALLOWED_OPS = {"<=", ">=", "=="}
+# 受控基准总配额（随 spec_registry.json 子类目扩展同步维护：3c_digital 25+5=30 / apparel 20 / beauty 15）
+EXPECTED_SUB_CATEGORY_COUNT = 18
+EXPECTED_SKU_COUNT = 65
+EXPECTED_CATEGORY_COUNTS: Dict[str, int] = {"3c_digital": 30, "apparel": 20, "beauty": 15}
+EXPECTED_QUOTA_SUMMARY = "30+20+15=65"
 ALLOWED_ORDER_STATUSES = {"pending", "shipped", "delivered", "refunded"}
 REQUIRED_SEED_ORDER_IDS = {
     "ORD-20261001-001",
@@ -148,6 +160,7 @@ CANONICAL_SUB_DISPLAY_LABELS: Dict[str, str] = {
     "nc_headphones": "头戴式降噪耳机",
     "power_bank": "移动电源/充电宝",
     "usb_hub_cable": "Type-C拓展坞",
+    "bone_conduction_earphone": "骨传导运动耳机",
     "hoodie": "卫衣",
     "knit_cardigan": "针织开衫",
     "windbreaker": "户外冲锋衣",
@@ -196,6 +209,10 @@ CANONICAL_ENUM_DISPLAY_LABELS: Dict[Tuple[str, str, str], str] = {
     ("sunscreen", "pa", "pa_plus_plus"): "PA++",
     ("sunscreen", "pa", "pa_plus_plus_plus"): "PA+++",
     ("sunscreen", "pa", "pa_plus_plus_plus_plus"): "PA++++",
+    ("bone_conduction_earphone", "waterproof_rating", "ip68"): "IP68",
+    ("bone_conduction_earphone", "waterproof_rating", "ipx8"): "IPX8",
+    ("bone_conduction_earphone", "wearing_type", "bone_conduction"): "骨传导式",
+    ("bone_conduction_earphone", "wearing_type", "neckband_in_ear"): "颈挂入耳式",
 }
 
 
@@ -618,7 +635,10 @@ def build_expected_retrieval_text(sku: Dict[str, Any], sub_cat_meta: Dict[str, A
         s_meta = specs_def.get(k, {})
         label = s_meta.get("label", k)
         unit = s_meta.get("unit", "")
-        if s_meta.get("type") == "enum":
+        if v is None:
+            # 【nullable 规格】：官方未披露时保持 null，语料侧显式标注“待核验”，严禁估值代填
+            spec_parts.append(f"{label}:待核验")
+        elif s_meta.get("type") == "enum":
             display_labels = s_meta.get("display_labels", {})
             neutral_label = display_labels.get(str(v), str(v))
             spec_parts.append(f"{label}:{v}({neutral_label})")
@@ -692,16 +712,16 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
     # ==================== 1. spec_registry.json 完整性、词表闭环与默认方向基准校验 ====================
     sub_categories_meta = spec_registry.get("sub_categories")
     categories_map = spec_registry.get("categories")
-    if not isinstance(sub_categories_meta, dict) or len(sub_categories_meta) != 17:
+    if not isinstance(sub_categories_meta, dict) or len(sub_categories_meta) != EXPECTED_SUB_CATEGORY_COUNT:
         errors.append(
-            f"spec_registry.json sub_categories 必须为包含 17 个子类目的字典，实际: {len(sub_categories_meta) if isinstance(sub_categories_meta, dict) else type(sub_categories_meta)}"
+            f"spec_registry.json sub_categories 必须为包含 {EXPECTED_SUB_CATEGORY_COUNT} 个子类目的字典，实际: {len(sub_categories_meta) if isinstance(sub_categories_meta, dict) else type(sub_categories_meta)}"
         )
         return False, passed_checks, errors
     if not isinstance(categories_map, dict) or set(categories_map.keys()) != {"3c_digital", "apparel", "beauty"}:
         errors.append("spec_registry.json categories 必须包含 3c_digital / apparel / beauty")
         return False, passed_checks, errors
 
-    passed_checks.append("spec_registry.json 包含完整 17 个子类目定义")
+    passed_checks.append(f"spec_registry.json 包含完整 {EXPECTED_SUB_CATEGORY_COUNT} 个子类目定义")
 
     registry_schema_ok = True
     seen_sub_aliases: Dict[str, str] = {}
@@ -972,28 +992,31 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
         )
 
     # ==================== 2. 全局与类目配额校验 ====================
-    if len(catalog) != 60:
-        errors.append(f"SKU 总数错误: 期望 60，实际 {len(catalog)}")
+    if len(catalog) != EXPECTED_SKU_COUNT:
+        errors.append(f"SKU 总数错误: 期望 {EXPECTED_SKU_COUNT}，实际 {len(catalog)}")
     else:
-        passed_checks.append("全局 SKU 总数 == 60")
+        passed_checks.append(f"全局 SKU 总数 == {EXPECTED_SKU_COUNT}")
 
     if not all(isinstance(item, dict) for item in catalog):
         errors.append("ecommerce_catalog_60skus.json 中存在非 JSON object 的元素")
         return False, passed_checks, errors
 
     sku_ids = [item.get("sku_id") for item in catalog]
-    if not all(is_non_empty_str(sid) for sid in sku_ids) or len(set(sku_ids)) != 60:
+    if not all(is_non_empty_str(sid) for sid in sku_ids) or len(set(sku_ids)) != EXPECTED_SKU_COUNT:
         dup = [k for k, v in Counter(sku_ids).items() if v > 1]
         errors.append(f"sku_id 非法或存在重复: {dup}")
     else:
-        passed_checks.append("60 条 sku_id 100% 唯一且格式合法")
+        passed_checks.append(f"{EXPECTED_SKU_COUNT} 条 sku_id 100% 唯一且格式合法")
 
-    expected_cat_counts = {"3c_digital": 25, "apparel": 20, "beauty": 15}
+    expected_cat_counts = dict(EXPECTED_CATEGORY_COUNTS)
     actual_cat_counts = Counter(item.get("category") for item in catalog)
     if dict(actual_cat_counts) != expected_cat_counts:
         errors.append(f"一级类目计数不匹配: 期望 {expected_cat_counts}，实际 {dict(actual_cat_counts)}")
     else:
-        passed_checks.append("三大一级类目配额精确匹配 (3c_digital=25, apparel=20, beauty=15)")
+        passed_checks.append(
+            f"三大一级类目配额精确匹配 (3c_digital={expected_cat_counts['3c_digital']}, "
+            f"apparel={expected_cat_counts['apparel']}, beauty={expected_cat_counts['beauty']})"
+        )
 
     actual_sub_counts = Counter(item.get("sub_category") for item in catalog)
     sub_quota_ok = True
@@ -1007,7 +1030,7 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
             errors.append(f"子类目 [{sub_cat}] 数量不匹配: 期望 {expected_cnt}，实际 {actual_cnt}")
             sub_quota_ok = False
     if sub_quota_ok:
-        passed_checks.append("17 个子类目 SKU 配额 (25+20+15=60) 100% 匹配")
+        passed_checks.append(f"{EXPECTED_SUB_CATEGORY_COUNT} 个子类目 SKU 配额 ({EXPECTED_QUOTA_SUMMARY}) 100% 匹配")
 
     # ==================== 3. SKU 字段类型、价格、量纲一致性(S3)、跨枚举无矛盾(S1)、溯源校验(S9)与反污染(S2) ====================
     required_str_fields = (
@@ -1151,6 +1174,17 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
             sval = actual_specs[skey]
             stype = sdef.get("type")
             if stype == "number":
+                if sval is None:
+                    # 【nullable 规格】：官方主动未披露的维度允许显式 null（须在 spec_registry 中声明 nullable=true），
+                    # 严禁估值/均值代填；未声明 nullable 的数值规格仍必须为纯数字。
+                    if sdef.get("nullable") is True:
+                        continue
+                    errors.append(
+                        f"[{sid}] 数值规格 {skey}=null 但 spec_registry 未声明 nullable=true（禁止空值绕过）"
+                    )
+                    spec_contract_ok = False
+                    sku_specs_valid = False
+                    continue
                 if not is_pure_number(sval):
                     errors.append(f"[{sid}] 数值规格 {skey}={sval!r} 不是纯数字(禁止字符串/单位/bool/NaN)")
                     spec_contract_ok = False
@@ -1260,7 +1294,7 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
                 ("anc_db", ANC_DB_TEXT_PATTERN, "dB"),
             ]
             for n_key, n_pat, n_unit in numeric_text_rules:
-                if n_key in actual_specs:
+                if n_key in actual_specs and is_pure_number(actual_specs[n_key]):
                     exp_num = float(actual_specs[n_key])
                     for fn, ftext in text_fields_map.items():
                         for m_num in n_pat.findall(ftext):
@@ -1282,7 +1316,7 @@ def validate_all(data_dir: Optional[Path] = None) -> Tuple[bool, List[str], List
                             spec_contract_ok = False
                             fact_isolation_ok = False
 
-            if "weight_g" in actual_specs:
+            if "weight_g" in actual_specs and is_pure_number(actual_specs["weight_g"]):
                 exp_wg = float(actual_specs["weight_g"])
                 for fn, ftext in text_fields_map.items():
                     for m_kg in KG_WEIGHT_PATTERN.findall(ftext):

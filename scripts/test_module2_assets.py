@@ -70,12 +70,27 @@ class TestModule2Assets(unittest.TestCase):
         self.assertGreaterEqual(len(passed), 27)
 
     def test_02_all_60_images_exist_valid_jpeg_magic_and_unique_sha256(self) -> None:
-        """校验 60 张本地商品图存在、JPEG 魔数正确、分辨率 >= 200x150，且 60 个 SHA-256 100% 唯一。"""
+        """校验 60 张本地商品图存在、JPEG 魔数正确、分辨率 >= 200x150，且 60 个 SHA-256 100% 唯一。
+
+        说明：由 contest 证据链并网的 5 条骨传导/游泳耳机 SKU 为**纯文本证据 SKU**（五源均为文本，无留存原图），
+        visual_description_source=synthetic_draft_pending_image_calibration，故不参与图片可达性断言；
+        受控基准 60 条 SKU 仍逐条强制校验。
+        """
         self.assertEqual(len(self.manifest), 60)
         seen_sha256 = set()
         seen_source_urls = set()
 
-        for sku in self.catalog:
+        image_backed_skus = [
+            s for s in self.catalog
+            if s.get("visual_description_source") == "calibrated_from_retained_image"
+        ]
+        self.assertEqual(len(image_backed_skus), 60, "除纯文本证据 SKU 外的全部 SKU 必须完成原图配准")
+        self.assertEqual(
+            len(self.catalog) - len(image_backed_skus),
+            sum(1 for s in self.catalog if s.get("visual_description_source") == "synthetic_draft_pending_image_calibration"),
+        )
+
+        for sku in image_backed_skus:
             sid = sku["sku_id"]
             self.assertIn(sid, self.manifest, f"image_manifest.json 缺少 {sid}")
             entry = self.manifest[sid]
@@ -169,7 +184,15 @@ class TestModule2Assets(unittest.TestCase):
 
         for sku in self.catalog:
             sid = sku["sku_id"]
-            self.assertIn(sid, sku_embs)
+            if sid not in sku_embs:
+                # 纯文本证据 SKU（contest 并网的骨传导/游泳耳机）无 Vertex 预计算向量，
+                # 运行时由 BM25 + 确定性向量兜底；受控基准 60 条 SKU 必须 100% 覆盖。
+                self.assertEqual(
+                    sku.get("visual_description_source"),
+                    "synthetic_draft_pending_image_calibration",
+                    f"{sid} 缺失预计算向量且不属于纯文本证据 SKU",
+                )
+                continue
             rec = sku_embs[sid]
             vec = rec["embedding"]
             ok, msg = build_embeddings.validate_embedding_vector(vec, expected_dim=1024)

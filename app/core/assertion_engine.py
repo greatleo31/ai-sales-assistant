@@ -471,6 +471,350 @@ class ShoppingAgentAssertionEngine:
         return violations
 
     # =========================================================================
+    # 沙利文 (Sullivan) R1 / P3 / U2 三维评估
+    #   R1 硬约束一票否决 / P3 事实溯源 / U2 精细度
+    # =========================================================================
+    SULLIVAN_TIER_MARKERS: Tuple[str, ...] = ("【首选】", "【备选 1】", "【备选 2】")
+    SULLIVAN_COST_MARKER = "【代价与注意事项】"
+
+    # 【条件改变句】判据：必须给出可执行的替代前提，而不是敷衍的“看情况”
+    SULLIVAN_CONDITION_PATTERNS: Tuple[re.Pattern, ...] = (
+        re.compile(r"只有当.{0,80}?(?:才|方可)"),
+        re.compile(r"(?:预算|价格|上限).{0,12}?(?:放宽|放宽到|提升到|提高)"),
+        re.compile(r"不再要求"),
+        re.compile(r"(?:条件|需求|前提)(?:改为|变更|变成)"),
+    )
+
+    # 笼统模糊表述判据（U2 精细度扣分项）
+    SULLIVAN_VAGUE_PATTERNS: Tuple[re.Pattern, ...] = (
+        re.compile(r"因人而异"),
+        re.compile(r"看个人(?:需求|喜好|情况)?"),
+        re.compile(r"看您(?:自己|需求|喜好|情况)?"),
+        re.compile(r"都(?:差不多|一样|可以|行)"),
+        re.compile(r"具体(?:看|视)(?:情况|需求|预算)"),
+        re.compile(r"各有(?:优劣|千秋)"),
+        re.compile(r"自行(?:判断|选择|斟酌)"),
+    )
+
+    SULLIVAN_SKU_ANCHOR_PATTERN = re.compile(r"\[\[SKU:([^\]]+)\]\]")
+
+    @staticmethod
+    def _sullivan_compare(actual: Any, op: str, target: Any) -> bool:
+        """沙利文约束比较：nullable 规格（None）一律视为“无法证明满足”，按不满足处理。"""
+        if actual is None or target is None:
+            return False
+        if op == "==":
+            if isinstance(actual, str) or isinstance(target, str):
+                return str(actual) == str(target)
+            try:
+                return abs(float(actual) - float(target)) < 1e-9
+            except (TypeError, ValueError):
+                return False
+        try:
+            if op == "<=":
+                return float(actual) <= float(target)
+            if op == ">=":
+                return float(actual) >= float(target)
+        except (TypeError, ValueError):
+            return False
+        return False
+
+    @classmethod
+    def _sullivan_card_satisfies(
+        cls,
+        card: Dict[str, Any],
+        max_price: Optional[float],
+        spec_constraints: List[Dict[str, Any]],
+    ) -> bool:
+        """判定单张商品卡片是否同时满足预算与全部硬规格约束。"""
+        if not isinstance(card, dict):
+            return False
+        if max_price is not None:
+            if not cls._sullivan_compare(card.get("final_price"), "<=", max_price):
+                return False
+        specs = card.get("specs") or {}
+        for hc in spec_constraints:
+            key = hc.get("key")
+            if key not in specs:
+                return False
+            if not cls._sullivan_compare(specs.get(key), hc.get("op", "=="), hc.get("value")):
+                return False
+        return True
+
+    def evaluate_sullivan_r1_p3_u2(self, session_trace: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        沙利文三维评估（R1 硬约束一票否决 / P3 事实溯源 / U2 精细度）。
+
+        `session_trace` 支持以下键（缺省时按上下文降级推断，绝不自造事实）：
+          - `emitted_text` / `reply_text` / `response_text`：Agent 最终自然语言回复（取第一个非空）；
+          - `user_query`：用户原始问题；
+          - `product_cards` / `rag_result.product_cards`：候选商品池（唯一事实来源）；
+          - `price_explain_cards` / `rag_result.price_explain_cards`：价格解释卡片；
+          - `hard_constraints` / `rag_result.hard_constraints`：硬约束列表（含 `final_price` 预算项）；
+          - `max_price`：预算上限（可从 `hard_constraints` 的 `final_price <= X` 项反推）；
+          - `feasible_skus`：可选，显式给出当前可行解 SKU 集合（缺省时由卡片 + 硬约束确定性计算）；
+          - `recommended_skus`：可选，显式给出推荐 SKU 列表（缺省时从 `[[SKU:xxx]]` 锚点解析）；
+          - `order_result` / `aftersales_result`：确定性订单与售后真源；
+          - `truth_numbers`：可选，额外允许的数值真源白名单（如人工审计补充的官方口径）。
+
+        返回值：
+          - `passed`：三维是否全部达标（R1 否决则整体不通过）；
+          - `r1` / `p3` / `u2`：各维度 score、passed、判据与违规明细；
+          - `total_score`：R1 通过时为三维均分，R1 否决时恒为 0.0；
+          - `violations`：扁平化违规清单，便于落库与归因。
+        """
+        trace: Dict[str, Any] = session_trace if isinstance(session_trace, dict) else {}
+        text = str(
+            trace.get("emitted_text")
+            or trace.get("reply_text")
+            or trace.get("response_text")
+            or ""
+        )
+        user_query = str(trace.get("user_query") or "")
+        rag_result = trace.get("rag_result") if isinstance(trace.get("rag_result"), dict) else {}
+        cards = list(trace.get("product_cards") or rag_result.get("product_cards") or [])
+        price_cards = list(trace.get("price_explain_cards") or rag_result.get("price_explain_cards") or [])
+        pool_ids: List[str] = [
+            str(c.get("sku_id")) for c in cards if isinstance(c, dict) and c.get("sku_id")
+        ]
+
+        # ---------------------------------------------------------------------
+        # R1：硬约束一票否决（可行解 > 0 时不得越界推荐；可行解 = 0 时须给出条件改变句）
+        # ---------------------------------------------------------------------
+        hard_constraints = list(trace.get("hard_constraints") or rag_result.get("hard_constraints") or [])
+        max_price = trace.get("max_price")
+        if max_price is None:
+            for hc in hard_constraints:
+                if isinstance(hc, dict) and hc.get("key") == "final_price":
+                    max_price = hc.get("value")
+                    break
+        spec_constraints = [
+            hc for hc in hard_constraints
+            if isinstance(hc, dict) and hc.get("key") not in (None, "final_price")
+        ]
+
+        feasible_source = trace.get("feasible_skus")
+        if feasible_source is not None:
+            feasible_ids = [str(x) for x in feasible_source]
+        else:
+            feasible_ids = [
+                str(c.get("sku_id"))
+                for c in cards
+                if isinstance(c, dict) and c.get("sku_id")
+                and self._sullivan_card_satisfies(c, max_price, spec_constraints)
+            ]
+
+        recommended_ids: List[str] = []
+        for sid in trace.get("recommended_skus") or []:
+            if str(sid) not in recommended_ids:
+                recommended_ids.append(str(sid))
+        anchor_ids = self.SULLIVAN_SKU_ANCHOR_PATTERN.findall(text)
+        for sid in anchor_ids:
+            if str(sid) not in recommended_ids:
+                recommended_ids.append(str(sid))
+        if not recommended_ids and cards:
+            # 无锚点也无显式推荐清单时，仅以“标题在正文中原样出现”的无歧义证据回退识别
+            for c in cards:
+                if isinstance(c, dict) and c.get("sku_id") and c.get("title") and str(c["title"]) in text:
+                    sid = str(c["sku_id"])
+                    if sid not in recommended_ids:
+                        recommended_ids.append(sid)
+
+        condition_hit = any(p.search(text) for p in self.SULLIVAN_CONDITION_PATTERNS)
+        r1_applicable = bool(recommended_ids)
+        relaxation_triggered = bool(cards) and not feasible_ids
+        r1_violations: List[Dict[str, Any]] = []
+        r1_score = 1.0
+        r1_passed = True
+        exemption_applied = False
+
+        if r1_applicable:
+            if feasible_ids:
+                violating = [
+                    sid for sid in recommended_ids
+                    if sid in pool_ids and sid not in feasible_ids
+                ]
+                if violating:
+                    r1_score = 0.0
+                    r1_passed = False
+                    r1_violations.append(
+                        {
+                            "rule": "R1",
+                            "violation_type": "hard_constraint_breach_despite_feasible_solution",
+                            "message": (
+                                f"候选池内存在 {len(feasible_ids)} 款满足预算与全部硬约束的可行解，"
+                                f"却推荐了违反约束的 {violating}"
+                            ),
+                            "expected": feasible_ids,
+                            "actual": violating,
+                        }
+                    )
+            else:
+                relaxation_triggered = True
+                if condition_hit:
+                    exemption_applied = True
+                else:
+                    r1_score = 0.0
+                    r1_passed = False
+                    r1_violations.append(
+                        {
+                            "rule": "R1",
+                            "violation_type": "relaxation_without_condition_sentence",
+                            "message": "可行解为 0（触发预算/规格松弛）但未输出【条件改变句】反转说明，不得以免责口径糊弄",
+                            "expected": "只有当预算放宽至/不再要求…时才可考虑",
+                            "actual": text[:120],
+                        }
+                    )
+
+        # ---------------------------------------------------------------------
+        # P3：事实溯源（文本商业数值 ⊆ 上下文真源闭包；SKU 锚点 ⊆ 候选池）
+        # ---------------------------------------------------------------------
+        allowed_numbers = self.build_ground_truth_closure(
+            user_query=user_query,
+            product_cards=cards or None,
+            price_cards=price_cards or None,
+            order_result=trace.get("order_result"),
+            aftersales_result=trace.get("aftersales_result"),
+            rag_result=rag_result or None,
+        )
+        for n in trace.get("truth_numbers") or []:
+            try:
+                allowed_numbers.add(round(float(n), 2))
+            except (TypeError, ValueError):
+                continue
+        # 约束阈值（预算上限与硬规格门限）本身属于上下文真源，复述它们不算无源虚构
+        allowed_numbers.update(self.extract_numbers_recursively(hard_constraints))
+        if max_price is not None:
+            try:
+                allowed_numbers.add(round(float(max_price), 2))
+            except (TypeError, ValueError):
+                pass
+
+        p3_violations: List[Dict[str, Any]] = []
+        for num in self.extract_text_commercial_numbers(text):
+            if not any(abs(num - tn) < 1e-2 for tn in allowed_numbers):
+                p3_violations.append(
+                    {
+                        "rule": "P3",
+                        "violation_type": "ungrounded_numeric_claim",
+                        "message": f"回复引用的数字参数 {num} 不在上下文真源闭包内（疑似虚构或跨源混用）",
+                        "expected": sorted(allowed_numbers),
+                        "actual": num,
+                    }
+                )
+        for sid in recommended_ids:
+            if pool_ids and sid not in pool_ids:
+                p3_violations.append(
+                    {
+                        "rule": "P3",
+                        "violation_type": "ungrounded_sku_reference",
+                        "message": f"回复引用了候选池之外的 SKU: {sid}",
+                        "expected": pool_ids,
+                        "actual": sid,
+                    }
+                )
+
+        p3_score = max(0.0, 1.0 - 0.25 * len(p3_violations))
+        p3_passed = not p3_violations
+
+        # ---------------------------------------------------------------------
+        # U2：精细度（笼统模糊表述 / 三档结构与代价项缺失，各扣 0.5 分）
+        # ---------------------------------------------------------------------
+        u2_reasons: List[Dict[str, Any]] = []
+        for pat in self.SULLIVAN_VAGUE_PATTERNS:
+            m = pat.search(text)
+            if m:
+                u2_reasons.append(
+                    {
+                        "rule": "U2",
+                        "violation_type": "vague_expression",
+                        "message": f"出现笼统模糊表述「{m.group(0)}」，未给出可核验的具体取舍",
+                        "expected": "具体规格/价格口径的牺牲项",
+                        "actual": m.group(0),
+                    }
+                )
+                break
+
+        tier_count = sum(1 for marker in self.SULLIVAN_TIER_MARKERS if marker in text)
+        cost_count = text.count(self.SULLIVAN_COST_MARKER)
+        if len(recommended_ids) >= 2 and tier_count == 0:
+            u2_reasons.append(
+                {
+                    "rule": "U2",
+                    "violation_type": "missing_tier_structure",
+                    "message": "多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级",
+                    "expected": "恰好 3 档结构化推荐",
+                    "actual": "无档位标记",
+                }
+            )
+        if tier_count >= 1 and cost_count < tier_count:
+            u2_reasons.append(
+                {
+                    "rule": "U2",
+                    "violation_type": "missing_cost_and_caveat",
+                    "message": (
+                        f"【代价与注意事项】仅出现 {cost_count} 次，少于档位标记 {tier_count} 处，"
+                        "存在只讲优点、不做牺牲项披露的推荐"
+                    ),
+                    "expected": f">= {tier_count} 处单列【代价与注意事项】",
+                    "actual": cost_count,
+                }
+            )
+        if tier_count >= 4:
+            u2_reasons.append(
+                {
+                    "rule": "U2",
+                    "violation_type": "tier_overflow",
+                    "message": f"档位标记出现 {tier_count} 处，超出沙利文恰好 3 款收敛要求",
+                    "expected": "<= 3",
+                    "actual": tier_count,
+                }
+            )
+
+        u2_score = max(0.0, 1.0 - 0.5 * len(u2_reasons))
+        u2_passed = u2_score >= 0.5 and not u2_reasons
+
+        total_score = (
+            round((r1_score + p3_score + u2_score) / 3.0, 4) if r1_passed else 0.0
+        )
+
+        all_violations = r1_violations + p3_violations + u2_reasons
+        return {
+            "rubric": "sullivan_r1_p3_u2",
+            "passed": bool(r1_passed and p3_passed and u2_passed),
+            "total_score": total_score,
+            "r1": {
+                "name": "硬约束一票否决",
+                "score": r1_score,
+                "passed": r1_passed,
+                "applicable": r1_applicable,
+                "relaxation_triggered": relaxation_triggered,
+                "exemption_applied": exemption_applied,
+                "condition_sentence_detected": condition_hit,
+                "max_price": max_price,
+                "feasible_skus": feasible_ids,
+                "recommended_skus": recommended_ids,
+                "violations": r1_violations,
+            },
+            "p3": {
+                "name": "事实溯源",
+                "score": p3_score,
+                "passed": p3_passed,
+                "grounded_numbers": sorted(allowed_numbers),
+                "violations": p3_violations,
+            },
+            "u2": {
+                "name": "精细度",
+                "score": u2_score,
+                "passed": u2_passed,
+                "tier_marker_count": tier_count,
+                "cost_caveat_count": cost_count,
+                "violations": u2_reasons,
+            },
+            "violations": all_violations,
+        }
+
+    # =========================================================================
     # 全链路综合核验入口
     # =========================================================================
     @classmethod

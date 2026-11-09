@@ -40,7 +40,11 @@ from app.services.rule_governance import (
     ContentGuard,
     EmotionTracker,
     GuardAction,
+    INTENT_AFTERSALES_QA,
+    INTENT_ORDER_QUERY,
     INTENT_PRIVACY_GUARD,
+    INTENT_CONTEXT_RECALL,
+    _CONTEXT_RECALL_PATTERNS,
     LocalRuleDecisionEngine,
 )
 
@@ -296,7 +300,15 @@ class JevDecisionRouter:
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
+        proxy_url = getattr(settings, "jev_proxy_url", None)
+        if proxy_url:
+            opener = urllib.request.build_opener(
+                urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
+            )
+        else:
+            opener = urllib.request.build_opener()
+
+        with opener.open(req, timeout=timeout_sec) as resp:
             status = resp.getcode()
             raw_text = resp.read().decode("utf-8")
             if status != 200:
@@ -406,9 +418,18 @@ class JevDecisionRouter:
             confidence_tier = "medium"
             clarification_needed = True
 
-        # 若本地护栏明确捕获到隐私试探 (privacy_probe)，确保 primary_intent 受到保护
-        if guard.category == "privacy_probe" and primary_intent != INTENT_PRIVACY_GUARD:
+        # 若本地护栏明确捕获到隐私试探 (privacy_probe)，确保非订单/售后业务的请求受到保护
+        if (
+            guard.category == "privacy_probe"
+            and primary_intent not in (INTENT_ORDER_QUERY, INTENT_AFTERSALES_QA)
+            and primary_intent != INTENT_PRIVACY_GUARD
+        ):
             primary_intent = INTENT_PRIVACY_GUARD
+
+        # 若本地明确捕获到上下文追溯提问（如“我刚才问了你什么”、“上面推荐过什么”）
+        if _CONTEXT_RECALL_PATTERNS.search(state):
+            primary_intent = INTENT_CONTEXT_RECALL
+            need_rag_score = 0.0
 
         # handoff_guard 采用 Jev (>=0.80) 与本地高危情绪规则的 Fail-Closed 安全并集
         handoff_triggered = (handoff_score >= self.handoff_guard_threshold) or emotion.trigger_handoff
@@ -428,7 +449,7 @@ class JevDecisionRouter:
             "confidence_tier": confidence_tier,
             "clarification_needed": clarification_needed,
             "intent_probabilities": {k: round(float(v), 4) for k, v in intent_probs.items()},
-            "need_rag": (need_rag_score >= self.need_rag_threshold) or (primary_intent == "product_recommend"),
+            "need_rag": ((need_rag_score >= self.need_rag_threshold) or (primary_intent == "product_recommend")) and (primary_intent != INTENT_CONTEXT_RECALL),
             "need_rag_score": round(need_rag_score, 4),
             "is_context_dependent": ctx_dep_score >= self.context_dependent_threshold,
             "context_dependent_score": round(ctx_dep_score, 4),

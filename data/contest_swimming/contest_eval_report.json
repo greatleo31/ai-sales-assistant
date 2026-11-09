@@ -1,0 +1,126 @@
+{
+  "benchmark": "sullivan_contest_6queries",
+  "total_queries": 6,
+  "metrics": {
+    "average_sullivan_score": 0.83,
+    "r1_hard_constraint_pass_rate_pct": 100.0,
+    "p3_fact_grounding_clean_rate_pct": 100.0,
+    "hallucination_violations_count": 0
+  },
+  "query_results": [
+    {
+      "id": "CONTEST_U1",
+      "user_name": "小王 (28岁/男/地铁通勤)",
+      "query": "每天在上海坐地铁单程40分钟，路上噪音很大，想买个耳机在路上听听播客和音乐放松一下。预算2000元左右，最近刚换成安卓手机，希望耳机能和安卓配合得好一些，不喜欢太轰头的低音。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-026",
+        "SKU-3C-029",
+        "SKU-3C-028"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **Zurmek Ralun Pro 骨传导游泳耳机 SR-210**（`SKU-3C-026`）：当前到手价 **¥1098.0**（日常原价 **¥1298.0**，官方直降立减 **¥200.0**）。核心亮点：32GB 本地存储，脱机水下播放、Vondir 2.0+ 骨传导振子，...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    },
+    {
+      "id": "CONTEST_U2",
+      "user_name": "小李 (20岁/女/宿舍图书馆学习)",
+      "query": "大二学生，平时主要在宿舍和图书馆学习，喜欢戴耳机听歌和学习视频。室友有时候比较吵，需要降噪功能。预算500元左右，希望性价比高一些，喜欢浅色系、好看的设计，平时跑步微防汗。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-022",
+        "SKU-3C-020",
+        "SKU-3C-021"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **QCY H3 轻羽版 头戴式主动降噪蓝牙耳机 学生党图书馆自习**（`SKU-3C-022`）：当前到手价 **¥89.0**（日常原价 **¥149.0**，官方直降立减 **¥60.0**）。核心亮点：195g超轻机身久戴不夹头、自习室人声降噪、可折叠便携。\n\n2. **倍思 H...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    },
+    {
+      "id": "CONTEST_U3",
+      "user_name": "小张 (22岁/男/重度FPS玩家)",
+      "query": "大学生重度FPS游戏玩家，主要玩竞技射击游戏。需要一个头戴式游戏耳机，要求听声辨位精准、麦克风清晰、长时间打游戏不夹头，预算300元左右，希望能耐用一些。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-020",
+        "SKU-3C-022",
+        "SKU-3C-019"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **倍思 H1i 头戴式无线蓝牙主动降噪耳机 空间音频长续航**（`SKU-3C-020`）：当前到手价 **¥129.0**（日常原价 **¥199.0**，官方直降立减 **¥70.0**）。核心亮点：65小时跨周超长续航、-38dB主动降噪、BISA空间音频。\n\n2. **QCY ...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    },
+    {
+      "id": "CONTEST_U4",
+      "user_name": "陈女士 (35岁/女/外企销售总监)",
+      "query": "经常出差坐飞机和高铁，需要在旅途中开会、听音乐。对降噪要求很高，希望隔绝引擎噪音，通话质量好。预算3000元左右，主力设备在封闭系统生态里。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-020",
+        "SKU-3C-019",
+        "SKU-3C-021"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **倍思 H1i 头戴式无线蓝牙主动降噪耳机 空间音频长续航**（`SKU-3C-020`）：当前到手价 **¥129.0**（日常原价 **¥199.0**，官方直降立减 **¥70.0**）。核心亮点：65小时跨周超长续航、-38dB主动降噪、BISA空间音频。\n\n2. **漫步者 ...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    },
+    {
+      "id": "CONTEST_U5",
+      "user_name": "赵先生 (30岁/男/游泳爱好者)",
+      "query": "游泳爱好者，每周去游泳馆3-4次，每次1小时左右。想在游泳时听音乐，之前试过普通蓝牙耳机下水就断连没法用。需要能在水下听歌的耳机，防水要好，最好自带存储不用带手机，预算1500-2000元。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-026",
+        "SKU-3C-030",
+        "SKU-3C-028"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **Zurmek Ralun Pro 骨传导游泳耳机 SR-210**（`SKU-3C-026`）：当前到手价 **¥1098.0**（日常原价 **¥1298.0**，官方直降立减 **¥200.0**）。核心亮点：32GB 本地存储，脱机水下播放、Vondir 2.0+ 骨传导振子，...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    },
+    {
+      "id": "CONTEST_U6",
+      "user_name": "赵先生 (30岁/科技公司软件开发/高专业度)",
+      "query": "游泳爱好者，每周去游泳馆3-4次每次1小时缓解枯燥。水下听歌，防水等级要高，自带存储不用带手机。预算1500-2000元之间，对产品专业性要求高。健身房跑步也会用，游泳是核心场景。",
+      "constraint_status": "satisfied",
+      "product_ids": [
+        "SKU-3C-026",
+        "SKU-3C-029",
+        "SKU-3C-028"
+      ],
+      "emitted_text_snippet": "为您从惠购官方自营商品池中精选出最匹配硬约束与实测口碑的款式：\n\n1. **Zurmek Ralun Pro 骨传导游泳耳机 SR-210**（`SKU-3C-026`）：当前到手价 **¥1098.0**（日常原价 **¥1298.0**，官方直降立减 **¥200.0**）。核心亮点：32GB 本地存储，脱机水下播放、Vondir 2.0+ 骨传导振子，...",
+      "sullivan_score": 0.8333,
+      "r1_pass": true,
+      "p3_pass": true,
+      "prohibited_hits": [],
+      "violations": [
+        "{'rule': 'U2', 'violation_type': 'missing_tier_structure', 'message': '多款推荐未使用【首选】/【备选 1】/【备选 2】三档结构，用户无法判断取舍优先级', 'expected': '恰好 3 档结构化推荐', 'actual': '无档位标记'}"
+      ]
+    }
+  ]
+}

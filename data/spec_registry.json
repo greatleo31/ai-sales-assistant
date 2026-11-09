@@ -74,7 +74,7 @@
     }
   },
   "categories": {
-    "3c_digital": ["laptop_bag", "gan_charger", "mechanical_keyboard", "nc_headphones", "power_bank", "usb_hub_cable"],
+    "3c_digital": ["laptop_bag", "gan_charger", "mechanical_keyboard", "nc_headphones", "power_bank", "usb_hub_cable", "bone_conduction_earphone"],
     "apparel": ["hoodie", "knit_cardigan", "windbreaker", "cargo_pants", "tshirt"],
     "beauty": ["facial_cream", "amino_cleanser", "sunscreen", "b5_serum", "salicylic_pads", "lip_balm"]
   },
@@ -281,6 +281,91 @@
         }
       },
       "soft_constraints": ["铝合金外壳", "免驱"]
+    },
+    "bone_conduction_earphone": {
+      "category": "3c_digital",
+      "count": 5,
+      "display_label": "骨传导运动耳机",
+      "zh_aliases": ["骨传导耳机", "骨传导游泳耳机", "游泳耳机", "骨传导运动耳机", "骨传导", "水上运动耳机"],
+      "specs": {
+        "storage_gb": {
+          "type": "number",
+          "integer": true,
+          "unit": "GB",
+          "op": ">=",
+          "label": "存储容量",
+          "range": [4, 64]
+        },
+        "battery_mp3_h": {
+          "type": "number",
+          "integer": false,
+          "unit": "h",
+          "op": ">=",
+          "label": "MP3模式续航",
+          "range": [4.0, 14.0],
+          "nullable": true,
+          "nullable_note": "官方未披露统一测试口径时置 null，禁止用同门类均值代填。"
+        },
+        "battery_bt_h": {
+          "type": "number",
+          "integer": false,
+          "unit": "h",
+          "op": ">=",
+          "label": "蓝牙模式续航",
+          "range": [0.0, 12.0],
+          "nullable": true,
+          "nullable_note": "无蓝牙硬件时置 0.0；官方未披露口径时置 null。"
+        },
+        "waterproof_rating": {
+          "type": "enum",
+          "op": "==",
+          "label": "防水等级",
+          "vocabulary": ["ip68", "ipx8"],
+          "display_labels": {
+            "ip68": "IP68",
+            "ipx8": "IPX8"
+          },
+          "zh_aliases": {
+            "ip68": ["IP68"],
+            "ipx8": ["IPX8"]
+          }
+        },
+        "waterproof_depth_m": {
+          "type": "number",
+          "integer": false,
+          "unit": "m",
+          "op": ">=",
+          "label": "最大防水水深",
+          "range": [1.5, 4.0],
+          "nullable": true,
+          "nullable_note": "禁止按 IP 等级自行外推水深；官方未明示时置 null。"
+        },
+        "wearing_type": {
+          "type": "enum",
+          "op": "==",
+          "label": "佩戴形态",
+          "vocabulary": ["bone_conduction", "neckband_in_ear"],
+          "display_labels": {
+            "bone_conduction": "骨传导式",
+            "neckband_in_ear": "颈挂入耳式"
+          },
+          "zh_aliases": {
+            "bone_conduction": ["骨传导式", "骨传导佩戴", "骨传导耳机"],
+            "neckband_in_ear": ["颈挂式", "入耳式", "颈挂入耳"]
+          }
+        },
+        "weight_g": {
+          "type": "number",
+          "integer": false,
+          "unit": "g",
+          "op": "<=",
+          "label": "整机重量",
+          "range": [20.0, 40.0],
+          "nullable": true,
+          "nullable_note": "五源均未披露时置 null，不估值、不按门类均值填充。"
+        }
+      },
+      "soft_constraints": ["脱机MP3播放", "轻量佩戴", "游泳耳塞", "快充"]
     },
     "hoodie": {
       "category": "apparel",

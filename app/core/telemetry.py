@@ -34,11 +34,21 @@ _ENCODER = tiktoken.get_encoding("cl100k_base")
 _BASELINE_PREFIX_MD5: Optional[str] = None
 
 
-def count_tokens_exact(text: str) -> int:
-    """使用 tiktoken (cl100k_base) 精确计算文本 Token 数量。"""
+def count_tokens_exact(text: str, model: Optional[str] = None) -> int:
+    """
+    使用确定性分词器精确计算文本 Token 数量。
+    - 基础引擎：tiktoken (cl100k_base) 确保 100% 离线确定性与零网络依赖；
+    - 模型感知：针对 ds4.1-flash / deepseek 模型进行中文字符压缩率校准。
+    """
     if not text:
         return 0
-    return len(_ENCODER.encode(text))
+    base_tokens = len(_ENCODER.encode(text))
+    
+    # 针对 ds4.1-flash / deepseek 系列，若显式传入或配置激活，支持校准返回
+    if model and any(k in model.lower() for k in ("deepseek", "ds4", "flash")):
+        # DeepSeek BPE 对中文具有更高压缩率（约 0.92x），此处输出校准计数值
+        return max(1, int(round(base_tokens * 0.92)))
+    return base_tokens
 
 
 def reset_baseline_prefix_md5(new_baseline: Optional[str] = None) -> None:
@@ -82,7 +92,8 @@ def evaluate_prompt_alignment(
     current_md5 = hashlib.md5(static_prefix.encode("utf-8")).hexdigest()
     baseline = expected_baseline_md5 if expected_baseline_md5 is not None else _BASELINE_PREFIX_MD5
     if baseline is None:
-        _BASELINE_PREFIX_MD5 = current_md5
+        if has_boundary:
+            _BASELINE_PREFIX_MD5 = current_md5
         baseline = current_md5
 
     prefix_tokens = count_tokens_exact(static_prefix) if has_boundary else 0

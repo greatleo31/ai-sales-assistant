@@ -1067,10 +1067,42 @@ function MoreActionsMenu({
    4. 惠购 (Huigou) 主应用组件
    ========================================================================== */
 export default function App() {
-  const [sessionId, setSessionId] = useState(() => `hg-${Date.now().toString(36)}`);
-  const [messages, setMessages] = useState([]);
+  const [sessionId, setSessionId] = useState(() => {
+    try {
+      const stored = localStorage.getItem('huigou_session_id');
+      if (stored && stored.startsWith('hg-')) return stored;
+      const created = `hg-${Date.now().toString(36)}`;
+      localStorage.setItem('huigou_session_id', created);
+      return created;
+    } catch {
+      return `hg-${Date.now().toString(36)}`;
+    }
+  });
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem('huigou_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
   const [inputText, setInputText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+
+  // 本地持久化消息历史（避免 F5 刷新页面丢失对话），仅在非流式输出时同步
+  useEffect(() => {
+    try {
+      if (!isStreaming && messages.length > 0) {
+        localStorage.setItem('huigou_messages', JSON.stringify(messages.slice(-20)));
+      } else if (messages.length === 0) {
+        localStorage.removeItem('huigou_messages');
+      }
+    } catch (e) {
+      console.warn('Failed to save messages to localStorage', e);
+    }
+  }, [messages, isStreaming]);
 
   // 多模态图片上传与相机预览状态
   const [pendingImage, setPendingImage] = useState(null); // { dataUrl, name } | null
@@ -1764,7 +1796,12 @@ export default function App() {
     stopCurrentStream();
     setMessages([]);
     setPendingImage(null);
-    setSessionId(`hg-${Date.now().toString(36)}`);
+    const newId = `hg-${Date.now().toString(36)}`;
+    try {
+      localStorage.setItem('huigou_session_id', newId);
+      localStorage.removeItem('huigou_messages');
+    } catch {}
+    setSessionId(newId);
     setShowPlusTray(false);
     setShowScrollFab(false);
     setSubPage(null);

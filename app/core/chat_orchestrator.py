@@ -51,6 +51,8 @@ from app.services.rule_governance import (
     EmotionTracker,
     EntityTracker,
     GuardAction,
+    INTENT_CONTEXT_RECALL,
+    _CONTEXT_RECALL_PATTERNS,
     SlidingWindowStreamFilter,
 )
 from app.services.strategy_injector import StrategyInjector
@@ -826,12 +828,16 @@ class ShoppingAgentOrchestrator:
         input_text: str,
         image_data_url: Optional[str] = None,
         timeout_sec: float = 18.0,
+        messages_list: Optional[List[Dict[str, Any]]] = None,
     ) -> AsyncGenerator[Dict[str, Any], None]:
         """
         调用主生成模型流式接口，同时兼容：
           1. OpenAI `chat` 协议 (`POST /v1/chat/completions`)：
-             - `messages[0]` (`role="system"`) 传入 100% 字节级恒定的静态系统提示词前缀 (`static_prefix`)，触发服务端硬件级 KV Prefix Cache；
-             - `messages[1]` (`role="user"`) 传入动态策略后缀、多轮历史、当前用户消息与可选的多模态 `image_url`；
+             - 传入 `messages_list` 时，直接作为 Append-Only 多轮消息数组上送
+               (`messages[0]` 恒为 `role="system"` 的静态前缀，其后为纯净历史与当前轮 user 消息)，
+               实现前序轮次物理级 KV Prefix Cache 复用；
+             - 未传入时回退为单条 user 双消息结构：`messages[0]` 传 `static_prefix`，
+               `messages[1]` 传 `input_text` 与可选多模态 `image_url`；
           2. OpenAI `responses` 协议 (`POST /v1/responses`)：
              - `instructions` 传入 `static_prefix`，`input` 传入 `input_text`。
         """
@@ -853,20 +859,32 @@ class ShoppingAgentOrchestrator:
             target_url = node.url.rstrip("/")
             if not target_url.endswith("/chat/completions"):
                 target_url = f"{target_url}/chat/completions"
-            user_content: Any = (
-                [
-                    {"type": "text", "text": input_text},
-                    {"type": "image_url", "image_url": {"url": image_data_url}},
-                ]
-                if image_data_url
-                else input_text
-            )
-            payload: Dict[str, Any] = {
-                "model": effective_model,
-                "messages": [
+            if messages_list:
+                # Append-Only 多轮消息数组：system 静态前缀 + 纯净历史 + 当前轮 user 消息
+                payload_messages: List[Dict[str, Any]] = [dict(m) for m in messages_list]
+                if image_data_url and payload_messages:
+                    last_msg = payload_messages[-1]
+                    if last_msg.get("role") == "user" and isinstance(last_msg.get("content"), str):
+                        last_msg["content"] = [
+                            {"type": "text", "text": last_msg["content"]},
+                            {"type": "image_url", "image_url": {"url": image_data_url}},
+                        ]
+            else:
+                user_content: Any = (
+                    [
+                        {"type": "text", "text": input_text},
+                        {"type": "image_url", "image_url": {"url": image_data_url}},
+                    ]
+                    if image_data_url
+                    else input_text
+                )
+                payload_messages = [
                     {"role": "system", "content": instructions},
                     {"role": "user", "content": user_content},
-                ],
+                ]
+            payload: Dict[str, Any] = {
+                "model": effective_model,
+                "messages": payload_messages,
                 "thinking": {"type": "disabled"},
                 "stream": True,
             }
@@ -969,6 +987,8 @@ class ShoppingAgentOrchestrator:
         client_ip: str = "127.0.0.1",
         user_agent: str = "Mozilla/5.0",
         image_base64: Optional[str] = None,
+        current_user: Optional[Dict[str, Any]] = None,
+        strict_pbac: bool = False,
     ) -> AsyncGenerator[str, None]:
         """
         执行全链路状态机并按序 yield 标准 SSE 帧：
@@ -985,6 +1005,12 @@ class ShoppingAgentOrchestrator:
         has_image = bool(image_base64 and image_base64.strip())
         if not clean_query and has_image:
             clean_query = "请帮我识别这张图片中的商品并推荐合适的款式"
+
+        # 阶段二双向 PII 脱敏金库：在送入 Prompt 和落盘前自动置换脱敏敏感手机、身份证、银行卡与姓名
+        from app.core.security import global_pii_vault
+        clean_query, pii_mapping = global_pii_vault.mask_text(clean_query, session_id=session_id)
+        has_pii_masked = bool(pii_mapping)
+
         conv_history = list(history or [])
         message_id = f"msg-{uuid.uuid4().hex[:12]}"
 
@@ -1007,6 +1033,8 @@ class ShoppingAgentOrchestrator:
                 "primary_intent": "privacy_guard",
                 "intent_confidence": 1.0,
                 "confidence_tier": "high",
+                "has_pii_masked": has_pii_masked,
+                "pii_masked_count": len(pii_mapping),
                 "intent_probabilities": {
                     "product_recommend": 0.0,
                     "order_query": 0.0,
@@ -1222,8 +1250,16 @@ class ShoppingAgentOrchestrator:
             if matched_single_sku_id:
                 break
 
+        # 检查跨轮品类跃迁跳转 (Category Shift Guard)
+        curr_sub = extracted.get("sub_category")
+        prev_sub = last_rec.get("sub_category") if last_rec else None
+        is_category_shift = bool(curr_sub and prev_sub and curr_sub != prev_sub)
+        if is_category_shift:
+            # 用户主动切换品类，前序推荐快照主动失效，杜绝旧品类 SKU 参与本轮代词锁定或集合锁定
+            last_rec = None
+
         # 检查是否满足代词追问或比价追问
-        if last_rec and last_rec.get("recommended_skus") and not is_sub_category_conflict:
+        if last_rec and last_rec.get("recommended_skus") and not is_sub_category_conflict and not is_category_shift:
             rec_skus = last_rec["recommended_skus"]
             prev_sub = last_rec.get("sub_category")
 
@@ -1376,10 +1412,18 @@ class ShoppingAgentOrchestrator:
             cards.sort(key=lambda c: 0 if c.get("sku_id") == target_sku_id else 1)
             pre_rag_result["product_cards"] = cards
 
-        # 合并本地情绪护栏与隐私试探信号
+        # 合并本地情绪护栏与隐私试探信号（不覆盖明确的查单与售后业务流）
         primary_intent = jev_decision["primary_intent"]
-        if input_guard.category == "privacy_probe":
+        if input_guard.category == "privacy_probe" and primary_intent not in ("order_query", "aftersales_qa"):
             primary_intent = "privacy_guard"
+
+        # 上下文历史追溯意图短路（“我刚才问你什么”、“上面推荐过什么”）
+        if _CONTEXT_RECALL_PATTERNS.search(clean_query) or primary_intent == INTENT_CONTEXT_RECALL:
+            primary_intent = INTENT_CONTEXT_RECALL
+            jev_decision["primary_intent"] = INTENT_CONTEXT_RECALL
+            jev_decision["need_rag"] = False
+            pre_rag_result = None
+
         handoff_guard = bool(
             jev_decision.get("handoff_guard", False) or emotion_sig.trigger_handoff
         )
@@ -1435,8 +1479,15 @@ class ShoppingAgentOrchestrator:
             order_result = self.order_tools.query_order_status(
                 order_id=entities.get("order_id"),
                 query_text=clean_query,
+                current_user=current_user,
+                strict_pbac=strict_pbac,
             )
-            if not order_result or not order_result.get("found"):
+            if order_result and order_result.get("forbidden"):
+                missing_order_reply_msg = (
+                    "【安全拦截】抱歉，您无权查询其他用户的订单物流信息。请登录对应购买账号或提供您本人的订单编号。"
+                )
+                order_result = None
+            elif not order_result or not order_result.get("found"):
                 missing_order_reply_msg = (
                     "为了帮您准确核实订单与最新物流轨迹，请提供您的**订单编号（以 ORD- 开头，如 ORD-20261001-XXX）**，"
                     "或告知您购买的具体商品名称。"
@@ -1446,11 +1497,21 @@ class ShoppingAgentOrchestrator:
             aftersales_result = self.order_tools.evaluate_aftersales_eligibility(
                 order_id=entities.get("order_id"),
                 query_text=clean_query,
+                current_user=current_user,
+                strict_pbac=strict_pbac,
             )
-            if aftersales_result and aftersales_result.get("found"):
+            if aftersales_result and aftersales_result.get("forbidden"):
+                missing_order_reply_msg = (
+                    "【安全拦截】抱歉，您无权核验或申请其他用户的订单售后。请登录对应购买账号或提供您本人的订单编号。"
+                )
+                aftersales_result = None
+                order_result = None
+            elif aftersales_result and aftersales_result.get("found"):
                 order_result = self.order_tools.query_order_status(
                     order_id=aftersales_result.get("order_id") or entities.get("order_id"),
                     query_text=clean_query,
+                    current_user=current_user,
+                    strict_pbac=strict_pbac,
                 )
             else:
                 missing_order_reply_msg = (
@@ -1491,9 +1552,13 @@ class ShoppingAgentOrchestrator:
                     f"抱歉，惠购目前暂无「{detected_missing_item}」相关商品，我们会尽快安排补货上架。"
                     f"您可以点击上方卡片一键登记心愿单，上架后第一时间通知您。"
                 )
+        elif primary_intent == INTENT_CONTEXT_RECALL:
+            # 彻底置空商品检索，防止在回顾历史时胡乱召回洗面奶等无关商品
+            rag_result = None
+            pre_rag_result = None
         elif (
             primary_intent == "product_recommend"
-            or (jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat", "order_query", "aftersales_qa"))
+            or (jev_decision.get("need_rag") and primary_intent not in ("privacy_guard", "chitchat", "order_query", "aftersales_qa", INTENT_CONTEXT_RECALL))
         ) and (has_product_constraints or (pre_rag_result and pre_rag_result.get("product_cards"))):
             rag_result = pre_rag_result
 
@@ -1557,6 +1622,8 @@ class ShoppingAgentOrchestrator:
             "primary_intent": primary_intent,
             "intent_confidence": jev_decision.get("intent_confidence", 1.0),
             "confidence_tier": jev_decision.get("confidence_tier", "high"),
+            "has_pii_masked": has_pii_masked,
+            "pii_masked_count": len(pii_mapping),
             "clarification_needed": bool(jev_decision.get("clarification_needed", False)),
             "intent_probabilities": jev_decision.get("intent_probabilities", {}),
             "need_rag": bool(jev_decision.get("need_rag", False)),
@@ -1604,9 +1671,22 @@ class ShoppingAgentOrchestrator:
                 "sla_promise": "人工专员将在 15 秒内优先接入处理您的诉求",
             }
 
+        # 阶段三来源溯源卡片 (Citations)
+        citations_list = []
+        if rag_result and rag_result.get("product_cards"):
+            for idx, pc in enumerate(rag_result["product_cards"]):
+                citations_list.append({
+                    "citation_index": idx + 1,
+                    "marker": f"[^{idx + 1}]",
+                    "sku_id": pc.get("sku_id"),
+                    "title": pc.get("title") or pc.get("sku_title"),
+                    "source": "platform_catalog_v2026",
+                })
+
         ui_cards_payload = {
             "product_cards": rag_result["product_cards"] if rag_result else [],
             "price_explain_cards": rag_result["price_explain_cards"] if rag_result else [],
+            "citations": citations_list,
             "order_cards": (
                 [order_result["order_card"]]
                 if (order_result and order_result.get("order_card"))
@@ -1655,6 +1735,9 @@ class ShoppingAgentOrchestrator:
         )
         static_prefix = prompt_pkg["static_prefix"]
         dynamic_suffix = prompt_pkg["dynamic_suffix"]
+        # KV Cache 对齐改造：动态块拆分为「稳定真源 §1~§6」与「易变度量 §7」，后者必须恒居消息最末尾
+        dynamic_context_block = prompt_pkg.get("dynamic_context_block", dynamic_suffix)
+        volatile_metrics_block = prompt_pkg.get("volatile_metrics_block", "")
         align_metrics = prompt_pkg["alignment_metrics"]
 
         trimmed_history, history_tokens = self._trim_history_to_window(
@@ -1665,7 +1748,7 @@ class ShoppingAgentOrchestrator:
         history_block, active_msgs = HierarchicalContextHarness.assemble_hierarchical_context(
             history=trimmed_history,
             ledger=session_ledger,
-            active_turns_window=3,
+            active_turns_window=8,
         )
 
         vision_context_block = ""
@@ -1705,13 +1788,44 @@ class ShoppingAgentOrchestrator:
                     "- **回答指引**：说明已收到客户上传的图片凭证，并结合上方确定性售后/订单核验卡片给出清晰结论。\n"
                 )
 
+        context_recall_directive = ""
+        if primary_intent == INTENT_CONTEXT_RECALL:
+            context_recall_directive = (
+                "\n【上下文追溯与对话记忆指引（最高红线）】：用户正在追溯或回顾本会话历史、刚才提问的问题或此前推荐的商品。"
+                "★ 必须严格基于下方「分级对话上下文与决策记忆」中的活跃轮次高保真记录与事实回顾作答；"
+                "★ 直接、清晰、准确地回答用户刚才所问的内容或刚才讨论过的商品，不要敷衍；"
+                "★ 严禁凭空捏造本会话中从未出现过的商品，严禁推荐无关品类！\n"
+            )
+
         c_end_format_rule = (
             "\n【C端客户界面排版硬约束】：直接输出面向消费者的自然专业中文流式回答（120~220字），"
             "语言自然流畅、专业得体、直击要害，像大厂自营专业客服顾问一样高效说人话。"
             "严禁生成‘先给结论：’、‘结论：’、‘观点先行：’、‘针对您的诉求’等任何生硬格式化小标题，也严禁使用轻浮俚语网梗。"
             "严禁输出 `<br>`、`<div>` 等任何 HTML 标签，严禁输出 `$...$`、`\\rightarrow` 等 LaTeX 数学公式符号或 Markdown 表格线。\n"
         )
-        llm_input_text = f"{dynamic_suffix}{vision_context_block}{context_locking_directive}{history_block}{c_end_format_rule}\n请直接基于以上真源数据回复用户：{clean_query}"
+        # 当前轮 user 消息定序：用户问题 → 排版格式硬约束 → 视觉/追溯/锁定指令 → 分级记忆 → 动态真源(§1~§6) → 易变度量(§7 恒居末尾)
+        llm_input_text = (
+            f"{clean_query}\n"
+            f"{c_end_format_rule}"
+            f"{vision_context_block}"
+            f"{context_recall_directive}"
+            f"{context_locking_directive}"
+            f"{history_block}"
+            f"{dynamic_context_block}"
+            f"{volatile_metrics_block}"
+        )
+
+        # Append-Only 多轮 messages 数组：[system 静态前缀] + [100% 纯净历史 (零动态污染)] + [当前轮 user]
+        messages_list: List[Dict[str, Any]] = [{"role": "system", "content": static_prefix}]
+        for h_msg in trimmed_history:
+            h_role = str(h_msg.get("role") or "user")
+            if h_role not in ("user", "assistant"):
+                h_role = "user"
+            h_content = str(h_msg.get("content") or "")
+            if not h_content.strip():
+                continue
+            messages_list.append({"role": h_role, "content": h_content})
+        messages_list.append({"role": "user", "content": llm_input_text})
 
         # ====================================================================
         # Step 7: 调用主生成模型 (/v1/responses) 或确定性合成器，经滑动窗口过滤推送 `text_delta`
@@ -1772,6 +1886,7 @@ class ShoppingAgentOrchestrator:
                     instructions=static_prefix,
                     input_text=llm_input_text,
                     image_data_url=vision_info.get("data_url") if vision_info else None,
+                    messages_list=messages_list,
                 ):
                     if item["type"] == "delta":
                         clean_delta = aligner.feed_chunk(item["delta"])
@@ -1859,6 +1974,15 @@ class ShoppingAgentOrchestrator:
                     ttft_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
                 emitted_full_text_parts.append(tail_piece)
                 yield format_sse_event("text_delta", {"delta": tail_piece})
+
+        # 阶段三分级置信度与兜底免责声明
+        conf_val = float(jev_decision.get("intent_confidence", 1.0))
+        is_fallback = bool(jev_decision.get("fallback_triggered", False))
+        is_rule_synth = not remote_succeeded
+        if (conf_val < 0.75 or is_fallback or is_rule_synth) and not missing_order_reply_msg and not handoff_guard:
+            disclaimer = "\n\n💡 温馨提示：以上信息由惠购平台规则知识库生成，具体商品配置、实时库存与优惠规则请以商品详情页最终结算为准。"
+            emitted_full_text_parts.append(disclaimer)
+            yield format_sse_event("text_delta", {"delta": disclaimer})
 
         full_emitted_text = "".join(emitted_full_text_parts)
         if llm_output_tokens == 0:

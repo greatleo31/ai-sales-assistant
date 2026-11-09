@@ -88,6 +88,7 @@ class AppConfig:
     context_dependent_threshold: float = _env_float("CONTEXT_DEPENDENT_THRESHOLD", 0.50)
     handoff_guard_threshold: float = _env_float("HANDOFF_GUARD_THRESHOLD", 0.80)
     jev_cache_path: Path = DATA_DIR / "jev_cache.json"
+    jev_proxy_url: Optional[str] = os.environ.get("JEV_PROXY_URL")
 
     # 2. System Two (DeepSeek-V4.1-Flash via /v1/chat/completions)
     llm_protocol: str = os.environ.get("LLM_PROTOCOL", "chat")
@@ -120,9 +121,7 @@ class AppConfig:
     rerank_enabled: bool = _env_bool("RERANK_ENABLED", True)
     rerank_provider: str = os.environ.get("RERANK_PROVIDER", "siliconflow")
     rerank_api_url: str = os.environ.get("RERANK_API_URL", "https://api.siliconflow.cn/v1/rerank")
-    rerank_api_key: str = os.environ.get(
-        "RERANK_API_KEY", "sk-dkxvhitmipiogdtofgbaurcmquszwgktycjkmtqmpcqqzncu"
-    )
+    rerank_api_key: str = os.environ.get("RERANK_API_KEY", "")
     rerank_model: str = os.environ.get("RERANK_MODEL", "Pro/BAAI/bge-reranker-v2-m3")
     rerank_timeout_sec: float = _env_float("RERANK_TIMEOUT_SEC", 4.5)
 
@@ -151,6 +150,16 @@ class AppConfig:
 
     # 7. RTC 语音预留开关 (默认关闭，零告警)
     enable_rtc_voice: bool = _env_bool("ENABLE_RTC_VOICE", False)
+
+    # 8. 安全网关与鉴权限流配置 (Security Gateway Guard)
+    require_admin_auth: bool = _env_bool("REQUIRE_ADMIN_AUTH", False)
+    jwt_secret: str = os.environ.get("JWT_SECRET", "huigou-ai-sales-secret-key-2026-safe")
+    jwt_algorithm: str = os.environ.get("JWT_ALGORITHM", "HS256")
+    jwt_expire_minutes: int = _env_int("JWT_EXPIRE_MINUTES", 1440)
+    rate_limit_rpm: int = _env_int("RATE_LIMIT_RPM", 20)
+    max_query_length: int = _env_int("MAX_QUERY_LENGTH", 2000)
+    admin_api_key: str = os.environ.get("ADMIN_API_KEY", "huigou-admin-super-key-2026")
+    trusted_proxies: str = os.environ.get("TRUSTED_PROXIES", "127.0.0.1,::1,localhost,testclient")
 
 
 settings = AppConfig()

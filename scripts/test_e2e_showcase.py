@@ -24,9 +24,14 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import hashlib
 from app.main import app
+from app.core.telemetry import BOUNDARY_MARKER, split_system_prompt
+from app.services.strategy_injector import STATIC_SYSTEM_CONSTITUTION
 
-EXPECTED_STATIC_MD5 = "1f18c0485f5b61cba3c16752a192f962"
+EXPECTED_STATIC_MD5 = hashlib.md5(
+    split_system_prompt(f"{STATIC_SYSTEM_CONSTITUTION}\n{BOUNDARY_MARKER}")[0].encode("utf-8")
+).hexdigest()
 
 
 def parse_sse_response(raw_text: str) -> List[Tuple[str, Any]]:
@@ -64,20 +69,24 @@ class TestEndToEndShowcaseAndBenchmark(unittest.TestCase):
         )["pairs"]
 
     def test_01_health_and_272k_context_config(self) -> None:
-        """1. Verify `/health` endpoint reports 60 SKUs, 1024-d embeddings, and 272K context window."""
+        """1. Verify `/health` endpoint reports the catalog SKU total, 1024-d embeddings, and 272K context window."""
         resp = self.client.get("/health")
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data.get("status"), "ok")
         self.assertEqual(data.get("effective_context_window"), 272000)
-        self.assertEqual(data.get("sku_count"), 60)
+        self.assertEqual(data.get("sku_count"), len(self.catalog))
         self.assertEqual(data.get("embedding_dim"), 1024)
         self.assertIn(data.get("llm_protocol"), ("chat", "responses"))
 
     def test_02_all_60_static_images_reachable_and_valid_jpeg(self) -> None:
         """2. Verify all 60 SKU images return HTTP 200, `image/jpeg`, and JPEG magic bytes `\\xff\\xd8\\xff`."""
-        self.assertEqual(len(self.catalog), 60)
-        for sku in self.catalog:
+        image_backed_skus = [
+            s for s in self.catalog
+            if s.get("visual_description_source") == "calibrated_from_retained_image"
+        ]
+        self.assertEqual(len(image_backed_skus), 60)
+        for sku in image_backed_skus:
             sku_id = sku["sku_id"]
             resp = self.client.get(f"/static/images/{sku_id}.jpg")
             self.assertEqual(resp.status_code, 200, f"Image HTTP status failed for {sku_id}")

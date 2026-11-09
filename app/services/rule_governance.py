@@ -20,12 +20,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-# 5 类封闭意图常量（与 Jev System One choice 词表严格一一对应）
+# 5 类封闭意图常量（与 Jev System One choice 词表严格一一对应）+ 扩展元上下文追溯意图
 INTENT_PRODUCT_RECOMMEND = "product_recommend"
 INTENT_ORDER_QUERY = "order_query"
 INTENT_AFTERSALES_QA = "aftersales_qa"
 INTENT_PRIVACY_GUARD = "privacy_guard"
 INTENT_CHITCHAT = "chitchat"
+INTENT_CONTEXT_RECALL = "context_recall"
 
 CLOSED_INTENTS: Tuple[str, ...] = (
     INTENT_PRODUCT_RECOMMEND,
@@ -34,6 +35,8 @@ CLOSED_INTENTS: Tuple[str, ...] = (
     INTENT_PRIVACY_GUARD,
     INTENT_CHITCHAT,
 )
+
+ALL_APP_INTENTS: Tuple[str, ...] = CLOSED_INTENTS + (INTENT_CONTEXT_RECALL,)
 
 
 # ==============================================================================
@@ -56,14 +59,16 @@ class GuardResult:
 
 _INJECTION_PATTERNS: List[re.Pattern] = [
     re.compile(r"忽略.{0,12}(上面|之前|以上|所有|系统).{0,12}(指令|规则|设定|提示|prompt)", re.IGNORECASE),
+    re.compile(r"忘掉.{0,12}(上面|之前|以上|所有|系统|你的).{0,12}(指令|规则|设定|约束|提示)", re.IGNORECASE),
     re.compile(r"ignore.{0,20}(above|previous|all|system).{0,20}(instructions?|rules?|prompts?)", re.IGNORECASE),
     re.compile(r"disregard.{0,20}(above|previous|all)", re.IGNORECASE),
-    re.compile(r"(输出|打印|显示|告诉我|给我看|背诵).{0,12}(system\s*prompt|系统提示|系统指令|你的设定|你的指令)", re.IGNORECASE),
-    re.compile(r"(repeat|print|show|output|reveal).{0,15}(system\s*prompt|instructions?)", re.IGNORECASE),
-    re.compile(r"你的\s*(prompt|提示词|系统指令|底层指令)\s*是什么", re.IGNORECASE),
+    re.compile(r"(输出|打印|显示|告诉我|给我看|背诵).{0,12}(system\s*prompt|系统提示|系统指令|你的设定|你的指令|系统宪法|静态宪法|边界标记)", re.IGNORECASE),
+    re.compile(r"(repeat|print|show|output|reveal|recite).{0,15}(system\s*prompt|instructions?|constitution|boundary)", re.IGNORECASE),
+    re.compile(r"你的\s*(prompt|提示词|系统指令|底层指令|系统宪法)\s*是什么", re.IGNORECASE),
     re.compile(r"(从现在开始|now\s*you\s*are).{0,20}(你是|act\s*as|pretend|扮演)", re.IGNORECASE),
     re.compile(r"进入.{0,8}(开发者|developer|DAN|越狱|jailbreak)模式", re.IGNORECASE),
     re.compile(r"(DAN|Do\s*Anything\s*Now|jailbreak)", re.IGNORECASE),
+    re.compile(r"(bypass|override).{0,20}(safety|guard|security|filter|rules?)", re.IGNORECASE),
     re.compile(r"\[System\]|\[INST\]|\[/INST\]", re.IGNORECASE),
     re.compile(r"(?i)(ctf|靶场|渗透测试|burp\s*suite|sql\s*注入|xss|抓包|逆向提示词|逆向你的提示词|夺旗|攻防演练|红蓝对抗)", re.UNICODE),
     re.compile(r"(?i)(系统\s*prompt|system\s*prompt|系统预设|底层提示词|系统底层指令|系统指令|使用的模型|使用什么大模型|deepseek|fastapi|uvicorn)", re.UNICODE),
@@ -713,6 +718,11 @@ _CONTEXT_DEP_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+_CONTEXT_RECALL_PATTERNS = re.compile(
+    r"(我刚才(问|说|提)|我之前(问|说|提)|上面(问|说|提|推荐|聊)|之前聊了什么|刚问了什么|问了你什么|说了什么|回顾一下|列了哪些|推荐了哪些|第[一二三四五12345]款是|刚刚聊的|之前说了什么|历史记录|我们聊了什么|上一个问题)",
+    re.IGNORECASE,
+)
+
 _CHITCHAT_PATTERNS = re.compile(
     r"^(你好|您好|hello|hi|嗨|在吗|谢谢|感谢|辛苦了|再见|拜拜|好的|收到|明白|哈哈|早上好|晚上好)([！!。，,？?~～\s]*)$",
     re.IGNORECASE,
@@ -738,12 +748,18 @@ class LocalRuleDecisionEngine:
         emotion = EmotionTracker.detect(messages or [], current_query=q)
         is_ctx = bool(_CONTEXT_DEP_PATTERNS.search(q))
 
-        # 判定主意图 (优先级：privacy_guard > aftersales_qa > order_query > product_recommend > chitchat)
+        # 判定主意图 (优先级：privacy_guard > context_recall > aftersales_qa > order_query > product_recommend > chitchat)
         if guard.category in ("prompt_injection", "privacy_probe") or _PRIVACY_PROBE_PATTERNS.search(q):
             primary_intent = INTENT_PRIVACY_GUARD
             need_rag_score = 0.05
             handoff_score = 0.10
             readiness_raw = 0.15
+        elif _CONTEXT_RECALL_PATTERNS.search(q):
+            # 元对话上下文追溯（“我刚才问你什么”、“上面推荐了哪些商品”）
+            primary_intent = INTENT_CONTEXT_RECALL
+            need_rag_score = 0.00
+            handoff_score = 0.02
+            readiness_raw = 0.80
         elif _AFTERSALES_PATTERNS.search(q):
             primary_intent = INTENT_AFTERSALES_QA
             need_rag_score = 0.88
@@ -772,7 +788,7 @@ class LocalRuleDecisionEngine:
             handoff_score = 0.85 if emotion.trigger_handoff else 0.05
             readiness_raw = 1.00 if primary_intent == INTENT_CHITCHAT else 2.00
 
-        probs: Dict[str, float] = {intent: 0.02 for intent in CLOSED_INTENTS}
+        probs: Dict[str, float] = {intent: 0.02 for intent in ALL_APP_INTENTS}
         probs[primary_intent] = 0.92
         ctx_score = 0.80 if is_ctx else 0.08
         readiness_score = round(readiness_raw + 1.0, 2)

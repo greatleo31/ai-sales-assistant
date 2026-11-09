@@ -5,8 +5,11 @@
 import time
 from fastapi.testclient import TestClient
 from app.main import app
+from app.services.admin_analytics_service import get_admin_analytics_service
 
 client = TestClient(app)
+_token = get_admin_analytics_service().authenticate_admin("admin", "admin123")["token"]
+client.headers["Authorization"] = f"Bearer {_token}"
 
 def test_eval_endpoints():
     print(">>> 1. 测试 GET /api/v1/admin/eval/cases")

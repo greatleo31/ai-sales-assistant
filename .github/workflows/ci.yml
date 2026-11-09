@@ -77,8 +77,3 @@ jobs:
           name: eval-results-summary
           path: data/eval_results_summary.json
           retention-days: 14
-
-      - name: Publish Markdown Evaluation Report to Step Summary
-        if: always()
-        run: |
-          python -B scripts/publish_ci_summary.py

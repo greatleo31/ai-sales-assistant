@@ -23,3 +23,11 @@ node_modules/
 
 # Local Internal Specs (kept locally, excluded from public English repository)
 HANDOFF.md
+
+# Deployment tarballs (stored locally in deploy/MM-DD/, never tracked in git)
+deploy/*.tar.gz
+deploy/**/*.tar.gz
+
+# Personal resume drafts (kept locally only)
+docs/简历_项目描述_五点亮点.md
+docs/简历_项目描述_最终版.md

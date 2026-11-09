@@ -51,7 +51,10 @@ def build_retrieval_text(
         s_meta = specs_def.get(k, {})
         label = s_meta.get("label", k)
         unit = s_meta.get("unit", "")
-        if s_meta.get("type") == "enum":
+        if v is None:
+            # 【nullable 规格】：官方未披露时保持 null，语料侧显式标注“待核验”，严禁估值代填
+            spec_parts.append(f"{label}:待核验")
+        elif s_meta.get("type") == "enum":
             display_labels = s_meta.get("display_labels", {})
             neutral_label = display_labels.get(str(v), str(v))
             spec_parts.append(f"{label}:{v}({neutral_label})")
@@ -423,6 +426,154 @@ def get_raw_skus() -> List[Dict[str, Any]]:
             "highlights": ["雷电4满血40Gbps带宽", "支持8K/双4K60Hz显示器", "CNC铝合金外壳散热鳍片", "免驱"],
             "visual_description": "银色CNC精雕铝合金方盒机身，表面带凹凸散热鳍片，正面与背面分布4个带闪电标志的雷电4接口。",
             "search_query": "阿卡西斯 雷电4 拓展坞 银色铝合金 商品图",
+        },
+
+        # --- 1.7 bone_conduction_earphone (5 SKUs: SKU-3C-026 ~ 030，源自 data/contest_swimming/cleaned_products.json) ---
+        # 说明：原件号 P001~P005 以 legacy_sku_id 保留为别名/原编号；nullable 规格（官网未披露）保持 null，估值代填被禁止。
+        {
+            "sku_id": "SKU-3C-026",
+            "legacy_sku_id": "P001",
+            "category": "3c_digital",
+            "sub_category": "bone_conduction_earphone",
+            "title": "Zurmek Ralun Pro 骨传导游泳耳机 SR-210",
+            "brand": "Zurmek",
+            "original_price": 1298.0,
+            "final_price": 1098.0,
+            "specs": {
+                "storage_gb": 32,
+                "battery_mp3_h": 6.0,
+                "battery_bt_h": 9.0,
+                "waterproof_rating": "ip68",
+                "waterproof_depth_m": 2.0,
+                "wearing_type": "bone_conduction",
+                "weight_g": 27.0,
+            },
+            "highlights": [
+                "32GB 本地存储，脱机水下播放",
+                "Vondir 2.0+ 骨传导振子，内外侧反相消漏音",
+                "游泳 EQ 水下听感模式",
+                "IP68，官方声明淡水 2 米内最长 2 小时",
+                "约 27g，适配泳帽与泳镜",
+                "官方标注 10 分钟快充约 3 小时（计量口径未写明）",
+                "24 个月保修（以销售地区政策为准）",
+            ],
+            "visual_description": "颈后环绕式骨传导结构，左右椭圆振子贴合颞骨，机身包覆哑光亲肤硅胶，右侧带实体按键与磁吸充电触点。",
+            "search_query": "骨传导游泳耳机 颈后环绕 实体按键 商品图",
+        },
+        {
+            "sku_id": "SKU-3C-027",
+            "legacy_sku_id": "P002",
+            "category": "3c_digital",
+            "sub_category": "bone_conduction_earphone",
+            "title": "Zurmek Ralun 游泳用骨传导运动耳机（第7代，无蓝牙）",
+            "brand": "Zurmek",
+            "original_price": 2948.0,
+            "final_price": 2948.0,
+            "specs": {
+                "storage_gb": 4,
+                "battery_mp3_h": 8.0,
+                "battery_bt_h": 0.0,
+                "waterproof_rating": "ip68",
+                "waterproof_depth_m": 2.0,
+                "wearing_type": "bone_conduction",
+                "weight_g": 30.0,
+            },
+            "highlights": [
+                "4GB 本地存储，不含蓝牙模块",
+                "Vondir 2.0 骨传导",
+                "最长 8 小时（本地播放口径，官网未分模式标注）",
+                "IP68，官方口径水下 2 米",
+                "约 30g，适配泳帽",
+                "24 个月保修（以销售地区政策为准）",
+            ],
+            "visual_description": "头梁一体式骨传导结构，耳挂弧度贴合耳后，机身磨砂塑料，单侧布置电源与播放实体按键。",
+            "search_query": "骨传导游泳耳机 一体式耳挂 实体按键 商品图",
+        },
+        {
+            "sku_id": "SKU-3C-028",
+            "legacy_sku_id": "P003",
+            "category": "3c_digital",
+            "sub_category": "bone_conduction_earphone",
+            "title": "Yovrix Kandro 2 Pro 多运动版 骨传导游泳耳机",
+            "brand": "Yovrix",
+            "original_price": 1845.0,
+            "final_price": 1845.0,
+            "specs": {
+                "storage_gb": 8,
+                "battery_mp3_h": 6.0,
+                "battery_bt_h": 9.0,
+                "waterproof_rating": "ipx8",
+                "waterproof_depth_m": 3.6,
+                "wearing_type": "bone_conduction",
+                "weight_g": None,
+            },
+            "highlights": [
+                "8GB 本地存储，MP3 与 Larvo 离线模式",
+                "Bluetooth 5.3",
+                "骨传导开放式佩戴（颈后式）",
+                "IPX8，官方声明可承受约 3.6 米水深",
+                "含游泳耳塞",
+                "12 个月保修（登记活动或可延长，以地区政策为准）",
+            ],
+            "visual_description": "颈后挂式骨传导结构，钛合金丝颈环外包硅胶，左右振子贴附耳前颧骨位置，机身无屏幕仅三颗实体按键。",
+            "search_query": "骨传导游泳耳机 颈后挂式 钛合金颈环 商品图",
+        },
+        {
+            "sku_id": "SKU-3C-029",
+            "legacy_sku_id": "P004",
+            "category": "3c_digital",
+            "sub_category": "bone_conduction_earphone",
+            "title": "Norvek VD-140 / Vantu V 系列 防水一体式 MP3 颈挂式游泳耳机",
+            "brand": "Norvek",
+            "original_price": 456.0,
+            "final_price": 456.0,
+            "specs": {
+                "storage_gb": 4,
+                "battery_mp3_h": 12.0,
+                "battery_bt_h": 4.0,
+                "waterproof_rating": "ip68",
+                "waterproof_depth_m": 2.0,
+                "wearing_type": "neckband_in_ear",
+                "weight_g": 32.0,
+            },
+            "highlights": [
+                "入耳式颈挂一体式 MP3 播放器形态",
+                "4GB 本地存储，支持 MP3/WMA/PCM/AAC",
+                "本地 MP3 最长约 12 小时",
+                "陆上支持蓝牙与 NFC，水下蓝牙不可用",
+                "IP68，需佩戴游泳耳塞时水下 2 米内 30 分钟",
+                "3 分钟快充约 60 分钟播放",
+                "约 32g，支持环境声模式",
+            ],
+            "visual_description": "深灰颈环式入耳结构，颈环两端收纳挂耳线材与硅胶耳塞，控制按键位于颈环右侧。",
+            "search_query": "颈挂入耳式 防水 MP3 游泳耳机 商品图",
+        },
+        {
+            "sku_id": "SKU-3C-030",
+            "legacy_sku_id": "P005",
+            "category": "3c_digital",
+            "sub_category": "bone_conduction_earphone",
+            "title": "珂沐 Sorbik Pro 5 骨传导游泳蓝牙耳机",
+            "brand": "珂沐",
+            "original_price": 1498.0,
+            "final_price": 1138.0,
+            "specs": {
+                "storage_gb": 32,
+                "battery_mp3_h": None,
+                "battery_bt_h": None,
+                "waterproof_rating": "ip68",
+                "waterproof_depth_m": None,
+                "wearing_type": "bone_conduction",
+                "weight_g": None,
+            },
+            "highlights": [
+                "32GB 本地存储，支持蓝牙与本地音乐",
+                "骨传导开放式佩戴，35° 可调结构",
+                "IP68（官网未给出水深与时长，须查说明书）",
+                "平台展示已售 2000+",
+            ],
+            "visual_description": "耳挂式骨传导结构，左右振子由可 35° 调节的弹性耳挂连接，机身包覆哑光涂层，右侧布置多功能实体键。",
+            "search_query": "骨传导游泳耳机 可调耳挂 实体按键 商品图",
         },
 
         # ==================== 2. 换季服饰 (20 SKUs) ====================
@@ -1584,6 +1735,9 @@ def main() -> None:
             "shipping_sla_hours": 24,
             "inventory_status": "in_stock",
         }
+        # 原件号别名/溯源编号（仅部分子类目提供，不影响既有 60 条 SKU 的字段集合）
+        if item.get("legacy_sku_id"):
+            sku_obj["legacy_sku_id"] = item["legacy_sku_id"]
         enriched_skus.append(sku_obj)
 
     sku_by_id = {s["sku_id"]: s for s in enriched_skus}

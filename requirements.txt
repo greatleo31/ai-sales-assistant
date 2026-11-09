@@ -7,3 +7,4 @@ tiktoken>=0.7.0
 psycopg[binary]>=3.1.18
 pillow>=10.3.0
 cos-python-sdk-v5>=1.9.30
+PyJWT>=2.8.0

@@ -142,13 +142,35 @@ class DeterministicOrderTools:
         self,
         order_id: Optional[str] = None,
         query_text: Optional[str] = None,
+        current_user: Optional[Union[Dict[str, Any], str]] = None,
+        strict_pbac: bool = False,
     ) -> Dict[str, Any]:
-        """只读查询订单物流状态、时间节点与商品卡片信息。"""
+        """只读查询订单物流状态、时间节点与商品卡片信息（支持 PBAC 细粒度校验与 IDOR 拦截）。"""
+        if strict_pbac and not order_id and not (query_text and ORDER_ID_REGEX.search(query_text)):
+            return {
+                "found": False,
+                "requires_order_id": True,
+                "prompt_question": "请提供您需要查询物流的订单编号（例如 ORD-20261001-001），以便为您精准查询。",
+                "order_card": None,
+            }
+
         order = self.resolve_order(order_id=order_id, query_text=query_text)
         if order is None:
             return {
                 "found": False,
                 "error": f"未找到匹配的订单: {order_id or query_text}",
+                "order_card": None,
+            }
+
+        # 细粒度 PBAC 鉴权与 IDOR 防御拦截
+        from app.core.security import PBACGuard
+        allowed, pbac_err = PBACGuard.verify_order_access(order, current_user=current_user, strict=strict_pbac)
+        if not allowed:
+            return {
+                "found": False,
+                "forbidden": True,
+                "error": pbac_err or "FORBIDDEN_CROSS_USER_ORDER_ACCESS",
+                "message": "权限拒绝：您无权查看或操作其他用户的订单（跨用户越权已被拦截并审计）",
                 "order_card": None,
             }
 
@@ -193,13 +215,24 @@ class DeterministicOrderTools:
         scenario: str = "auto",
         reference_time: Optional[str] = None,
         query_text: Optional[str] = None,
+        current_user: Optional[Union[Dict[str, Any], str]] = None,
+        strict_pbac: bool = False,
     ) -> Dict[str, Any]:
         """
         确定性核验订单的 7天无理由退货（168h）与 15天价格保护（360h）资格：
+          - 严格支持 PBAC 细粒度所有权校验与 IDOR 拦截；
           - 严格调用 `scripts/validate_catalog.py` 的 `evaluate_order_eligibility` 函数；
           - 自动计算已签收经过小时数、剩余窗口小时数与精确退差金额；
           - 返回结构化 `aftersales_card` 与关联的平台规则条目。
         """
+        if strict_pbac and not order_id and not (query_text and ORDER_ID_REGEX.search(query_text)):
+            return {
+                "found": False,
+                "requires_order_id": True,
+                "prompt_question": "请提供您需要核验售后的订单编号（例如 ORD-20261001-002），以便为您精准计算时效与退款差额。",
+                "aftersales_card": None,
+            }
+
         hint = None
         q_str = (query_text or "").lower()
         if scenario == "price_guarantee" or any(k in q_str for k in ("降价", "保价", "价保", "差价")):
@@ -212,6 +245,18 @@ class DeterministicOrderTools:
             return {
                 "found": False,
                 "error": f"未找到可核验的订单: {order_id or query_text}",
+                "aftersales_card": None,
+            }
+
+        # 细粒度 PBAC 鉴权与 IDOR 防御拦截
+        from app.core.security import PBACGuard
+        allowed, pbac_err = PBACGuard.verify_order_access(order, current_user=current_user, strict=strict_pbac)
+        if not allowed:
+            return {
+                "found": False,
+                "forbidden": True,
+                "error": pbac_err or "FORBIDDEN_CROSS_USER_ORDER_ACCESS",
+                "message": "权限拒绝：您无权核验或申请其他用户的订单售后（跨用户越权已被拦截并审计）",
                 "aftersales_card": None,
             }
 
@@ -317,9 +362,16 @@ def get_order_tools() -> DeterministicOrderTools:
 def query_order_status(
     order_id: Optional[str] = None,
     query_text: Optional[str] = None,
+    current_user: Optional[Union[Dict[str, Any], str]] = None,
+    strict_pbac: bool = False,
 ) -> Dict[str, Any]:
-    """模块级便捷函数：查询订单物流状态。"""
-    return get_order_tools().query_order_status(order_id=order_id, query_text=query_text)
+    """模块级便捷函数：查询订单物流状态（支持 PBAC 与 IDOR 防御）。"""
+    return get_order_tools().query_order_status(
+        order_id=order_id,
+        query_text=query_text,
+        current_user=current_user,
+        strict_pbac=strict_pbac,
+    )
 
 
 def evaluate_aftersales_eligibility(
@@ -327,11 +379,15 @@ def evaluate_aftersales_eligibility(
     scenario: str = "auto",
     reference_time: Optional[str] = None,
     query_text: Optional[str] = None,
+    current_user: Optional[Union[Dict[str, Any], str]] = None,
+    strict_pbac: bool = False,
 ) -> Dict[str, Any]:
-    """模块级便捷函数：核验订单 7天无理由退货与 15天价格保护资格。"""
+    """模块级便捷函数：核验订单 7天无理由退货与 15天价格保护资格（支持 PBAC 与 IDOR 防御）。"""
     return get_order_tools().evaluate_aftersales_eligibility(
         order_id=order_id,
         scenario=scenario,
         reference_time=reference_time,
         query_text=query_text,
+        current_user=current_user,
+        strict_pbac=strict_pbac,
     )

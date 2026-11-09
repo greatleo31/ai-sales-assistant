@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, Header, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,6 +24,8 @@ from pydantic import BaseModel, Field
 
 from app.config import DATA_DIR, ROOT_DIR, settings
 from app.core.chat_orchestrator import ShoppingAgentOrchestrator
+from app.core.rate_limiter import enforce_rate_limit, global_rate_limiter
+from app.core.security import get_current_admin, get_current_user_optional
 from app.services.admin_analytics_service import (
     get_admin_analytics_service,
     get_static_constitution_metrics,
@@ -74,30 +76,48 @@ analytics_service = get_admin_analytics_service()
 
 
 def _extract_client_ip(request: Request, explicit_ip: Optional[str] = None) -> str:
-    """优先从显式参数、X-Forwarded-For、X-Real-IP 或 socket client 提取真实客户端 IP。"""
+    """
+    提取真实客户端 IP 并防御 X-Forwarded-For 伪造攻击：
+      1. 若显式指定 explicit_ip 则采纳（供本地仿真与测试）；
+      2. 校验直接连接的 Socket 客户端是否属于受信任代理白名单；
+      3. 仅当直连来源为受信任代理（如 127.0.0.1, ::1, 内网私有网段或测试客户端）时，才信任反代头 X-Forwarded-For / X-Real-IP；
+      4. 否则直接取直连客户端 IP，彻底阻断公网客户端伪造。
+    """
     if explicit_ip and explicit_ip.strip():
         return explicit_ip.strip()
-    xff = request.headers.get("X-Forwarded-For")
-    if xff:
-        first_ip = xff.split(",")[0].strip()
-        if first_ip:
-            return first_ip
-    xri = request.headers.get("X-Real-IP")
-    if xri and xri.strip():
-        return xri.strip()
-    if request.client and request.client.host:
-        return request.client.host
-    return "127.0.0.1"
+
+    remote_ip = request.client.host if request.client and request.client.host else "127.0.0.1"
+    trusted_list = [p.strip() for p in settings.trusted_proxies.split(",") if p.strip()]
+    is_trusted = (
+        remote_ip in trusted_list
+        or remote_ip == "testclient"
+        or remote_ip.startswith("10.")
+        or remote_ip.startswith("192.168.")
+        or (remote_ip.startswith("172.") and 16 <= int(remote_ip.split(".")[1]) <= 31)
+    )
+
+    if is_trusted:
+        xff = request.headers.get("X-Forwarded-For")
+        if xff:
+            first_ip = xff.split(",")[0].strip()
+            if first_ip:
+                return first_ip
+        xri = request.headers.get("X-Real-IP")
+        if xri and xri.strip():
+            return xri.strip()
+
+    return remote_ip
 
 
 # ============================================================================
 # Pydantic 请求契约模型
 # ============================================================================
 class ChatStreamRequest(BaseModel):
-    query: Optional[str] = Field(default=None, description="用户输入的主查询文本")
-    message: Optional[str] = Field(default=None, description="兼容字段：用户消息文本")
+    query: Optional[str] = Field(default=None, max_length=2000, description="用户输入的主查询文本（单次最多 2000 字符）")
+    message: Optional[str] = Field(default=None, max_length=2000, description="兼容字段：用户消息文本（单次最多 2000 字符）")
     session_id: str = Field(default="default-session", description="会话 ID")
     tenant_id: str = Field(default="tenant_all", description="所属租户/店铺 ID")
+    user_id: Optional[str] = Field(default=None, description="可选当前操作用户的 user_id（用于 PBAC 细粒度校验）")
     client_ip: Optional[str] = Field(default=None, description="可选显式传入的客户端 IP")
     history: List[Dict[str, str]] = Field(default_factory=list, description="多轮对话历史")
     refresh_jev: bool = Field(default=False, description="是否穿透 jev_cache.json 强制刷新远端 Jev")
@@ -121,6 +141,7 @@ class AftersalesEvalRequest(BaseModel):
     scenario: str = Field(default="auto", description="核验场景：auto / return_7d / price_guarantee")
     reference_time: Optional[str] = Field(default=None, description="带 UTC 时区偏移的 ISO-8601 基准时间")
     query_text: Optional[str] = Field(default=None, description="自然语言查询文本")
+    user_id: Optional[str] = Field(default=None, description="可选当前用户的 user_id（用于 PBAC 细粒度校验）")
 
 
 class CustomerFeedbackRequest(BaseModel):
@@ -311,17 +332,24 @@ async def get_order_status_endpoint(order_id: str) -> Dict[str, Any]:
 
 
 @app.post("/api/v1/aftersales/evaluate")
-async def evaluate_aftersales_endpoint(req: AftersalesEvalRequest) -> Dict[str, Any]:
-    """只读确定性售后/价保资格核验接口。"""
+async def evaluate_aftersales_endpoint(req: AftersalesEvalRequest, request: Request) -> Dict[str, Any]:
+    """只读确定性售后/价保资格核验接口（严格集成 PBAC 越权拦截与身份隔离）。"""
+    auth_user = await get_current_user_optional(request)
+    effective_user = auth_user or ({"user_id": req.user_id} if req.user_id else None)
+    strict_pbac = bool(effective_user)
     try:
         res = evaluate_aftersales_eligibility(
             order_id=req.order_id,
             scenario=req.scenario,
             reference_time=req.reference_time,
             query_text=req.query_text,
+            current_user=effective_user,
+            strict_pbac=strict_pbac,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if res.get("forbidden"):
+        raise HTTPException(status_code=403, detail=res.get("message") or "权限拒绝：禁止跨用户访问他人订单")
     if not res.get("found"):
         raise HTTPException(status_code=404, detail=res.get("error", "Order not found"))
     return res
@@ -343,6 +371,19 @@ async def chat_stream_endpoint(req: ChatStreamRequest, request: Request) -> Stre
     real_client_ip = _extract_client_ip(request, explicit_ip=req.client_ip)
     user_agent = request.headers.get("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X)")
 
+    # 阶段一安全网关：20 RPM 内存滑动窗口频控门禁 (IP + User/Session 复合维度)
+    auth_user = await get_current_user_optional(request)
+    effective_user = auth_user or ({"user_id": req.user_id} if req.user_id else None)
+    strict_pbac = bool(effective_user)
+
+    if effective_user and effective_user.get("user_id"):
+        rate_key = f"user:{effective_user['user_id']}"
+    elif req.session_id and req.session_id != "default-session":
+        rate_key = f"session:{real_client_ip}:{req.session_id}"
+    else:
+        rate_key = f"ip:{real_client_ip}"
+    enforce_rate_limit(rate_key)
+
     sse_generator = orchestrator.stream_chat(
         query=user_query,
         session_id=req.session_id,
@@ -355,6 +396,8 @@ async def chat_stream_endpoint(req: ChatStreamRequest, request: Request) -> Stre
         client_ip=real_client_ip,
         user_agent=user_agent,
         image_base64=req.image_base64,
+        current_user=effective_user,
+        strict_pbac=strict_pbac,
     )
     return StreamingResponse(
         sse_generator,
@@ -379,7 +422,7 @@ async def admin_login_endpoint(req: AdminLoginRequest) -> Dict[str, Any]:
     return {"status": "ok", **auth_res}
 
 
-@app.get("/api/v1/admin/dashboard")
+@app.get("/api/v1/admin/dashboard", dependencies=[Depends(get_current_admin)])
 async def admin_dashboard_endpoint(
     tenant_id: Optional[str] = Query(default=None, description="按租户 ID 筛选"),
     days: int = Query(default=7, ge=1, le=30, description="统计天数范围"),
@@ -388,20 +431,20 @@ async def admin_dashboard_endpoint(
     return analytics_service.get_dashboard_overview(tenant_id=tenant_id, days=days)
 
 
-@app.get("/api/v1/admin/tenants")
+@app.get("/api/v1/admin/tenants", dependencies=[Depends(get_current_admin)])
 async def admin_list_tenants_endpoint() -> Dict[str, Any]:
     """管理后台模块②：获取全部店铺租户配置与实时配额消耗。"""
     return {"tenants": analytics_service.list_tenants()}
 
 
-@app.post("/api/v1/admin/tenants")
+@app.post("/api/v1/admin/tenants", dependencies=[Depends(get_current_admin)])
 async def admin_upsert_tenant_endpoint(req: TenantUpsertRequest) -> Dict[str, Any]:
     """管理后台模块②：新增或更新店铺租户（支持动态修改品类权限、配额、状态与欢迎语）。"""
     tenant = analytics_service.create_or_update_tenant(req.model_dump())
     return {"status": "ok", "tenant": tenant}
 
 
-@app.post("/api/v1/admin/tenants/{tenant_id}/rotate-key")
+@app.post("/api/v1/admin/tenants/{tenant_id}/rotate-key", dependencies=[Depends(get_current_admin)])
 async def admin_rotate_tenant_key_endpoint(tenant_id: str) -> Dict[str, Any]:
     """管理后台模块②：一键轮换指定店铺租户的 AppKey。"""
     try:
@@ -411,7 +454,7 @@ async def admin_rotate_tenant_key_endpoint(tenant_id: str) -> Dict[str, Any]:
     return {"status": "ok", "tenant": tenant}
 
 
-@app.get("/api/v1/admin/conversations")
+@app.get("/api/v1/admin/conversations", dependencies=[Depends(get_current_admin)])
 async def admin_conversations_endpoint(
     tenant_id: Optional[str] = Query(default=None, description="按租户筛选"),
     intent: Optional[str] = Query(default=None, description="按主意图筛选"),
@@ -435,7 +478,7 @@ async def admin_conversations_endpoint(
     )
 
 
-@app.get("/api/v1/admin/feedbacks")
+@app.get("/api/v1/admin/feedbacks", dependencies=[Depends(get_current_admin)])
 async def admin_feedbacks_endpoint(
     tenant_id: Optional[str] = Query(default=None),
     rating: Optional[str] = Query(default=None, description="like / dislike"),
@@ -453,7 +496,7 @@ async def admin_feedbacks_endpoint(
     )
 
 
-@app.patch("/api/v1/admin/feedbacks/{feedback_id}")
+@app.patch("/api/v1/admin/feedbacks/{feedback_id}", dependencies=[Depends(get_current_admin)])
 async def admin_update_feedback_endpoint(
     feedback_id: str,
     req: FeedbackUpdateRequest,
@@ -470,7 +513,7 @@ async def admin_update_feedback_endpoint(
     return {"status": "ok", "feedback": updated}
 
 
-@app.get("/api/v1/admin/rag-analytics")
+@app.get("/api/v1/admin/rag-analytics", dependencies=[Depends(get_current_admin)])
 async def admin_rag_analytics_endpoint(
     tenant_id: Optional[str] = Query(default=None),
 ) -> Dict[str, Any]:
@@ -478,7 +521,7 @@ async def admin_rag_analytics_endpoint(
     return analytics_service.get_rag_analytics(tenant_id=tenant_id)
 
 
-@app.get("/api/v1/admin/token-analytics")
+@app.get("/api/v1/admin/token-analytics", dependencies=[Depends(get_current_admin)])
 async def admin_token_analytics_endpoint(
     tenant_id: Optional[str] = Query(default=None),
 ) -> Dict[str, Any]:
@@ -486,7 +529,7 @@ async def admin_token_analytics_endpoint(
     return analytics_service.get_token_analytics(tenant_id=tenant_id)
 
 
-@app.get("/api/v1/admin/handoffs")
+@app.get("/api/v1/admin/handoffs", dependencies=[Depends(get_current_admin)])
 async def admin_handoffs_endpoint(
     tenant_id: Optional[str] = Query(default=None),
     status: Optional[str] = Query(default=None),
@@ -495,7 +538,7 @@ async def admin_handoffs_endpoint(
     return analytics_service.list_handoff_tickets(tenant_id=tenant_id, status=status)
 
 
-@app.patch("/api/v1/admin/handoffs/{ticket_id}")
+@app.patch("/api/v1/admin/handoffs/{ticket_id}", dependencies=[Depends(get_current_admin)])
 async def admin_update_handoff_endpoint(
     ticket_id: str,
     req: HandoffUpdateRequest,
@@ -513,7 +556,7 @@ async def admin_update_handoff_endpoint(
     return {"status": "ok", "ticket": ticket}
 
 
-@app.get("/api/v1/admin/catalog")
+@app.get("/api/v1/admin/catalog", dependencies=[Depends(get_current_admin)])
 async def admin_catalog_insights_endpoint(
     category: Optional[str] = Query(default=None, description="3c / apparel / beauty"),
     sub_category: Optional[str] = Query(default=None),
@@ -544,7 +587,7 @@ async def admin_catalog_insights_endpoint(
     }
 
 
-@app.get("/api/v1/admin/wishlists")
+@app.get("/api/v1/admin/wishlists", dependencies=[Depends(get_current_admin)])
 async def admin_list_wishlists_endpoint(
     status: Optional[str] = Query(default=None, description="pending / sourcing / stocked"),
 ) -> Dict[str, Any]:
@@ -552,7 +595,7 @@ async def admin_list_wishlists_endpoint(
     return analytics_service.list_wishlist_hooks(status=status)
 
 
-@app.patch("/api/v1/admin/wishlists/{hook_id}")
+@app.patch("/api/v1/admin/wishlists/{hook_id}", dependencies=[Depends(get_current_admin)])
 async def admin_update_wishlist_endpoint(
     hook_id: str,
     req: WishlistUpdateRequest,
@@ -569,13 +612,13 @@ async def admin_update_wishlist_endpoint(
     return {"status": "ok", "wishlist": updated}
 
 
-@app.get("/api/v1/admin/context-manifest")
+@app.get("/api/v1/admin/context-manifest", dependencies=[Depends(get_current_admin)])
 async def admin_context_manifest_endpoint() -> Dict[str, Any]:
     """启发 2：上下文缝补接口（返回全平台生效的软硬双锁、静态前缀 Hash、商品池与缺货心愿单快照）。"""
     return analytics_service.get_context_manifest()
 
 
-@app.get("/api/v1/admin/runtime-status")
+@app.get("/api/v1/admin/runtime-status", dependencies=[Depends(get_current_admin)])
 async def admin_runtime_status_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：获取底层生成节点、熔断器、Jev 缓存与 Prefix Cache 运行状态快照。"""
     primary_node = orchestrator.llm_router.primary_node
@@ -602,7 +645,7 @@ async def admin_runtime_status_endpoint() -> Dict[str, Any]:
     }
 
 
-@app.get("/api/v1/admin/eval-summary")
+@app.get("/api/v1/admin/eval-summary", dependencies=[Depends(get_current_admin)])
 async def admin_eval_summary_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：读取 50 题评测基准与三大 A/B 对照实验汇总结果。"""
     summary_path = DATA_DIR / "eval_results_summary.json"
@@ -611,7 +654,7 @@ async def admin_eval_summary_endpoint() -> Dict[str, Any]:
     return json.loads(summary_path.read_text(encoding="utf-8"))
 
 
-@app.get("/api/v1/admin/benchmark-queries")
+@app.get("/api/v1/admin/benchmark-queries", dependencies=[Depends(get_current_admin)])
 async def admin_benchmark_queries_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：读取 50 题黄金评测集全量题目与期望真值。"""
     bench_path = DATA_DIR / "eval_benchmark_50queries.json"
@@ -620,7 +663,7 @@ async def admin_benchmark_queries_endpoint() -> Dict[str, Any]:
     return json.loads(bench_path.read_text(encoding="utf-8"))
 
 
-@app.get("/api/v1/admin/eval/attribution-audit")
+@app.get("/api/v1/admin/eval/attribution-audit", dependencies=[Depends(get_current_admin)])
 async def admin_eval_attribution_audit_endpoint(
     layer: Optional[str] = None,
     stage: Optional[str] = None,
@@ -637,14 +680,14 @@ async def admin_eval_attribution_audit_endpoint(
     return {"status": "ok", "total": len(audits), "audits": audits}
 
 
-@app.get("/api/v1/admin/eval/attribution-stats")
+@app.get("/api/v1/admin/eval/attribution-stats", dependencies=[Depends(get_current_admin)])
 async def admin_eval_attribution_stats_endpoint() -> Dict[str, Any]:
     """管理后台研发中台：获取评测四层归因分布、六层漏斗通过率与高频根因建议统计。"""
     stats = analytics_service.get_attribution_summary_stats()
     return {"status": "ok", "stats": stats}
 
 
-@app.post("/api/v1/admin/eval/trigger")
+@app.post("/api/v1/admin/eval/trigger", dependencies=[Depends(get_current_admin)])
 async def admin_eval_trigger_endpoint(req: EvalTriggerRequest) -> Dict[str, Any]:
     """管理后台评测中心：一键异步触发全量自动化评测（支持快速沙箱与实机测试模式）。"""
     task_id = analytics_service.trigger_eval_run(
@@ -659,7 +702,7 @@ async def admin_eval_trigger_endpoint(req: EvalTriggerRequest) -> Dict[str, Any]
     }
 
 
-@app.get("/api/v1/admin/eval/progress/{task_id}")
+@app.get("/api/v1/admin/eval/progress/{task_id}", dependencies=[Depends(get_current_admin)])
 async def admin_eval_progress_endpoint(task_id: str) -> Dict[str, Any]:
     """管理后台评测中心：轮询当前正在执行的评测进度或查询最新任务状态。"""
     progress = analytics_service.get_eval_progress(task_id)
@@ -668,7 +711,7 @@ async def admin_eval_progress_endpoint(task_id: str) -> Dict[str, Any]:
     return progress
 
 
-@app.get("/api/v1/admin/eval/cases")
+@app.get("/api/v1/admin/eval/cases", dependencies=[Depends(get_current_admin)])
 async def admin_eval_cases_endpoint(
     scenario_group: Optional[str] = Query(default=None, description="场景组过滤"),
     audit_status: Optional[str] = Query(default=None, description="复核状态过滤 verified / pending_review"),
@@ -688,7 +731,7 @@ async def admin_eval_cases_endpoint(
     )
 
 
-@app.patch("/api/v1/admin/eval/cases/{case_id}")
+@app.patch("/api/v1/admin/eval/cases/{case_id}", dependencies=[Depends(get_current_admin)])
 async def admin_update_eval_case_endpoint(case_id: str, req: EvalCaseUpdateRequest) -> Dict[str, Any]:
     """管理后台评测中心：在线修订单个用例的标杆标准回答与复核状态。"""
     try:
@@ -703,7 +746,7 @@ async def admin_update_eval_case_endpoint(case_id: str, req: EvalCaseUpdateReque
     return {"status": "ok", "case": updated}
 
 
-@app.post("/api/v1/admin/eval/adopt-feedback")
+@app.post("/api/v1/admin/eval/adopt-feedback", dependencies=[Depends(get_current_admin)])
 async def admin_adopt_feedback_endpoint(req: EvalAdoptFeedbackRequest) -> Dict[str, Any]:
     """管理后台评测中心：将 C 端点踩反馈或转人工工单直接收录为官方基准用例。"""
     try:
@@ -717,6 +760,22 @@ async def admin_adopt_feedback_endpoint(req: EvalAdoptFeedbackRequest) -> Dict[s
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"status": "ok", "new_case_id": new_case.get("case_id"), "case": new_case}
+
+
+@app.get("/api/v1/admin/audit-logs", dependencies=[Depends(get_current_admin)])
+async def admin_audit_logs_endpoint(
+    operator_id: Optional[str] = Query(default=None, description="按操作人筛选"),
+    action: Optional[str] = Query(default=None, description="按动作类型筛选"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+) -> Dict[str, Any]:
+    """管理后台模块⑩：全量管理员操作审计记录与快照查看。"""
+    return analytics_service.list_admin_audit_logs(
+        operator_id=operator_id,
+        action=action,
+        page=page,
+        page_size=page_size,
+    )
 
 
 

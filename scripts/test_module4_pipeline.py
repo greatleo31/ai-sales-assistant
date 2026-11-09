@@ -253,15 +253,22 @@ class TestModule4Pipeline(unittest.TestCase):
         self.assertEqual(primary.breaker.failure_count, 0)
 
     def test_04_fastapi_static_images_and_showcase_html_contract(self) -> None:
-        """验证 FastAPI 静态图片全部 60 张 HTTP 200 可达，且 showcase.html 严格使用 fetch + ReadableStream。"""
+        """验证 FastAPI 静态图片全部可达，且 showcase.html 严格使用 fetch + ReadableStream。"""
         health_resp = self.client.get("/health")
         self.assertEqual(health_resp.status_code, 200)
         h_data = health_resp.json()
         self.assertEqual(h_data["effective_context_window"], 272000)
-        self.assertEqual(h_data["sku_count"], 60)
+        # /health 的 SKU 总数必须与商品目录真源严格一致（扩展子类目后自动跟随）
+        self.assertEqual(h_data["sku_count"], len(self.catalog))
 
-        # 验证全部 60 张静态商品图 GET /static/images/{sku_id}.jpg 返回 200 与 image/jpeg
-        for sku in self.catalog:
+        # 验证全部留存的静态商品图 GET /static/images/{sku_id}.jpg 返回 200 与 image/jpeg
+        # （contest 并网的纯文本证据 SKU 无留存原图，不参与图片可达性断言）
+        image_backed_skus = [
+            s for s in self.catalog
+            if s.get("visual_description_source") == "calibrated_from_retained_image"
+        ]
+        self.assertEqual(len(image_backed_skus), 60)
+        for sku in image_backed_skus:
             sid = sku["sku_id"]
             img_resp = self.client.get(f"/static/images/{sid}.jpg")
             self.assertEqual(img_resp.status_code, 200, f"图片 /static/images/{sid}.jpg 返回非 200")
